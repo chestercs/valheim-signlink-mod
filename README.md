@@ -14,7 +14,7 @@
   <img alt="BepInEx 5" src="https://img.shields.io/badge/BepInEx-5.4-2f5d8a">
   <img alt="Client-side" src="https://img.shields.io/badge/side-client-6a4c93">
   <img alt="Code MIT, art CC BY 4.0" src="https://img.shields.io/badge/licence-MIT%20%2B%20CC%20BY%204.0-informational">
-  <a href="https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/"><img alt="Thunderstore" src="https://img.shields.io/thunderstore/v/PetyusPolisz/SignLink?label=Thunderstore"></a>
+  <a href="https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/"><img alt="Thunderstore" src="https://img.shields.io/badge/Thunderstore-SignLink-23a8e0"></a>
   <a href="https://www.nexusmods.com/valheim/mods/4453"><img alt="Nexus Mods" src="https://img.shields.io/badge/Nexus%20Mods-SignLink-d98f40"></a>
 </p>
 
