@@ -1,0 +1,485 @@
+using System;
+using System.Collections.Generic;
+using SignLink.Pictures;
+using SignLink.Signs;
+using UnityEngine;
+
+namespace SignLink.UI
+{
+    /// <summary>Move the sign (3 Place): the selected sign and its copies a little, as they are (SignMove, no remaking):
+    /// steps, three rows of two directions in the frame of the sign as built (Draw, Sign positioning), a turn about the up
+    /// axis as the hammer turns a piece (DrawTurn, Sign rotations), and Changes (DrawChanges, under both): how far it is
+    /// from where and how it was built, Apply and Undo for the steps not applied yet (0.20.34), back there (a tilted or
+    /// rotated sign made again standing, 0.20.66), and making the signs again where they are, so players without
+    /// SignLink see the move at once. Arrow keys too (Keys, from the window's Update while 3 Place is open).</summary>
+    internal sealed class MovePanel
+    {
+        // up to a metre a step, now that a sign goes as far as the game holds it (0.20.109)
+        static readonly float[] MoveSteps = { 0.001f, 0.005f, 0.01f, 0.05f, 0.1f, 0.5f, 1f };
+        static readonly string[] MoveStepNames = { "1 mm", "5 mm", "1 cm", "5 cm", "10 cm", "50 cm", "1 m" };
+        static readonly string[] MoveWords = { "left", "right", "down", "up", "towards you", "away" };
+        static readonly KeyCode[] Arrows = { KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.UpArrow, KeyCode.DownArrow };
+
+        readonly SignLinkWindow window;
+        int moveStep = 3;                                                   // 5 cm (0.20.55, the author: 5 cm as the default)
+        KeyCode held = KeyCode.None;
+        float repeatAt;
+        string movedText = "where it was built";
+        bool moved, posed;                                                  // moved or turned; tilted or rotated
+        float turned;                                                      // the Turn row's value, on the Moved row's clock
+        Sign movedOf;
+        float movedAt = -1f;
+        bool pendingNow;                                                    // steps not applied yet (Layout: the buttons' state)
+
+        /// <summary>Where and how the sign stood before Reset to default, so Undo brings it back while the window stays
+        /// open and the sign is the one the reset made (0.20.96, the author: for Reset to default in 3 Place, until I close
+        /// the window the Undo button could work to revert the reset).</summary>
+        sealed class BeforeReset
+        {
+            public Sign Root;                                               // the stack's first sign after the reset
+            public bool Remade, Tipped, Edge;                               // the signs were made again; its pose
+            public Vector3 Applied, Pending;                                // the move since it was built: written, and not yet
+            public float AppliedTurn, PendingTurn, Tilt, Rotated;
+            public Fit Chosen;                                              // 3 Place's rows as they were
+        }
+
+        BeforeReset beforeReset;
+
+        public MovePanel(SignLinkWindow w) => window = w;
+
+        /// <summary>The window closes: a reset stays as it is.</summary>
+        public void Close() => beforeReset = null;
+
+        /// <summary>Steps or turns wait for Apply sign coord changes (as the last Layout found).</summary>
+        public bool Pending => pendingNow;
+
+        /// <summary>The steps and turns not applied dropped, as Undo steps drops them (3 Place's Undo changes, 0.20.186):
+        /// the sign as it stands for everyone.</summary>
+        public void DropPending(Session s)
+        {
+            if (!pendingNow || !s.HasTarget) return;
+            Sign root = SignFinder.Root(s.Target);
+            SignMove.Revert();
+            UpdateMoved(root);
+        }
+
+        /// <summary>Layout events only: the Moved row and the Turn row's total on a half-second clock, and whether steps
+        /// wait for Apply. Both DrawTurn and Draw call it; it works once a frame.</summary>
+        void Prepare(Session s, bool can)
+        {
+            if (Event.current.type != EventType.Layout || preparedFrame == Time.frameCount) return;
+            preparedFrame = Time.frameCount;
+            bool has = s.HasTarget && can;
+            Sign target = has ? s.Target : null;
+            if (!ReferenceEquals(movedOf, target) || Time.unscaledTime - movedAt > 0.5f)
+            {
+                movedOf = target;
+                movedAt = Time.unscaledTime;
+                UpdateMoved(s.Stack.Count > 0 ? s.Stack[0] : target);
+            }
+            Sign rootNow = !has ? null : s.First;
+            pendingNow = has && SignMove.HasPending(rootNow);
+            if (beforeReset != null && !ReferenceEquals(beforeReset.Root, rootNow)) beforeReset = null;   // another sign, or made again since
+        }
+
+        int preparedFrame = -1;
+        float chosenTurn = float.NaN;                                       // the Turn row's own end of the circle
+
+        /// <summary>The Turn row (the sign about its up axis, as the hammer turns a piece), drawn by 3 Place › Sign
+        /// rotations under the tilt: it shows the total since the sign was built and reports a change in its own event; the stack turns
+        /// at the next Layout (SignMove.Turn), as a step does.</summary>
+        public void DrawTurn(Session s, bool can)
+        {
+            Prepare(s, can);
+            bool has = s.HasTarget && can;
+            bool was = GUI.enabled;
+            GUI.enabled = was && has;
+            // -180 and 180 are one turn, read back as 180: the row keeps the end the player chose (dragged to -180 the
+            // slider jumped to the right end and let go of the mouse; typed -180 came back as 180)
+            float shown = !float.IsNaN(chosenTurn) && Mathf.Abs(Mathf.DeltaAngle(turned, chosenTurn)) < 0.01f ? chosenTurn : turned;
+            float want = Widgets.Number("move.turn", "Turn (clockwise)", shown, -180f, 180f, 5f, "°", "0.#");
+            GUI.enabled = was;
+            if (has && Mathf.Abs(want - shown) > 0.001f)
+            {
+                chosenTurn = want;                                          // a typed turn comes when it is done (Widgets.Number)
+                if (Mathf.Abs(Mathf.DeltaAngle(turned, want)) > 0.01f) Turn(s, s.Target, want);   // the total wanted, not a step
+            }
+        }
+
+        public void Draw(Session s, bool can)
+        {
+            Prepare(s, can);
+            bool has = s.HasTarget && can;
+            Sign target = has ? s.Target : null;
+            bool was = GUI.enabled;
+            GUI.enabled = has;
+            int dir = -1;
+
+            using (Widgets.Vertical(Theme.Section))
+            {
+                using (Widgets.Horizontal())
+                {
+                    GUILayout.Label("Move by", Theme.Label, Widgets.W(Widgets.LabelW));
+                    int pick = Widgets.Toolbar(moveStep, MoveStepNames, Theme.Chip, Widgets.W(Mathf.Min(440f, Widgets.RestW)));   // small (0.20.78)
+                    GUILayout.FlexibleSpace();
+                    if (pick != moveStep) window.Later(() => moveStep = pick);
+                }
+                Widgets.Space(4);
+                // the steps laid out as the arrow keys lie (0.20.78, the author: place them a bit smarter and
+                // nicer, even just swap them for arrows): ▲ over ◄ ▼ ►, and beside them Shift's pair, away over towards
+                // you; the gaps keep a button's margins, so the two rows line up
+                const float k = 46f, kh = 32f, side = 132f;
+                using (Widgets.Horizontal())
+                {
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label("", Theme.ButtonGap, Widgets.W(k), Widgets.H(kh));
+                    if (Widgets.Button("▲", KeyStyle(3), Widgets.W(k), Widgets.H(kh))) dir = 3;
+                    GUILayout.Label("", Theme.ButtonGap, Widgets.W(k), Widgets.H(kh));
+                    Widgets.Space(20);
+                    if (Widgets.Button("Away", KeyStyle(5), Widgets.W(side), Widgets.H(kh))) dir = 5;
+                    GUILayout.FlexibleSpace();
+                }
+                using (Widgets.Horizontal())
+                {
+                    GUILayout.FlexibleSpace();
+                    if (Widgets.Button("◄", KeyStyle(0), Widgets.W(k), Widgets.H(kh))) dir = 0;
+                    if (Widgets.Button("▼", KeyStyle(2), Widgets.W(k), Widgets.H(kh))) dir = 2;
+                    if (Widgets.Button("►", KeyStyle(1), Widgets.W(k), Widgets.H(kh))) dir = 1;
+                    Widgets.Space(20);
+                    if (Widgets.Button("Towards you", KeyStyle(4), Widgets.W(side), Widgets.H(kh))) dir = 4;
+                    GUILayout.FlexibleSpace();
+                }
+                // the keyboard moves it too (0.20.56, the author: rather than the limits, say that); a limit says itself
+                // when a step meets it
+                Widgets.Hint("The arrow keys move it too, by the step above: ← → sideways, ↑ ↓ up and down, Shift with ↑ ↓ away " +
+                             "and towards you.");
+            }
+            GUI.enabled = was;
+            if (dir >= 0)
+            {
+                Widgets.DropFocus();                                        // the arrow keys are the sign's again
+                Move(s, target, dir);
+            }
+        }
+
+        /// <summary>Changes (0.20.56, the author: what is "moved the move"?? ... name the field Changes ... in one
+        /// group): what the moves, turns and the pose add up to since the sign was built, and the four things
+        /// to do with them. Under both Sign positioning and Sign rotations (0.20.66), whichever is open. Apply makes the
+        /// signs again where they stand, so every player sees the change at once (0.20.72, the author: the Rebuild for everyone
+        /// button should go ... illogical and legacy); Reset to default puts the sign back where and as it was
+        /// built, at once, for everyone (the author: "back to where it was built" should simply be Reset to default).</summary>
+        public void DrawChanges(Session s, bool can)
+        {
+            Prepare(s, can);
+            bool has = s.HasTarget && can;
+            Sign target = has ? s.Target : null;
+            bool was = GUI.enabled;
+            bool reset, apply, undo;
+            Widgets.Space(4);                                               // no rule: Changes belongs to the groups above (0.20.146)
+            using (Widgets.Vertical(Theme.Section))
+            {
+                using (Widgets.Horizontal())
+                {
+                    GUILayout.Label("Changes", Theme.Label, Widgets.W(Widgets.LabelW));
+                    GUILayout.Label(!has ? "" : !moved && !posed && !pendingNow ? "none: it stands where and as it was built"
+                                    : movedText + (pendingNow ? " · not applied yet: only you see it" : ""),
+                                    pendingNow ? Theme.Notice : Theme.Label, Widgets.W(Widgets.RestW));
+                }
+                float half = (Widgets.ContentWidth - 30) / 2f - 4f;
+                using (Widgets.Horizontal())
+                {
+                    GUI.enabled = has && pendingNow;                        // steps and turns wait for one of these
+                    float wide = (Widgets.ContentWidth - 30) * 0.62f, rest = Widgets.ContentWidth - 30 - wide - 8f;
+                    apply = Widgets.NextButton("Apply sign coord changes", 26f, wide, less: true);   // 0.20.77, the author: the apply button to read "Apply sign coord changes"
+                    GUI.enabled = has && (pendingNow || beforeReset != null);   // steps not applied, else the reset
+                    undo = Widgets.Button("Undo steps", Theme.ButtonLess, Widgets.W(rest), Widgets.H(26));
+                }
+                using (Widgets.Horizontal())
+                {
+                    GUI.enabled = has && (moved || posed || pendingNow);    // moved, turned, tilted or rotated
+                    reset = Widgets.Button("Reset to default", Theme.ButtonLess, Widgets.W(180), Widgets.H(26));   // a size under Content positioning's (190 wide)
+                    GUI.enabled = was;
+                    GUILayout.Label("where and as it was built, for everyone", Theme.SideNote, Widgets.H(26));
+                }
+            }
+            GUI.enabled = was;
+            if (reset || apply || undo) window.KeepOpen();                  // not a put: its message keeps the window
+            if (reset) window.Act(() => Reset(s, target));
+            if (apply)
+                window.Act(() =>
+                {
+                    beforeReset = null;                                     // a new place: the reset is behind it
+                    Sign root = SignFinder.Root(target);
+                    SignMove.Write();                                       // SignLink players see it at once
+                    // and the signs made again where they stand, so players without SignLink see it at once too: the game
+                    // places a piece only when it loads (Rebuild for everyone did this apart, before 0.20.72)
+                    List<Sign> made;
+                    try { made = SignPose.Remake(root); }
+                    catch (InvalidOperationException e)
+                    {
+                        UpdateMoved(root);
+                        return $"applied for SignLink players; players without SignLink see it when they come back (the signs could not be made again: {e.Message}).";
+                    }
+                    if (made.Count > 0)
+                    {
+                        window.Select(made[0], sameContent: true);
+                        UpdateMoved(made[0]);
+                    }
+                    return "applied: every player sees the sign there now.";
+                });
+            BeforeReset back = undo && !pendingNow ? beforeReset : null;    // steps not applied go first, the reset after them
+            if (back != null)
+            {
+                beforeReset = null;
+                window.Act(() => UndoReset(s, back, back.Root, 0));
+            }
+            else if (undo)
+                window.Act(() =>
+                {
+                    Sign root = SignFinder.Root(target);
+                    SignMove.Revert();
+                    UpdateMoved(root);
+                    return "undone: the sign is back where it was last applied.";
+                });
+            Widgets.Hint("Steps and turns show only for you until Apply sign coord changes; then every player sees them. Undo steps drops " +
+                         "what is not applied (so do closing the window and picking another sign); after Reset to default it brings " +
+                         "the sign back until the window closes.");
+        }
+
+        /// <summary>Undo after Reset to default: the sign back where and as it stood, for everyone, the reverse of the reset,
+        /// one part a frame (the signs made in one frame stand beside the old ones until the frame ends): 0 its pose (made
+        /// again tilted or rotated where it was built: the moves were made in that pose, so they go along its face again),
+        /// 1 its moves and turns (made again there), 2 the steps that were not applied (only this player sees them again).
+        /// The rows take what they held before the reset.</summary>
+        string UndoReset(Session s, BeforeReset b, Sign root, int part)
+        {
+            if (!root || SignFinder.Zdo(root) == null) return "the reset stays: the sign is gone (unloaded or removed).";
+            s.Chosen.Fit = b.Chosen;
+            if (part == 0 && b.Remade && b.Tipped)
+            {
+                string recipe = SignMarks.Source(root);
+                Fit on = SignFit.Read(root, out _, out _, out _);
+                List<Sign> posed = SignFit.Refit(root, on.Posed(b.Rotated, b.Tilt, b.Edge), GlowMode.AsMade, out _);
+                if (posed.Count == 0) return "the sign is gone.";
+                if (recipe.Length > 0) SignMarks.SetSource(posed[0], recipe);
+                window.Select(posed[0], sameContent: true);
+                root = posed[0];
+                Sign next = root;
+                window.Act(() => UndoReset(s, b, next, 1));
+                return "undoing the reset ...";
+            }
+            if (part <= 1 && b.Remade && (b.Applied.sqrMagnitude > 1e-8f || Mathf.Abs(b.AppliedTurn) > 0.05f))
+            {
+                List<Sign> stack = SignFinder.Stack(root);
+                if (b.Applied.sqrMagnitude > 1e-8f) SignMove.Nudge(stack, b.Applied, root);
+                if (Mathf.Abs(b.AppliedTurn) > 0.05f) SignMove.Turn(stack, b.AppliedTurn, root);
+                List<Sign> made = SignPose.Remake(root);                    // where it stood, for every player at once
+                if (made.Count == 0) return "the sign is gone.";
+                window.Select(made[0], sameContent: true);
+                if (b.Pending.sqrMagnitude > 1e-8f || Mathf.Abs(b.PendingTurn) > 1e-4f)
+                {
+                    Sign next = made[0];
+                    window.Act(() => UndoReset(s, b, next, 2));
+                    return "undoing the reset ...";
+                }
+                UpdateMoved(made[0]);
+                return "the reset is undone: the sign stands where and as it stood before, for everyone.";
+            }
+            bool steps = b.Pending.sqrMagnitude > 1e-8f || Mathf.Abs(b.PendingTurn) > 1e-4f;
+            if (steps)
+            {
+                List<Sign> stack = SignFinder.Stack(root);
+                if (b.Pending.sqrMagnitude > 1e-8f) SignMove.Nudge(stack, b.Pending, root);
+                if (Mathf.Abs(b.PendingTurn) > 1e-4f) SignMove.Turn(stack, b.PendingTurn, root);
+            }
+            UpdateMoved(root);
+            return b.Remade ? "the reset is undone: the sign stands where and as it stood before" + (steps ? "; the steps not applied are back (only you see them)." : ".")
+                            : "the reset is undone: the steps not applied are back (only you see them).";
+        }
+
+        /// <summary>Reset to default: the sign back where and as it was built, at once, for everyone. Steps never applied
+        /// are simply dropped; else the moves and turns go back and the signs are made again there, standing as built when
+        /// it was tilted or rotated (0.20.66: the content stays where it sits on the face and keeps its record).</summary>
+        string Reset(Session s, Sign target)
+        {
+            Sign root = SignFinder.Root(target);
+            List<Sign> stack = SignFinder.Stack(root);
+            bool applied = (SignMove.Moved(root) - SignMove.Pending(root)).sqrMagnitude > 1e-8f ||
+                           Mathf.Abs(Mathf.DeltaAngle(SignMove.PendingTurn(root), SignMove.Turned(root))) > 0.05f;
+            SignPose.Read(root, out float tilt, out float rotated, out bool edge);
+            bool tipped = Mathf.Abs(tilt) >= 0.05f || Mathf.Abs(rotated) >= 0.05f;
+            var before = new BeforeReset                                    // for Undo, while the window stays open
+            {
+                Root = root, Tipped = tipped, Edge = edge, Tilt = tilt, Rotated = rotated, Chosen = s.Chosen.Fit,
+                Applied = SignMove.Moved(root) - SignMove.Pending(root), Pending = SignMove.Pending(root),
+                AppliedTurn = Mathf.DeltaAngle(SignMove.PendingTurn(root), SignMove.Turned(root)), PendingTurn = SignMove.PendingTurn(root),
+            };
+            if (!applied && !tipped)
+            {
+                SignMove.Revert();                                          // only steps not applied: dropping them is the way back
+                UpdateMoved(root);
+                beforeReset = before;
+                return "the sign is back where it was built (Undo brings the steps back).";
+            }
+            SignMove.Nudge(root, -SignMove.Moved(root));
+            SignMove.Turn(stack, -SignMove.Turned(root), root);
+            List<Sign> made;
+            if (tipped)
+            {
+                // the pose is the signs' own, so they are made again standing as built, the moves undone with them
+                string recipe = SignMarks.Source(root);
+                Fit on = SignFit.Read(root, out _, out _, out _);
+                made = SignFit.Refit(root, on.Posed(0, 0, false), GlowMode.AsMade, out _);
+                if (made.Count > 0 && recipe.Length > 0) SignMarks.SetSource(made[0], recipe);
+                Fit chosen = s.Chosen.Fit;                                  // the rows stand too; what else they hold stays
+                s.Chosen.Fit = chosen.Posed(0, 0, chosen.Edge);
+            }
+            else made = SignPose.Remake(root);                              // where it was built, for every player at once
+            if (made.Count == 0) return "the sign is gone.";
+            window.Select(made[0], sameContent: true);
+            UpdateMoved(made[0]);
+            before.Root = made[0];
+            before.Remade = true;
+            beforeReset = before;
+            return "the sign stands where and as it was built: its signs were made again, every player sees it so now (Undo brings it back).";
+        }
+
+        /// <summary>A turn (the Turn row) to a total since it was built: the stack the session knows, about its first sign,
+        /// refreshing only the Moved row. The total, not a step: two changes in one frame (typing fast) turn it to the
+        /// last one instead of adding both.</summary>
+        void Turn(Session s, Sign target, float to)
+        {
+            window.KeepOpen();                                              // not a put: its message keeps the window
+            List<Sign> stack = s.Stack.Count > 0 && ReferenceEquals(s.Target, target) ? s.Stack : null;
+            window.Later(() =>
+            {
+                try
+                {
+                    if (stack != null && (!stack[0] || SignFinder.Zdo(stack[0]) == null)) stack = null;   // made again meanwhile:
+                    Sign at = target && SignFinder.Zdo(target) != null ? target : window.Session.Target;   // the new one (0.20.130)
+                    if (!at) return;
+                    Sign root = stack != null ? stack[0] : SignFinder.Root(at);
+                    float degrees = Mathf.DeltaAngle(SignMove.Turned(root), to);
+                    if (Mathf.Abs(degrees) < 0.01f) return;
+                    SignMove.Turn(stack ?? SignFinder.Stack(root), degrees, root);
+                    UpdateMoved(root);
+                    window.Say($"turned the sign {Mathf.Abs(degrees):0.#}° {(degrees > 0 ? "clockwise" : "anticlockwise")} ({movedText}).");
+                }
+                catch (Exception e)
+                {
+                    window.Say("error: " + e.Message);
+                }
+            });
+        }
+
+        /// <summary>One step: the stack the session knows (no second search for it), refreshing only the Moved row (the
+        /// bar and the table have their half-second clock).</summary>
+        void Move(Session s, Sign target, int dir)
+        {
+            window.KeepOpen();                                              // a step (button or arrow key) is not a put
+            float step = MoveSteps[moveStep];
+            List<Sign> stack = s.Stack.Count > 0 && ReferenceEquals(s.Target, target) ? s.Stack : null;
+            window.Later(() =>
+            {
+                try
+                {
+                    if (stack != null && (!stack[0] || SignFinder.Zdo(stack[0]) == null)) stack = null;   // made again meanwhile:
+                    Sign at = target && SignFinder.Zdo(target) != null ? target : window.Session.Target;   // the new one (0.20.130)
+                    if (!at) return;
+                    Sign root = stack != null ? stack[0] : SignFinder.Root(at);
+                    SignPose.Frame(root, out Vector3 right, out Vector3 towards);
+                    Vector3 d = dir == 0 ? -right : dir == 1 ? right : dir == 2 ? Vector3.down : dir == 3 ? Vector3.up : dir == 4 ? towards : -towards;
+                    if (stack != null) SignMove.Nudge(stack, d * step);
+                    else SignMove.Nudge(at, d * step);
+                    UpdateMoved(root);
+                    window.Say($"moved the sign {Length(step)} {MoveWords[dir]} (" +
+                               (moved ? $"{movedText} from where it was built)." : "back where it was built)."));
+                }
+                catch (Exception e)
+                {
+                    window.Say("error: " + e.Message);
+                }
+            });
+        }
+
+        /// <summary>Arrow keys (from the window's Update) while 3 Place is open and no text field has the keyboard; held,
+        /// they repeat.</summary>
+        public void Keys()
+        {
+            if (!window.HasTarget || GUIUtility.keyboardControl != 0 || Console.IsVisible() ||
+                (Chat.instance && Chat.instance.HasFocus()))
+            {
+                held = KeyCode.None;
+                return;
+            }
+            bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            foreach (KeyCode k in Arrows)
+                if (Input.GetKeyDown(k))
+                {
+                    held = k;
+                    repeatAt = Time.unscaledTime + 0.4f;
+                    Key(k, shift);
+                    return;
+                }
+            if (held == KeyCode.None) return;
+            if (!Input.GetKey(held)) held = KeyCode.None;
+            else if (Time.unscaledTime >= repeatAt)
+            {
+                repeatAt = Time.unscaledTime + 0.08f;
+                Key(held, shift);
+            }
+        }
+
+        void Key(KeyCode k, bool shift)
+        {
+            int dir = k == KeyCode.LeftArrow ? 0 : k == KeyCode.RightArrow ? 1 : k == KeyCode.DownArrow ? (shift ? 4 : 2) : (shift ? 5 : 3);
+            keyDir = dir;                                                   // its button shows pressed (KeyStyle)
+            keyAt = Time.unscaledTime;
+            Move(window.Session, window.Target, dir);
+        }
+
+        int keyDir = -1;
+        float keyAt = -100f;
+
+        /// <summary>A step's button pressed while its arrow key moves the sign (held, or a moment after a tap), as the
+        /// mouse would show it (0.20.77, the author: when I push it with the hotkey ... show it on the buttons as if I had
+        /// pressed them with the mouse).</summary>
+        GUIStyle KeyStyle(int dir) =>
+            keyDir == dir && (held != KeyCode.None || Time.unscaledTime - keyAt < 0.15f) ? Theme.ButtonDown : Theme.Button;
+
+        void UpdateMoved(Sign root)
+        {
+            Vector3 m = root ? SignMove.Moved(root) : Vector3.zero;
+            turned = root ? SignMove.Turned(root) : 0f;
+            moved = m.sqrMagnitude > 1e-8f || Mathf.Abs(turned) > 0.05f;
+            float tilt = 0f, rotated = 0f;
+            if (root) SignPose.Read(root, out tilt, out rotated);
+            posed = Mathf.Abs(tilt) >= 0.05f || Mathf.Abs(rotated) >= 0.05f;   // the pose the signs were made in (Sign rotations)
+            if (!moved && !posed)
+            {
+                movedText = "where it was built";
+                return;
+            }
+            var parts = new List<string>();
+            if (m.sqrMagnitude > 1e-8f)
+            {
+                SignPose.Frame(root, out Vector3 right, out Vector3 towards);
+                Part(parts, Vector3.Dot(m, right), "right", "left");
+                Part(parts, m.y, "up", "down");
+                Part(parts, Vector3.Dot(m, towards), "towards you", "away");
+            }
+            if (Mathf.Abs(turned) > 0.05f) parts.Add($"turned {Mathf.Abs(turned):0.#}° {(turned > 0 ? "clockwise" : "anticlockwise")}");
+            string tipped = Fit.TiltWords(tilt);
+            if (tipped.Length > 0) parts.Add(tipped);
+            if (Mathf.Abs(rotated) >= 0.05f) parts.Add($"rotated {Mathf.Abs(rotated):0.#}° {(rotated > 0 ? "clockwise" : "anticlockwise")}");
+            movedText = parts.Count > 0 ? string.Join(", ", parts.ToArray()) : "where it was built";
+        }
+
+        static void Part(List<string> parts, float v, string plus, string minus)
+        {
+            if (Mathf.Abs(v) >= 0.0005f) parts.Add($"{Length(Mathf.Abs(v))} {(v > 0 ? plus : minus)}");
+        }
+
+        static string Length(float m) => m < 0.0095f ? $"{m * 1000:0} mm" : $"{m * 100:0.#} cm";
+    }
+}

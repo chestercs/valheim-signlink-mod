@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Built in Docker (../../sign.sh mod). Game and BepInEx assemblies are referenced from read-only mounts
+       and never copied or committed; assembly_valheim is publicized at build time (private members visible). -->
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>SignLink</AssemblyName>
+    <RootNamespace>SignLink</RootNamespace>
+    <Version>1.0.1</Version>
+    <Authors>ChesTeRcs</Authors>
+    <Company>PetyusPolisz</Company>
+    <Product>SignLink</Product>
+    <Copyright>Copyright (c) 2026 ChesTeRcs</Copyright>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GameManaged Condition="'$(GameManaged)' == ''">/game/valheim_Data/Managed</GameManaged>
+    <BepInExCore Condition="'$(BepInExCore)' == ''">/bepinex/BepInEx/core</BepInExCore>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Web/index.html" LogicalName="SignLink.Web.index.html" />
+    <EmbeddedResource Include="Art/**/*" LogicalName="SignLink.Art.%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Stock/*" LogicalName="SignLink.Stock.%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="assembly_valheim" Publicize="true"><HintPath>$(GameManaged)/assembly_valheim.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="assembly_utils"><HintPath>$(GameManaged)/assembly_utils.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="assembly_guiutils"><HintPath>$(GameManaged)/assembly_guiutils.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(GameManaged)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameManaged)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(GameManaged)/UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(GameManaged)/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIModule"><HintPath>$(GameManaged)/UnityEngine.UIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Splatform"><HintPath>$(GameManaged)/Splatform.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(GameManaged)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(GameManaged)/UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(GameManaged)/UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.TextMeshPro"><HintPath>$(GameManaged)/Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx"><HintPath>$(BepInExCore)/BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExCore)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

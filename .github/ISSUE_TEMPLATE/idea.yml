@@ -1,0 +1,16 @@
+name: Idea
+description: Something SignLink could do, or do better.
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would you like to make or do, and what is in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: An example
+      description: A picture, a sketch or a link helps.

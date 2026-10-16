@@ -1,0 +1,31 @@
+# build output: glyph outlines extracted from the game's fonts (IronGate / Noto), renders, built simulator.
+# Regenerate with ./sign.sh extract && ./sign.sh build
+signart/out/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# world copies (100+ MB each): rig templates and generated art worlds
+worlds/
+
+# SignLink plugin build output
+mod/out/
+mod/**/bin/
+mod/**/obj/
+mod/build/
+mod/SignLink.Tests/vectors/
+mod/SignLink.Tests/page/out/
+mod/SignLink.Tests/page/node_modules/
+mod/SignLink.Tests/page/package*.json
+
+# input pictures for image_import.py (not ours to publish)
+signart/images/
+docs/media/original/
+
+# kept on this computer only, out of the public repository: real base coordinates (sign rigs) and the working notes
+# of the window's design (the owner's requests, specs, plans, reviews)
+signart/rigs/
+.private/
+# the author's own: Claude Code's project rules and the in-game verification log (kept on their computer)
+CLAUDE.md
+signart/ingame_tests.json

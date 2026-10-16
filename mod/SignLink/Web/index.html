@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SignLink import</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #17130f; --panel: #221c16; --line: #3a2f24; --text: #ebe3d3; --muted: #a89a84;
+    --amber: #f6b74f; --amber-dim: #9c6b25; --ok: #8fd16e; --bad: #ff7a64;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 16px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: .02em; color: var(--amber); }
+  h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--amber); }
+  .muted { color: var(--muted); font-size: 13px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 18px; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  label.check { display: flex; gap: 8px; align-items: center; color: var(--text); font-size: 14px; }
+  input[type=password], input[type=text], input[type=number], select {
+    background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px;
+    padding: 8px 10px; font: inherit; min-width: 0; }
+  input[type=range] { accent-color: var(--amber); width: 100%; }
+  input[type=checkbox] { accent-color: var(--amber); width: 16px; height: 16px; }
+  button { background: #3a2e20; color: var(--text); border: 1px solid #5a4630; border-radius: 6px;
+           padding: 8px 14px; font: inherit; cursor: pointer; }
+  button:hover { background: #4a3a26; }
+  button.primary { background: var(--amber-dim); border-color: var(--amber); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; }
+  #drop { border: 2px dashed var(--line); border-radius: 10px; padding: 18px; text-align: center; cursor: pointer;
+          display: grid; gap: 10px; justify-items: center; }
+  #drop.over { border-color: var(--amber); }
+  #preview { max-width: 100%; max-height: 260px; border-radius: 6px; display: none; }
+  #signs { display: grid; gap: 6px; margin-top: 10px; max-height: 220px; overflow: auto; }
+  .sign { display: flex; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--line);
+          border-radius: 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+  .sign.on { border-color: var(--amber); background: #2d2418; }
+  .sign code { color: var(--amber); }
+  #result { font-variant-numeric: tabular-nums; }
+  #log { font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--muted); white-space: pre-wrap;
+         overflow-wrap: anywhere; max-height: 180px; overflow: auto; margin: 0; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>SignLink</h1>
+    <span id="version" class="muted">connecting ...</span>
+  </header>
+  <p class="muted" style="margin:0">A picture becomes sign text in your world: every player sees it, with or without the
+    mod. Big pictures go over copies stacked on the sign, a fraction of a millimetre apart, so they stay one flat
+    picture. The SignLink window (Page Up by default: 2 Content › Picture, then 3 Place) does the same in game.</p>
+
+  <section>
+    <h2>1. Password</h2>
+    <div class="row">
+      <input id="pw" type="password" placeholder="API password (SignLink window, Settings › Developer API)" style="flex:1 1 260px">
+      <label class="check"><input id="remember" type="checkbox"> remember in this browser</label>
+      <button id="connect">Connect</button>
+    </div>
+    <p id="state" class="muted" style="margin:8px 0 0"></p>
+  </section>
+
+  <section>
+    <h2>2. Sign</h2>
+    <div class="row">
+      <button id="hovered">The sign under my crosshair</button>
+      <button id="near">Signs near me</button>
+      <span id="chosen" class="muted">none chosen</span>
+    </div>
+    <div id="signs"></div>
+  </section>
+
+  <section>
+    <h2>3. Picture</h2>
+    <div id="drop">
+      <img id="preview" alt="">
+      <span id="dropText">Drop a PNG, JPG or GIF here, or click to choose one</span>
+      <input id="file" type="file" accept="image/png,image/jpeg,image/gif" hidden>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <label>Width: <b id="widthOut"></b> (the height follows)
+        <input id="width" type="range" min="0.5" max="30" step="0.5" value="2"></label>
+      <label>Pixel size
+        <select id="pitch">
+          <option value="0.125" selected>3 mm (the finest)</option><option value="0.25">6 mm</option>
+          <option value="0.5">12.5 mm</option><option value="0.75">19 mm</option><option value="1">2.5 cm</option>
+          <option value="1.5">3.75 cm</option><option value="2">5 cm</option>
+        </select></label>
+      <label>Pose
+        <select id="tilt">
+          <option value="" selected>as the sign is</option><option value="0">standing</option>
+          <option value="90">face up (a floor)</option><option value="-90">face down (a ceiling)</option>
+        </select></label>
+      <label>Rotate, degrees clockwise (empty: as the sign is)
+        <input id="turn" type="number" min="-180" max="180" step="5" placeholder="as the sign is"></label>
+      <label>Right, metres <input id="x" type="number" step="0.25" value="0"></label>
+      <label>Up, metres <input id="up" type="number" step="0.25" value="0"></label>
+      <label>Towards you, metres <input id="out" type="number" step="0.25" value="0"></label>
+    </div>
+    <p class="muted" style="margin:8px 0 0">Right, Up and Towards you place the picture's middle from the sign's middle, as
+      seen from where you faced the sign, whatever its pose (negative: left, down, away).</p>
+    <div class="row" style="margin-top:10px; gap:8px 20px">
+      <label class="check"><input id="glow" type="checkbox" checked> glowing (its own colours day and night)</label>
+      <label class="check"><input id="alpha" type="checkbox" checked> PNG transparency</label>
+      <label class="check"><input id="cover" type="checkbox" checked> seamless pixels (no gaps from afar)</label>
+      <label class="check"><input id="animate" type="checkbox" checked> moving GIF: also play it over the still</label>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Place it</h2>
+    <div class="row">
+      <button id="dry">Check the size</button>
+      <button id="place" class="primary">Place it in the world</button>
+    </div>
+    <p id="result" style="margin:10px 0 0"></p>
+  </section>
+
+  <section>
+    <h2>Log</h2>
+    <pre id="log"></pre>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let signId = null, file = null;
+
+function log(msg, cls) {
+  const line = document.createElement("div");
+  line.textContent = new Date().toLocaleTimeString() + "  " + msg;
+  if (cls) line.className = cls;
+  $("log").prepend(line);
+}
+
+function store(key, value) { try { value == null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch (e) {} }
+function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+async function api(method, path, body) {
+  const sent = $("pw").value;
+  const res = await fetch(path, { method, body, headers: { "X-SignLink-Password": sent } });
+  const data = await res.json().catch(() => ({ ok: false, error: "HTTP " + res.status }));
+  if (res.status === 401 && sent && sent === load("signlink.pw")) {
+    forget();
+    throw new Error("the remembered password is wrong now (a new one was made?): paste the one from the SignLink window (Settings › Developer API)");
+  }
+  if (!data.ok) throw new Error(data.error || "HTTP " + res.status);
+  return data;
+}
+
+// a remembered password the API refuses is forgotten, and the field is empty again for the new one (0.20.132, review)
+function forget() {
+  store("signlink.pw", null);
+  $("remember").checked = false;
+  $("pw").value = "";
+  $("pw").focus();
+}
+
+function metres(id) { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : 0; }
+
+function options(dry) {
+  const q = new URLSearchParams({
+    id: signId, width: $("width").value, pitch: $("pitch").value,
+    x: metres("x"), up: metres("up"), out: metres("out"),
+    glow: $("glow").checked ? 1 : 0, alpha: $("alpha").checked ? 1 : 0, cover: $("cover").checked ? 2 : 0,
+    maxkb: 400, animate: $("animate").checked ? 1 : 0, dry: dry ? 1 : 0, name: file ? file.name : "" });
+  if ($("tilt").value !== "") q.set("tilt", $("tilt").value);
+  const turn = parseFloat($("turn").value);
+  if (Number.isFinite(turn)) q.set("turn", turn);
+  return q;
+}
+
+function chooseSign(s) {
+  signId = s.id;
+  $("chosen").textContent = "sign " + s.id + (s.dist != null ? ", " + s.dist.toFixed(1) + " m away" : "");
+  $("chosen").className = "";
+  document.querySelectorAll(".sign").forEach(el => el.classList.toggle("on", el.dataset.id === s.id));
+}
+
+function setFile(f) {
+  if (!f) return;
+  file = f;
+  const url = URL.createObjectURL(f);
+  const img = $("preview");
+  img.onload = () => { $("dropText").textContent = f.name + ": " + img.naturalWidth + " x " + img.naturalHeight; };
+  img.src = url;
+  img.style.display = "block";
+}
+
+async function connect() {
+  if (!$("pw").value) {
+    $("state").textContent = "Paste the password from the SignLink window (Settings › Developer API) first.";
+    $("state").className = "bad";
+    return;
+  }
+  try {
+    const p = await api("GET", "/ping");
+    if (!("inWorld" in p)) throw new Error("wrong password: copy it from the SignLink window (Settings › Developer API)");
+    store("signlink.pw", $("remember").checked ? $("pw").value : null);
+    $("state").textContent = p.inWorld ? "Connected: you are in a world." : "Connected, but no world is loaded yet.";
+    $("state").className = "ok";
+    log("connected to SignLink " + p.version, "ok");
+  } catch (e) {
+    $("state").textContent = e.message;
+    $("state").className = "bad";
+  }
+}
+
+async function run(dry) {
+  if (!signId) return log("choose a sign first", "bad");
+  if (!file) return log("choose a picture first", "bad");
+  $("dry").disabled = $("place").disabled = true;
+  $("result").textContent = dry ? "encoding ..." : "encoding and placing ...";
+  try {
+    const r = await api("POST", "/image?" + options(dry), file);
+    const pitch = r.pitch != null ? r.pitch : parseFloat($("pitch").value);   // the plan's own (a small picture is coarsened)
+    const size = (r.w * pitch * 0.025).toFixed(1) + " x " + (r.h * pitch * 0.025).toFixed(1) + " m";
+    const text = r.w + " x " + r.h + " pixels, " + size + ", on " + r.signs + " sign(s) of " + r.kb.join(", ") + " KB" +
+                 (r.saveKb != null ? " (" + r.saveKb.toLocaleString() + " KB in the world save)" : "");
+    $("result").textContent = (dry ? "Would be " : "Placed: ") + text + ".";
+    $("result").className = "ok";
+    log((dry ? "check: " : "placed: ") + text + " (encoded in " + Math.round(r.encodeMs) + " ms)", "ok");
+  } catch (e) {
+    $("result").textContent = e.message;
+    $("result").className = "bad";
+    log(e.message, "bad");
+  } finally {
+    $("dry").disabled = $("place").disabled = false;
+  }
+}
+
+$("connect").onclick = connect;
+$("pw").onkeydown = e => { if (e.key === "Enter") connect(); };
+$("hovered").onclick = async () => {
+  try {
+    const r = await api("GET", "/hovered");
+    if (!r.sign) return log("no sign under your crosshair: look at one in the game", "bad");
+    chooseSign(r.sign);
+    log("chose the sign under the crosshair: " + r.sign.id);
+  } catch (e) { log(e.message, "bad"); }
+};
+$("near").onclick = async () => {
+  try {
+    const r = await api("GET", "/signs?radius=30");
+    const box = $("signs");
+    box.replaceChildren();
+    for (const s of r.signs) {
+      const el = document.createElement("div");
+      el.className = "sign";
+      el.dataset.id = s.id;
+      const left = document.createElement("span");
+      left.innerHTML = "<code></code> ";
+      left.firstChild.textContent = s.id;
+      left.append((s.preview || "(empty)").slice(0, 40));
+      const right = document.createElement("span");
+      right.className = "muted";
+      right.textContent = s.dist.toFixed(1) + " m, " + s.len.toLocaleString() + " chars";
+      el.append(left, right);
+      el.onclick = () => chooseSign(s);
+      box.append(el);
+    }
+    log(r.signs.length + " sign(s) within 30 m");
+  } catch (e) { log(e.message, "bad"); }
+};
+$("drop").onclick = () => $("file").click();
+$("file").onchange = e => setFile(e.target.files[0]);
+$("drop").ondragover = e => { e.preventDefault(); $("drop").classList.add("over"); };
+$("drop").ondragleave = () => $("drop").classList.remove("over");
+$("drop").ondrop = e => { e.preventDefault(); $("drop").classList.remove("over"); setFile(e.dataTransfer.files[0]); };
+$("width").oninput = () => $("widthOut").textContent = $("width").value + " m";
+$("dry").onclick = () => run(true);
+$("place").onclick = () => run(false);
+
+$("width").oninput();
+const saved = load("signlink.pw");
+if (saved) { $("pw").value = saved; $("remember").checked = true; }
+fetch("/ping").then(r => r.json()).then(p => {
+  $("version").textContent = "version " + p.version + ", " + location.host;
+  if (saved) connect();
+}).catch(() => { $("version").textContent = "not reachable"; });
+</script>
+</body>
+</html>

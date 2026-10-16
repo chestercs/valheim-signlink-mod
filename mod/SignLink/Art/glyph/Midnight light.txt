@@ -1,0 +1,15 @@
+<line-height=0><font=valheim_fonts/valheim-norse><#3f8a><size=20.21><voffset=92.4><indent=-41.4>|
+<#3fba><size=28.52><voffset=91.2><indent=-31.8>|
+<#2fda><size=27.85><voffset=93><indent=-22.1>|
+<#7fea><size=27.17><voffset=90><indent=-12.4>|
+<#a6fa><size=26.5><voffset=91.8><indent=-2.7>|
+<#3f8a><size=25.83><voffset=93.7><indent=7>|
+<#3fba><size=25.15><voffset=90.7><indent=16.6>|
+<#2fda><size=24.48><voffset=92.5><indent=26.3>|
+<#7fea><size=23.81><voffset=94.4><indent=36>|
+<#a6fa><size=23.13><voffset=91.4><indent=45.7>|
+</font><#234><size=14.87><voffset=74.9><indent=-21.3><scale=1.59>▲
+<#345><size=11.89><voffset=75><indent=27.1><scale=1.62>▲
+<font=valheim_fonts/valheim-norse><#ffd><size=2.74><voffset=116.4><indent=-45.5><scale=1>★
+<voffset=118.4><indent=-5.1>★
+<voffset=116><indent=43.3>★

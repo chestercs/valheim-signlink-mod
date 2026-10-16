@@ -1,0 +1,764 @@
+openapi: 3.1.0
+info:
+  title: SignLink developer API
+  version: 1.0.1
+  summary: Write, animate and fill Valheim signs from your own tools.
+  description: |
+    An optional HTTP API built into the SignLink mod. It is **off by default**: switch it on in the SignLink window,
+    *Settings › Developer API*, where the password is shown, copied or renewed.
+
+    - Every request except `GET /`, `GET /ping` (without a password) and `GET /favicon.ico` sends the password in the
+      `X-SignLink-Password` header. Five wrong passwords in a minute lock that address out for a minute (never this
+      computer).
+    - It answers this computer only; with *network access* on, local networks too (home, Tailscale), never the internet.
+    - No CORS: a web page cannot call it from a browser. Call it from a script, a server or a bot.
+    - Every answer is JSON: `{"ok": true, ...}`, or `{"ok": false, "error": "..."}` with a 4xx status.
+    - Sign ids are the game's object ids (`"1234567890:42"`). They change every session: list `/signs` again.
+    - Every write obeys the window's rules: wards, the 400 KB cap per sign, and in a shared world 300 KB a sign and
+      600 KB for all SignLink signs within 100 m.
+
+    The human-friendly guide is [`docs/api.md`](api.md).
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://127.0.0.1:8417
+    description: This computer (the port is a setting, 8417 by default)
+security:
+  - password: []
+tags:
+  - name: Status
+    description: Is the game there, and where is the player.
+  - name: Signs
+    description: Find, read and write signs.
+  - name: Pictures
+    description: A PNG, JPG or GIF as a picture on a sign, as the window places it.
+  - name: Stacks
+    description: Copies stacked on a sign, their pose, and removing signs.
+  - name: Text animation
+    description: Frames of sign text, played from here or stored on the signs.
+  - name: Screens
+    description: Raw RGB video over a sign, seen by SignLink players only.
+
+paths:
+  /:
+    get:
+      tags: [Status]
+      operationId: getPage
+      summary: The picture import page
+      description: 'A browser page served by the mod itself: pick a sign, drop a picture, place it.'
+      security: []
+      responses:
+        '200':
+          description: The page.
+          content:
+            text/html: {}
+        '403':
+          description: The Host header does not name this computer (a guard against DNS rebinding).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+
+  /ping:
+    get:
+      tags: [Status]
+      operationId: ping
+      summary: Version, and with the password the world and the player
+      description: Without the password header it answers the version only (a quick "is it on?").
+      security: [{}, {password: []}]
+      responses:
+        '200':
+          description: The mod answers.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, version]
+                properties:
+                  ok: {const: true}
+                  version: {type: string, examples: ['1.0.1']}
+                  inWorld: {type: boolean, description: With the password only.}
+                  player: {$ref: '#/components/schemas/Vec3', description: 'With the password, in a world only.'}
+              example: {ok: true, version: '1.0.1', inWorld: true, player: [80.12, 31.5, -95.03]}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /signs:
+    get:
+      tags: [Signs]
+      operationId: listSigns
+      summary: The loaded signs around the player, nearest first
+      parameters:
+        - name: radius
+          in: query
+          description: Metres around the player.
+          schema: {type: number, default: 50}
+      responses:
+        '200':
+          description: The signs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  signs:
+                    type: array
+                    items: {$ref: '#/components/schemas/SignSummary'}
+              example:
+                ok: true
+                signs:
+                  - {id: '1234567890:42', dist: 2.31, pos: [80.0, 32.1, -95.5], yaw: 90, len: 11, preview: Fish & Ale}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /hovered:
+    get:
+      tags: [Signs]
+      operationId: getHovered
+      summary: The sign under the crosshair
+      description: For a stack, its rearmost sign (the original the copies were made from). `null` while a tool such as
+        the hammer is in hand.
+      responses:
+        '200':
+          description: The sign, or `null`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  sign:
+                    oneOf:
+                      - {$ref: '#/components/schemas/SignSummary'}
+                      - {type: 'null'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /sign:
+    get:
+      tags: [Signs]
+      operationId: readSign
+      summary: Read a sign's text
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The saved text.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  id: {type: string}
+                  text: {type: string}
+              example: {ok: true, id: '1234567890:42', text: Fish & Ale}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+    post:
+      tags: [Signs]
+      operationId: writeSign
+      summary: Write any text, of any length, to one sign
+      description: |
+        This one sign only: a stack's copies keep their texts (for whole stacks use `/image` or `/signs/clone`).
+        A running text animation on the sign stops.
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/mode'
+      requestBody:
+        required: true
+        description: The text, UTF-8. Rich text tags work as on any sign.
+        content:
+          text/plain:
+            schema: {type: string, maxLength: 16777216}
+            example: <color=#ffcc00>Fish & Ale</color>
+      responses:
+        '200':
+          description: Written.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  ms: {type: number, description: Time the game took to rebuild the text.}
+                  chars: {type: integer}
+              example: {ok: true, ms: 0.42, chars: 32}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '411': {$ref: '#/components/responses/LengthRequired'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+
+  /image:
+    post:
+      tags: [Pictures]
+      operationId: placeImage
+      summary: Put a picture on a sign
+      description: |
+        The picture becomes saved sign text on the sign and, when it needs more, on copies stacked on it. Every player
+        sees it, with or without the mod. A moving GIF also plays over it for SignLink players.
+
+        Size it with `width` and `detail` (the window's model: the pixel size follows from both), or with `width` and
+        `pitch`. Pixel sizes come in steps, so the picture can come out a little wider than asked: read `w` and `pitch`
+        in the answer, or try first with `dry=1`.
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: width
+          in: query
+          description: The picture's width in metres. 0 takes the `pixels` budget instead.
+          schema: {type: number, minimum: 0, maximum: 200, default: 0}
+        - name: detail
+          in: query
+          description: Pixels across, with `width`.
+          schema: {type: integer, minimum: 1, maximum: 4000}
+        - name: pitch
+          in: query
+          description: The pixel size in sign units. A multiple of 0.125 up to 40 that the game reads exactly
+            (0.125, 0.25, 0.5, 0.625, 0.75, 1, 1.25, 1.5, 2 ...).
+          schema: {type: number, default: 1}
+        - name: pixels
+          in: query
+          deprecated: true
+          description: The older size model, a pixel budget. Use `width` with `detail`.
+          schema: {type: integer, minimum: 100, maximum: 2000000, default: 200000}
+        - name: place
+          in: query
+          description: Where the picture sits on a standing sign. A tilted sign's picture is centred unless asked.
+          schema: {type: string, enum: [above, centred, centered, below], default: above}
+        - name: x
+          in: query
+          description: The picture's centre from the sign's centre, metres to the right.
+          schema: {type: number, minimum: -300, maximum: 300, default: 0}
+        - name: up
+          in: query
+          description: Metres up (overrides `place`). On a lying or tipped sign only the part along its face counts;
+            lying, `up` is dropped.
+          schema: {type: number, minimum: -300, maximum: 300}
+        - name: out
+          in: query
+          description: Metres towards you, as the sign was built.
+          schema: {type: number, minimum: -300, maximum: 300, default: 0}
+        - name: above
+          in: query
+          deprecated: true
+          description: The older way to set the bottom edge, in metres. Use `up` or `place`.
+          schema: {type: number}
+        - $ref: '#/components/parameters/tilt'
+        - $ref: '#/components/parameters/pose'
+        - $ref: '#/components/parameters/turn'
+        - name: maxkb
+          in: query
+          description: At most this many KB a sign. In a shared world every write must also fit 300 KB a sign and
+            600 KB within 100 m.
+          schema: {type: number, minimum: 16, maximum: 400, default: 400}
+        - name: cover
+          in: query
+          description: 2 draws the pixels seamless; 0 leaves the hairline gaps.
+          schema: {type: integer, enum: [0, 2], default: 2}
+        - $ref: '#/components/parameters/glow'
+        - name: alpha
+          in: query
+          description: 1 keeps PNG transparency; 0 drops it.
+          schema: {type: integer, enum: [0, 1], default: 1}
+        - name: animate
+          in: query
+          description: 1 plays a moving GIF over the picture for SignLink players.
+          schema: {type: integer, enum: [0, 1], default: 1}
+        - name: dry
+          in: query
+          description: 1 only encodes and answers the sizes; nothing is placed.
+          schema: {type: integer, enum: [0, 1], default: 0}
+        - name: name
+          in: query
+          description: The file name, kept on the sign so the window can edit the picture later.
+          schema: {type: string}
+      requestBody:
+        required: true
+        description: The image file, at most 64 MB.
+        content:
+          image/png: {schema: {type: string, format: binary}}
+          image/jpeg: {schema: {type: string, format: binary}}
+          image/gif: {schema: {type: string, format: binary}}
+          application/octet-stream: {schema: {type: string, format: binary}}
+      responses:
+        '200':
+          description: Encoded (and placed unless `dry=1`).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  w: {type: integer, description: Pixels across.}
+                  h: {type: integer, description: Pixels down.}
+                  pitch: {type: number, description: 'The pixel size used, in sign units.'}
+                  signs: {type: integer, description: How many signs the picture takes.}
+                  kb: {type: array, items: {type: integer}, description: KB on each sign.}
+                  saveKb: {type: integer, description: What the picture adds to the world save.}
+                  encodeMs: {type: number}
+                  ids: {type: array, items: {type: string}, description: The signs holding it. Not with `dry=1`.}
+              example: {ok: true, w: 160, h: 127, pitch: 1, signs: 1, kb: [262], saveKb: 262, encodeMs: 85.4, ids: ['1234567890:42']}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '411': {$ref: '#/components/responses/LengthRequired'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+
+  /stack:
+    get:
+      tags: [Stacks]
+      operationId: getStack
+      summary: The sign and the copies stacked on it
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Rear first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  signs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: string}
+                        len: {type: integer, description: Characters.}
+                        bytes: {type: integer, description: UTF-8 bytes.}
+              example: {ok: true, signs: [{id: '1234567890:42', len: 98112, bytes: 268300}]}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /pose:
+    post:
+      tags: [Stacks]
+      operationId: setPose
+      summary: Tilt and turn a sign with its stack
+      description: The stack tilts about its middle and turns clockwise, as the window's Tilt and Rotate rows do; the
+        content keeps its place on the sign's face. The signs are made again, so their ids change.
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/tilt'
+        - $ref: '#/components/parameters/pose'
+        - $ref: '#/components/parameters/turn'
+      responses:
+        '200': {$ref: '#/components/responses/Ids'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /signs/clone:
+    post:
+      tags: [Stacks]
+      operationId: cloneSigns
+      summary: Stack new signs in front of a sign
+      description: New signs at the exact rotation of `id`, each `step` metres past the stack's front. The copies must
+        fit one stack, and the multiplayer limits hold for the whole stack.
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: step
+          in: query
+          description: Metres between copies. 0 takes the window's spacing; otherwise 0.0003 to 0.002.
+          schema: {type: number, default: 0}
+      requestBody:
+        required: true
+        description: One text per new sign, separated by U+001D.
+        content:
+          text/plain:
+            schema: {type: string}
+      responses:
+        '200': {$ref: '#/components/responses/Ids'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '411': {$ref: '#/components/responses/LengthRequired'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+
+  /signs/delete:
+    post:
+      tags: [Stacks]
+      operationId: deleteSigns
+      summary: Remove signs
+      description: Removed without a drop. Ids that are not loaded are skipped.
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Comma-separated sign ids.
+          schema: {type: string}
+          example: '1234567890:43,1234567890:44'
+      responses:
+        '200':
+          description: Removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  deleted: {type: integer}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /anim:
+    get:
+      tags: [Text animation]
+      operationId: animStats
+      summary: The running text animations
+      responses:
+        '200':
+          description: Stats.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  anims: {type: array, items: {$ref: '#/components/schemas/AnimStats'}}
+                  stored: {type: integer, description: Stored animations playing.}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+    post:
+      tags: [Text animation]
+      operationId: playAnim
+      summary: Play text frames over one or more signs
+      description: |
+        All the signs change together on one clock. With `store=1` the frames are saved on the signs instead: every
+        SignLink player plays them on the world clock, after restarts too, and the text holds the first frame for
+        players without the mod (text and frames under 400 KB a sign, one stored animation a stack).
+
+        Players without SignLink see at most one frame every 2 s. In a shared world `mode=zdo` sends at most 16 KB/s.
+      parameters:
+        - name: ids
+          in: query
+          description: Comma-separated sign ids, in the order of the texts inside a frame. `id` works for one sign.
+          schema: {type: string}
+        - name: id
+          in: query
+          schema: {type: string}
+        - name: fps
+          in: query
+          schema: {type: number, exclusiveMinimum: 0, maximum: 60, default: 10}
+        - $ref: '#/components/parameters/mode'
+        - name: loop
+          in: query
+          schema: {type: integer, enum: [0, 1], default: 1}
+        - name: store
+          in: query
+          description: 1 saves the frames on the signs instead of playing them from here.
+          schema: {type: integer, enum: [0, 1], default: 0}
+      requestBody:
+        required: true
+        description: Frames separated by U+001E; inside a frame, one text per sign separated by U+001D (with one sign, the whole frame is its text). At most
+          20 000 frames, 16 MB.
+        content:
+          text/plain:
+            schema: {type: string}
+      responses:
+        '200':
+          description: Playing (or stored).
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    title: Playing
+                    properties:
+                      ok: {const: true}
+                      signs: {type: integer}
+                      frames: {type: integer}
+                      chars: {type: integer}
+                  - type: object
+                    title: Stored
+                    properties:
+                      ok: {const: true}
+                      stored:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            ok: {const: true}
+                            frames: {type: integer}
+                            kb: {type: integer}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '411': {$ref: '#/components/responses/LengthRequired'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+
+  /anim/stop:
+    post:
+      tags: [Text animation]
+      operationId: stopAnim
+      summary: Stop text animations played from here
+      parameters:
+        - $ref: '#/components/parameters/optionalId'
+      responses:
+        '200': {$ref: '#/components/responses/Stopped'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /anim/unstore:
+    post:
+      tags: [Text animation]
+      operationId: unstoreAnim
+      summary: Remove a stored animation from a sign
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Done.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  removed: {type: boolean}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /screen:
+    post:
+      tags: [Screens]
+      operationId: playScreen
+      summary: Play raw RGB frames as a screen over a sign
+      description: |
+        A texture on the sign's canvas: smooth video, one texture upload a frame. Only SignLink players see it, and it
+        is not saved; everyone else sees the sign's own text. Over a stacked picture, vanilla players see the still and
+        SignLink players the moving picture in the same place.
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: w
+          in: query
+          required: true
+          schema: {type: integer, minimum: 1, maximum: 4096}
+        - name: h
+          in: query
+          required: true
+          schema: {type: integer, minimum: 1, maximum: 4096}
+        - name: fps
+          in: query
+          schema: {type: number, exclusiveMinimum: 0, maximum: 60, default: 10}
+        - name: cx
+          in: query
+          description: The picture's centre from the sign's centre, in sign units (2.5 cm), to the right.
+          schema: {type: number, default: 0}
+        - name: cy
+          in: query
+          description: The same, up.
+          schema: {type: number, default: 0}
+        - name: pitch
+          in: query
+          description: Sign units per pixel.
+          schema: {type: number, exclusiveMinimum: 0, maximum: 4096, default: 2}
+        - name: loop
+          in: query
+          schema: {type: integer, enum: [0, 1], default: 1}
+        - name: hide
+          in: query
+          description: 1 hides the text of the whole stack while the screen shows.
+          schema: {type: integer, enum: [0, 1], default: 1}
+        - name: filter
+          in: query
+          description: '`point` keeps hard pixels; anything else smooths them.'
+          schema: {type: string, default: point}
+        - $ref: '#/components/parameters/lit'
+      requestBody:
+        required: true
+        description: Whole frames of w × h × 3 bytes (RGB), rows top-down, one after the other. At most 256 MB.
+        content:
+          application/octet-stream:
+            schema: {type: string, format: binary}
+      responses:
+        '200':
+          description: Playing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  frames: {type: integer}
+                  w: {type: integer}
+                  h: {type: integer}
+                  mb: {type: number}
+                  lit: {type: boolean}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '411': {$ref: '#/components/responses/LengthRequired'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+
+  /screen/stop:
+    post:
+      tags: [Screens]
+      operationId: stopScreen
+      summary: Stop screens
+      description: A moving GIF's screen stopped here is not started again.
+      parameters:
+        - $ref: '#/components/parameters/optionalId'
+      responses:
+        '200': {$ref: '#/components/responses/Stopped'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+  /screens:
+    get:
+      tags: [Screens]
+      operationId: screenStats
+      summary: The running screens
+      responses:
+        '200':
+          description: Stats.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: {const: true}
+                  screens: {type: array, items: {$ref: '#/components/schemas/ScreenStats'}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+
+components:
+  securitySchemes:
+    password:
+      type: apiKey
+      in: header
+      name: X-SignLink-Password
+      description: Shown, copied or renewed in the SignLink window, Settings › Developer API.
+
+  parameters:
+    id:
+      name: id
+      in: query
+      required: true
+      description: A sign id from `/signs`, `/hovered` or an earlier answer.
+      schema: {type: string}
+      example: '1234567890:42'
+    optionalId:
+      name: id
+      in: query
+      description: Only this sign; left out, all of them.
+      schema: {type: string}
+    mode:
+      name: mode
+      in: query
+      description: '`local` changes only what this game shows (fast, gone on reload); `zdo` saves and syncs it like
+        the in-game editor.'
+      schema: {type: string, enum: [local, zdo], default: local}
+    tilt:
+      name: tilt
+      in: query
+      description: Degrees over the sign's bottom edge, + face up. Left out, the sign keeps its pose.
+      schema: {type: number, minimum: -90, maximum: 90}
+    pose:
+      name: pose
+      in: query
+      description: Instead of `tilt`. floor = 90, ceiling = -90.
+      schema: {type: string, enum: [standing, floor, ceiling]}
+    turn:
+      name: turn
+      in: query
+      description: Degrees, clockwise. Left out, as it is.
+      schema: {type: number}
+    glow:
+      name: glow
+      in: query
+      description: 1 glows day and night; 0 is lit by the scene.
+      schema: {type: integer, enum: [0, 1], default: 1}
+    lit:
+      name: lit
+      in: query
+      description: 1 shades it by the scene like the sign's text; 0 glows.
+      schema: {type: integer, enum: [0, 1], default: 0}
+
+  schemas:
+    Vec3:
+      type: array
+      description: x, y, z in metres (y is up).
+      items: {type: number}
+      minItems: 3
+      maxItems: 3
+    SignSummary:
+      type: object
+      properties:
+        id: {type: string}
+        dist: {type: number, description: Metres from the player.}
+        pos: {$ref: '#/components/schemas/Vec3'}
+        yaw: {type: number, description: Degrees.}
+        len: {type: integer, description: Characters of text.}
+        preview: {type: string, description: The first 60 characters.}
+    AnimStats:
+      type: object
+      properties:
+        ids: {type: string}
+        mode: {type: string, enum: [local, zdo]}
+        frames: {type: integer}
+        fps: {type: number}
+        shown: {type: integer}
+        realFps: {type: number}
+        skipped: {type: integer}
+        writes: {type: integer}
+        kbPerSec: {type: number}
+        avgMs: {type: number}
+        maxMs: {type: number}
+    ScreenStats:
+      type: object
+      properties:
+        id: {type: string}
+        w: {type: integer}
+        h: {type: integer}
+        frames: {type: integer}
+        fps: {type: number}
+        shown: {type: integer}
+        realFps: {type: number}
+        paused: {type: boolean}
+        skipped: {type: integer}
+        avgMs: {type: number}
+        maxMs: {type: number}
+        mb: {type: number}
+        lit: {type: boolean}
+    Error:
+      type: object
+      required: [ok, error]
+      properties:
+        ok: {const: false}
+        error: {type: string}
+
+  responses:
+    Ids:
+      description: The signs made.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: {const: true}
+              ids: {type: array, items: {type: string}}
+    Stopped:
+      description: Stopped.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok: {const: true}
+              stopped: {type: integer}
+    BadRequest:
+      description: A wrong or missing parameter, a sign that is not loaded, a ward, or a size limit. The message says
+        which.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+          example: {ok: false, error: 'no loaded sign with id 1234567890:42 (ids change every session: list /signs again)'}
+    Unauthorized:
+      description: The password header is missing or wrong.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    LengthRequired:
+      description: The body needs a Content-Length (chunked bodies are refused).
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    TooLarge:
+      description: 'The body is over the route''s cap: /sign, /anim and /signs/clone 16 MB, /image 64 MB, /screen
+        256 MB. Routes that take no body refuse one.'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}

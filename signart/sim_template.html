@@ -1,0 +1,842 @@
+<title>Valheim Sign Drawing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze:wght@500;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: workshop bench — concept shelf left, night-sky stage centre, sign-by-sign command board right. */
+:root {
+  --sky: #0c141d; --panel: #121c27; --panel2: #172433; --line: #26374a;
+  --fg: #e8e2d2; --muted: #93a3b5; --gold: #d9a441; --wood: #8a6a43;
+  --ok: #6fcf97; --warn: #f2b84b; --bad: #ef6b5b; --sel: #6de3f0;
+  --display: "Grenze", "Palatino Linotype", Georgia, serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--sky); color: var(--fg); font: 15px/1.45 var(--body); margin: 0; }
+.app { display: grid; grid-template-columns: 236px minmax(0, 1fr) 400px; grid-template-rows: auto minmax(0, 1fr);
+  height: 100%; gap: 0; }
+header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px;
+  padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header h1 { font: 700 26px/1 var(--display); margin: 0; letter-spacing: .02em; color: var(--gold); }
+header .sub { color: var(--muted); font-size: 13px; }
+header .stats { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { font: 600 12px/1 var(--body); padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--panel2); color: var(--fg); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill.ok { border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); color: var(--ok); }
+.pill.warn { border-color: color-mix(in srgb, var(--warn) 50%, var(--line)); color: var(--warn); }
+.pill.bad { border-color: color-mix(in srgb, var(--bad) 60%, var(--line)); color: var(--bad); }
+
+/* concept shelf */
+.shelf { overflow: auto; border-right: 1px solid var(--line); padding: 12px; display: grid; gap: 10px; align-content: start; }
+.shelf h2, .board h2, .under h2 { font: 600 11px/1 var(--body); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 6px 0 2px; }
+.card { display: grid; grid-template-columns: 64px minmax(0,1fr); gap: 10px; align-items: center; padding: 6px;
+  border: 1px solid transparent; border-radius: 8px; background: none; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.card:hover { background: var(--panel2); }
+.card[aria-current="true"] { border-color: var(--gold); background: var(--panel2); }
+.card canvas { width: 64px; height: 64px; border-radius: 6px; background: #0f1a26; }
+.card b { display: block; font: 600 14px/1.2 var(--body); }
+.card span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* stage */
+.stage { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; min-height: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.toolbar .idea { flex: 1 1 320px; min-width: 0; color: var(--muted); font-size: 13px; }
+.toolbar h2 { font: 700 22px/1.1 var(--display); margin: 0; color: var(--fg); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { font: 600 12px/1 var(--body); padding: 7px 10px; background: var(--panel); color: var(--muted); border: 0; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--panel2); color: var(--fg); box-shadow: inset 0 -2px 0 var(--gold); }
+label.chk { font-size: 12px; color: var(--muted); display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.canvaswrap { position: relative; min-height: 320px; }
+#stage { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+.under { border-top: 1px solid var(--line); padding: 10px 14px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 14px; max-height: 300px; overflow: auto; }
+.insp { font-size: 13px; }
+.insp .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-variant-numeric: tabular-nums; }
+.insp .kv dt { color: var(--muted); } .insp .kv dd { margin: 0; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.nudge { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.nudge button, .btn { font: 600 12px/1 var(--body); padding: 6px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); cursor: pointer; }
+.nudge button:hover, .btn:hover { border-color: var(--gold); }
+.btn.primary { background: var(--gold); color: #1b1408; border-color: var(--gold); }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.palette .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.palette .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 3px; max-height: 190px; overflow: auto; }
+.palette .grid button { width: 100%; aspect-ratio: 1; max-width: 100%; padding: 2px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); cursor: pointer; }
+.palette .grid button:hover { border-color: var(--gold); }
+.palette .grid canvas { width: 100%; height: 100%; display: block; }
+
+/* command board */
+.board { border-left: 1px solid var(--line); overflow: auto; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.board .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.gridpanel { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); display: grid; gap: 8px; }
+.gridpanel .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.gridpanel .top b { font: 700 18px/1 var(--display); color: var(--gold); }
+.gridpanel .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.gridpanel label { display: grid; gap: 2px; font-size: 11px; color: var(--muted); }
+.gridpanel input[type=number] { width: 100%; box-sizing: border-box; font: 13px/1.2 var(--mono); color: var(--fg); background: var(--sky); border: 1px solid var(--line); border-radius: 5px; padding: 4px 6px; }
+.gridpanel .msg { font-size: 12px; color: var(--muted); }
+.gridpanel .msg.bad { color: var(--bad); }
+.cellgroup { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.cellgroup.bg { border-style: dashed; }
+.cellgroup > .gh { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.cellgroup > .gh b { font: 700 18px/1 var(--display); color: var(--gold); }
+.cellgroup > .gh span { font-size: 12px; color: var(--muted); }
+.srow { display: grid; grid-template-columns: 34px 26px minmax(0, 1fr) auto auto; gap: 6px; align-items: center; padding: 5px 8px; border-top: 1px solid color-mix(in srgb, var(--line) 50%, transparent); }
+.srow:first-of-type { border-top: 0; }
+.srow[aria-selected="true"] { background: color-mix(in srgb, var(--sel) 12%, transparent); }
+.srow .ly { font: 600 12px/1 var(--mono); color: var(--muted); }
+.srow canvas { width: 26px; height: 26px; border-radius: 4px; background: #0f1a26; }
+.srow input { width: 100%; min-width: 0; font: 12px/1.3 var(--mono); color: var(--fg); background: var(--sky); border: 1px solid var(--line); border-radius: 5px; padding: 5px 6px; }
+.srow input.badtext { border-color: var(--bad); }
+.srow .n { font: 600 11px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 22px; text-align: right; }
+.srow .n.over { color: var(--bad); }
+.srow .warn { grid-column: 3 / -1; font-size: 11px; color: var(--warn); }
+.srow .x { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 2px; }
+.srow .copy { font: 600 11px/1 var(--body); padding: 5px 7px; border-radius: 5px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); cursor: pointer; }
+.srow .copy.done { color: var(--ok); border-color: var(--ok); }
+textarea.export { width: 100%; min-height: 120px; font: 11px/1.35 var(--mono); background: var(--sky); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; box-sizing: border-box; }
+.tests { display: grid; gap: 6px; }
+.test { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); display: grid; gap: 4px; }
+.test .top { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.test code { font: 12px/1.3 var(--mono); overflow-wrap: anywhere; }
+.test p { margin: 0; font-size: 12px; color: var(--muted); }
+details > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+@media (max-width: 1100px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(420px, 70vh) auto; height: auto; }
+  .shelf { border-right: 0; border-bottom: 1px solid var(--line); grid-auto-flow: column; grid-auto-columns: 210px; overflow-x: auto; }
+  .board { border-left: 0; border-top: 1px solid var(--line); }
+  .under { grid-template-columns: minmax(0, 1fr); max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Valheim Sign Drawing</h1>
+    <span class="sub">Signekből vetített art: a játék valódi glyph-körvonalai és a TextMeshPro elrendezési modellje alapján.</span>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <nav class="shelf" id="shelf" aria-label="Koncepciók"></nav>
+
+  <main class="stage">
+    <div class="toolbar">
+      <h2 id="ctitle"></h2>
+      <div class="idea" id="cidea"></div>
+      <div class="seg" role="group" aria-label="Nézet">
+        <button id="v-art" aria-pressed="true">Kép</button>
+        <button id="v-cells" aria-pressed="false">Cellák</button>
+      </div>
+      <div class="seg" role="group" aria-label="Fény és égbolt">
+        <button data-light="front" aria-pressed="true" title="A nap a néző mögött: a színek valódiak">Szemből süt</button>
+        <button data-light="back" aria-pressed="false" title="A nap a kép mögött: a megvilágított sign-szöveg sötét">Ellenfény</button>
+        <button data-light="dusk" aria-pressed="false">Alkony</button>
+        <button data-light="night" aria-pressed="false" title="Éjjel a megvilágított sign-szöveg sötét; csak a világító (font-álneves) glyphek látszanak">Éj</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="o-boards"> signtáblák</label>
+      <label class="chk"><input type="checkbox" id="o-hits" checked> ütközések</label>
+    </div>
+    <div class="canvaswrap"><canvas id="stage" aria-label="A kiválasztott koncepció renderje"></canvas></div>
+    <div class="under">
+      <section class="insp" aria-label="Kijelölt sign">
+        <h2>Kijelölt sign</h2>
+        <div id="insp">Kattints egy alakzatra a képen vagy egy sorra jobbra.</div>
+        <div class="nudge" id="nudge" hidden>
+          <button data-n="pos:-10">◀ pos</button><button data-n="pos:10">pos ▶</button>
+          <button data-n="voffset:10">▲ voffset</button><button data-n="voffset:-10">voffset ▼</button>
+          <button data-n="size:-5">size −</button><button data-n="size:5">size +</button>
+          <button data-n="rotate:5">↺ 5°</button><button data-n="rotate:-5">↻ 5°</button>
+          <button data-n="scale:-0.1">scale −</button><button data-n="scale:0.1">scale +</button>
+          <button data-n="mirror:1">tükrözés</button>
+        </div>
+        <div class="hint">Billentyűk a kijelölt signre: nyilak (Shift = ×10), + / − méret, [ ] forgatás, &lt; &gt; nyújtás.</div>
+      </section>
+      <section class="palette" aria-label="Glyph-paletta">
+        <h2>Glyph-paletta <span class="hint" style="text-transform:none;letter-spacing:0">(kattintás: a kijelölt sign glyphjét cseréli, különben vágólapra)</span></h2>
+        <div class="tabs" id="ptabs"></div>
+        <div class="grid" id="pgrid"></div>
+      </section>
+    </div>
+  </main>
+
+  <aside class="board" aria-label="Parancsok">
+    <section class="gridpanel" aria-label="Rács">
+      <div class="top"><b id="glabel">3×3×5</b><span class="hint" style="margin:0">oszlop × sor × mélység</span></div>
+      <div class="fields">
+        <label for="g-cols">oszlop<input type="number" id="g-cols" min="1" max="26" value="3"></label>
+        <label for="g-rows">sor<input type="number" id="g-rows" min="1" max="52" value="3"></label>
+        <label for="g-depth">mélység<input type="number" id="g-depth" min="1" max="40" value="5"></label>
+        <label for="g-gapx">rés vízsz.<input type="number" id="g-gapx" min="0" max="20" step="0.5" value="1"></label>
+        <label for="g-gapy">rés függ.<input type="number" id="g-gapy" min="0" max="20" step="0.5" value="1"></label>
+        <label for="g-bg">háttér-cella<input type="number" id="g-bg" min="0" max="4" value="0"></label>
+        <label for="g-scale">méret %<input type="number" id="g-scale" min="10" max="400" step="5" value="100"></label>
+        <label for="g-above">rács fölött (sign)<input type="number" id="g-above" min="0" max="200" step="0.5" value="3"></label>
+      </div>
+      <label class="chk" for="g-center"><input type="checkbox" id="g-center"> a művet középre a rács fölé teszi a megadott magasságba</label>
+      <div class="actions"><button class="btn primary" id="regrid">Újraosztás erre a rácsra</button></div>
+      <div class="msg" id="gmsg">A cellákat és a parancsokat újraszámolja. Rés: üres signhelyek két aktív sign között (1 = a tesztelt elrendezés, 0,5 is lehet); lépésköz = 40×(rés+1) és 20×(rés+1). Kicsinyítéskor a rések is szűkülnek: ha alakzatok összeérnek, nagyobb cellamélység kell.</div>
+    </section>
+    <h2 id="orderhint">Beviteli sorrend: A1 → B1 → C1 → A2 … cellán belül L1 (hátsó) → első</h2>
+    <div class="actions">
+      <button class="btn" id="addrow">+ sign</button>
+      <button class="btn" id="reset">Eredeti visszaállítása</button>
+      <button class="btn" id="export">Export Claude-nak</button>
+    </div>
+    <textarea class="export" id="exportbox" hidden readonly aria-label="Export"></textarea>
+    <section class="cellgroup" id="loader" hidden>
+      <div class="gh"><b>Betöltő</b><span>külön sign, közelebb a nézőhöz, mint a mű</span></div>
+      <div class="srow"><span class="ly">!</span><span></span><input id="loadertext" readonly aria-label="Betöltő sign parancsa"><span class="n"></span><span><button class="copy" id="loadercopy">Másol</button></span>
+        <div class="warn">Világító mód: a mű signjei a &lt;font=…&gt; álnévvel kezdődnek, ami csak akkor működik, ha ez a sign előbb töltődik be (a kis világító rúna jelzi). Ha a mű helyén tag-szöveg látszik, menj 100 m-nél messzebbre, és gyere vissza.</div></div>
+    </section>
+    <div id="rows"></div>
+    <details>
+      <summary>Játékbeli tesztek (mit igazoltunk eddig)</summary>
+      <div class="tests" id="tests"></div>
+    </details>
+  </aside>
+</div>
+
+<script>
+/*__DATA__*/
+const G = DATA.glyphs.glyphs, F = DATA.glyphs.fonts;
+const LIMIT = 50, SIGN_W = 40, SIGN_H = 20;
+const DEFAULT_COLOR = [0x1e, 0x1a, 0x12, 255];
+const TINT = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c",
+  "#fabebe", "#008080", "#e6beff", "#9a6324", "#fffac8", "#800000", "#aaffc3"];
+
+// ---------------------------------------------------------------- grid (mirrors engine.Grid)
+function rowName(i) { let s = ""; i += 1; while (i) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = Math.floor((i - 1) / 26); } return s; }
+function makeGrid(spec) {
+  const g = { cols: 3, rows: 3, depth: 5, gap_x: 1, gap_y: 1, backdrop: [], backdrop_depth: 5, ...(spec || {}) };
+  g.px = SIGN_W * (g.gap_x + 1); g.py = SIGN_H * (g.gap_y + 1);
+  g.cells = {}; g.order = []; g.xy = {};
+  if (g.positions && g.positions.length) {          // measured build (rig): explicit board positions
+    g.positions.forEach(([n, x, y]) => { g.cells[n] = [null, null, n.startsWith("BG")]; g.order.push(n); g.xy[n] = [x, y]; });
+  } else {
+    g.backdrop.forEach(([c, r], k) => { const n = "BG" + (k + 1); g.cells[n] = [c, r, true]; g.order.push(n); g.xy[n] = [g.px * c, -g.py * r]; });
+    for (let c = 0; c < g.cols; c++) for (let r = 0; r < g.rows; r++) { const n = rowName(r) + (c + 1); g.cells[n] = [c, r, false]; g.order.push(n); g.xy[n] = [g.px * c, -g.py * r]; }
+  }
+  g.cap = n => n.startsWith("BG") ? g.backdrop_depth : g.depth;
+  g.label = g.positions && g.positions.length ? `rig ${g.name || ""} (${g.positions.length}×${g.depth})` : `${g.cols}×${g.rows}×${g.depth}` + (g.backdrop.length ? ` + ${g.backdrop.length} háttér` : "");
+  const front = g.order.filter(n => !g.cells[n][2]).map(n => g.xy[n]);
+  g.centerX = (Math.min(...front.map(p => p[0])) + Math.max(...front.map(p => p[0]))) / 2;
+  g.topY = Math.max(...front.map(p => p[1])) + SIGN_H / 2;
+  g.spec = { cols: g.cols, rows: g.rows, depth: g.depth, gap_x: g.gap_x, gap_y: g.gap_y, backdrop: g.backdrop, backdrop_depth: g.backdrop_depth, positions: g.positions || [], name: g.name || "" };
+  return g;
+}
+
+// ---------------------------------------------------------------- command codec (mirrors engine.py)
+function parseHex(h) {
+  h = h.replace(/^#/, "");
+  if (h.length === 3 || h.length === 4) h = [...h].map(c => c + c).join("");
+  if (h.length === 6) h += "ff";
+  if (!/^[0-9a-fA-F]{8}$/.test(h)) throw new Error("bad color");
+  return [0, 2, 4, 6].map(i => parseInt(h.substr(i, 2), 16));
+}
+const NAMED = { red: "#f00", green: "#0f0", blue: "#00f", white: "#fff", black: "#000", yellow: "#ff0", orange: "#ff8000", purple: "#a020f0" };
+function parse(text) {
+  const c = { glyph: "", size: 1, pos: 0, voffset: 0, rotate: 0, scale: 1, color: DEFAULT_COLOR.slice(), font: null, warnings: [] };
+  let alpha = null, vis = "", i = 0;
+  while (i < text.length) {
+    if (text[i] === "<") {
+      const j = text.indexOf(">", i);
+      if (j > 0 && !text.slice(i + 1, j).includes("<")) {
+        const t = text.slice(i + 1, j); i = j + 1;
+        try {
+          if (t.startsWith("#")) c.color = parseHex(t);
+          else if (t.startsWith("color=")) { const v = t.slice(6).replace(/"/g, ""); c.color = parseHex(v.startsWith("#") ? v : NAMED[v.toLowerCase()]); }
+          else if (t.startsWith("font=")) c.font = t.slice(5).replace(/"/g, "");
+          else if (t.startsWith("alpha=#")) alpha = parseInt(t.slice(7, 9), 16);
+          else {
+            const m = t.match(/^(size|pos|voffset|rotate|scale)=([-+]?[\d.]+)$/);
+            if (m) c[m[1]] = parseFloat(m[2]); else c.warnings.push(`<${t}> nincs modellezve`);
+          }
+        } catch (e) { c.warnings.push(`rossz érték: <${t}>`); }
+        continue;
+      }
+    }
+    vis += text[i]; i++;
+  }
+  if (alpha !== null) c.color[3] = alpha;
+  const chars = [...vis.replace(/[︎️]/g, "")];
+  if (!chars.length) c.warnings.push("nincs látható glyph");
+  if (chars.length > 1) c.warnings.push("több glyph egy signben: sortörés, nincs modellezve");
+  c.glyph = chars[0] || "";
+  if (c.glyph && !G[c.glyph]) c.warnings.push(`a(z) ${c.glyph} nem renderelhető signen`);
+  if (text.length > LIMIT) c.warnings.push(`${text.length} karakter > ${LIMIT}: a játék levágja a végét`);
+  return c;
+}
+function num(v, nd) {
+  if (!nd) return String(Math.round(v));
+  let s = v.toFixed(nd).replace(/0+$/, "").replace(/\.$/, "");
+  if (s === "-0" || s === "") return "0";
+  return s.replace(/^(-?)0\./, "$1.");
+}
+function shortHex(rgba) {
+  const parts = rgba[3] < 255 ? rgba : rgba.slice(0, 3);
+  if (parts.every(p => p % 17 === 0)) return "#" + parts.map(p => (p / 17).toString(16)).join("");
+  return "#" + parts.map(p => p.toString(16).padStart(2, "0")).join("");
+}
+function encode(c) {
+  let s = c.font ? `<font=${c.font}>` : "";
+  if (c.color.join() !== DEFAULT_COLOR.join()) s += `<${shortHex(c.color)}>`;
+  s += `<size=${num(c.size)}>`;
+  if (Math.round(c.voffset)) s += `<voffset=${num(c.voffset)}>`;
+  if (Math.round(c.pos)) s += `<pos=${num(c.pos)}>`;
+  if (Math.round(c.rotate) % 360) s += `<rotate=${num(c.rotate)}>`;
+  if (Math.abs(c.scale - 1) > 0.005) s += `<scale=${num(c.scale, 2)}>`;
+  return s + c.glyph;
+}
+
+// ---------------------------------------------------------------- TMP layout model (mirrors engine.py)
+function centerOffset(ch, S, sx) {
+  const g = G[ch], f = F[g.f], [x0, y0, x1, y1] = g.bb;
+  return [2 * sx * S * ((x0 + x1) / 2 - g.adv / 2), -S * (f.A + f.D) + S * (y0 + y1)];
+}
+function layout(c, cell, grid) {
+  if (!c.glyph || !G[c.glyph] || !grid.cells[cell]) return null;
+  const bg = grid.cells[cell][2], [gx, gy] = grid.xy[cell], [dx, dy] = centerOffset(c.glyph, c.size, c.scale);
+  return { glyph: c.glyph, x: c.pos + dx + gx, y: c.voffset + dy + gy, size: c.size, scale: c.scale, rotate: c.rotate, color: c.color, cell, backdrop: bg, font: c.font };
+}
+const pyRound = v => { const r = Math.round(v); return (Math.abs(v % 1) === 0.5 && r % 2) ? r - 1 : r; };  // Python's banker's rounding
+const SYM180 = "■□●○◆◇◯⭕█▬━─│┃|-=+×✕╳◎◉⊕⊗※✳✴❖♦♢◊";
+const mod = (a, n) => ((a % n) + n) % n;
+const ROT_FAMILIES = [{ "▲": 0, "◀": 90, "▼": 180, "▶": 270 }, { "◢": 0, "◥": 90, "◤": 180, "◣": 270 }];
+function rotationTwin(ch, rot, sx) {
+  const fam = ROT_FAMILIES.find(f => ch in f);
+  if (!fam || sx < 0) return [ch, rot];
+  const total = fam[ch] + rot;
+  let best = [ch, rot];
+  for (const [m, base] of Object.entries(fam)) {
+    if (Math.abs(sx - 1) > 0.005 && mod(base - fam[ch], 180)) continue;
+    const r = mod(total - base + 180, 360) - 180;
+    if (Math.abs(r) < Math.abs(mod(best[1] + 180, 360) - 180)) best = [m, r];
+  }
+  return best;
+}
+function toCmd(p, cell, grid) {
+  const [gx, gy] = grid.xy[cell];
+  const S = Math.max(1, pyRound(p.size)), sx = pyRound(p.scale * 100) / 100;
+  let [glyph, rot] = rotationTwin(p.glyph, pyRound(p.rotate), sx);
+  const [dx, dy] = centerOffset(glyph, S, sx);
+  rot = SYM180.includes(glyph) ? mod(rot + 89, 180) - 89 : mod(rot + 180, 360) - 180;
+  const c = { glyph, size: S, pos: pyRound(p.x - dx - gx), voffset: pyRound(p.y - dy - gy), rotate: rot, scale: sx, color: p.color, font: p.font || null, warnings: [] };
+  return encode(c).length > LIMIT ? shorten(c) : c;
+}
+function shorten(c) {
+  const L = x => encode(x).length;
+  let best = { ...c };
+  if (Math.abs(c.scale - 1) > 0.005 && pyRound(c.scale * 10) / 10 !== c.scale) {
+    const t = { ...c, scale: pyRound(c.scale * 10) / 10 };
+    if (t.scale && Math.abs(t.scale - c.scale) / Math.abs(c.scale) < 0.04) best = t;
+  }
+  for (const [field, tol] of [["pos", 3], ["voffset", 3], ["size", null]]) {
+    if (L(best) <= LIMIT) break;
+    const v = best[field];
+    for (const target of [99, -9, 999]) {
+      const tl = tol !== null ? tol : Math.max(1, Math.abs(v) * 0.04);
+      if (Math.abs(v) > Math.abs(target) && Math.abs(v) - Math.abs(target) <= tl && (v > 0) === (target > 0)) {
+        let t = { ...best, [field]: target };
+        if (field === "size") {
+          const [dx0, dy0] = centerOffset(c.glyph, best.size, best.scale), [dx1, dy1] = centerOffset(c.glyph, target, best.scale);
+          t = { ...t, pos: pyRound(best.pos + dx0 - dx1), voffset: pyRound(best.voffset + dy0 - dy1) };
+        }
+        best = t; break;
+      }
+    }
+  }
+  return best;
+}
+const PATHS = {};
+function path(ch) { return PATHS[ch] || (PATHS[ch] = new Path2D(G[ch].d)); }
+function glyphXform(ctx, p) {
+  const [x0, y0, x1, y1] = G[p.glyph].bb;
+  ctx.translate(p.x, p.y); ctx.rotate(p.rotate * Math.PI / 180);
+  ctx.scale(2 * p.size * p.scale, 2 * p.size); ctx.translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+}
+function corners(p) {
+  const [x0, y0, x1, y1] = G[p.glyph].bb, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, a = p.rotate * Math.PI / 180;
+  const sx = 2 * p.size * p.scale, sy = 2 * p.size;
+  return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(([u, v]) => {
+    const X = (u - cx) * sx, Y = (v - cy) * sy;
+    return [p.x + X * Math.cos(a) - Y * Math.sin(a), p.y + X * Math.sin(a) + Y * Math.cos(a)];
+  });
+}
+function bounds(placed, margin = 40) {
+  let l = Infinity, b = Infinity, r = -Infinity, t = -Infinity;
+  placed.forEach(p => corners(p).forEach(([x, y]) => { l = Math.min(l, x); r = Math.max(r, x); b = Math.min(b, y); t = Math.max(t, y); }));
+  if (!isFinite(l)) return [-100, -100, 100, 100];
+  return [l - margin, b - margin, r + margin, t + margin];
+}
+function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${(a ?? c[3]) / 255})`; }
+// The sign text uses "TextMeshPro/Distance Field (Surface)": it is lit like a board. Rough light
+// presets: per-channel factor on the glyph colour (the alpha and the sky behind stay as they are).
+const LIGHTS = {
+  front: { sky: "#86aecb", k: [1, 1, 1] },
+  back: { sky: "#d4e6f2", k: [0.34, 0.42, 0.55] },
+  dusk: { sky: "#3a3150", k: [0.45, 0.33, 0.36] },
+  night: { sky: "#0b121b", k: [0.1, 0.12, 0.17] },
+};
+let light = "front";
+function lit(c) { const k = LIGHTS[light].k; return [Math.round(c[0] * k[0]), Math.round(c[1] * k[1]), Math.round(c[2] * k[2]), c[3]]; }
+// fill + faux-bold growth are one SDF pass in game: a translucent glyph is drawn opaque on a scratch
+// canvas and composited once, so its rim does not get double alpha
+let scratch = null;
+function drawGlyph(ctx, p, fill, alpha = 1) {
+  const bold = F[G[p.glyph].f].bold;
+  const paint = c => { c.save(); glyphXform(c, p); c.fillStyle = fill; c.fill(path(p.glyph));
+    if (bold > 0) { c.strokeStyle = fill; c.lineJoin = "round"; c.lineWidth = 2 * bold; c.stroke(path(p.glyph)); } c.restore(); };
+  if (alpha >= 1) { paint(ctx); return; }
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  if (!scratch) scratch = document.createElement("canvas");
+  if (scratch.width !== W || scratch.height !== H) { scratch.width = W; scratch.height = H; }
+  const s = scratch.getContext("2d");
+  s.setTransform(1, 0, 0, 1, 0, 0); s.clearRect(0, 0, W, H); s.setTransform(ctx.getTransform());
+  paint(s);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = alpha; ctx.drawImage(scratch, 0, 0); ctx.restore();
+}
+function sorted(placed, grid) {
+  return placed.filter(Boolean).slice().sort((a, b) => (b.backdrop - a.backdrop) || (grid.order.indexOf(a.cell) - grid.order.indexOf(b.cell)) || (a.layer - b.layer));
+}
+
+// ---------------------------------------------------------------- touching pixels
+function touchPairs(placed, grow = 1) {
+  placed = placed.filter(Boolean);
+  if (placed.length < 2) return [];
+  const res = 2;
+  const [l, b, r, t] = bounds(placed, 20), W = Math.ceil((r - l) / res) + 1, H = Math.ceil((t - b) / res) + 1;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  const masks = placed.map(p => {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+    ctx.setTransform(1 / res, 0, 0, -1 / res, -l / res, t / res);
+    ctx.save(); glyphXform(ctx, p); ctx.fillStyle = "#fff"; ctx.fill(path(p.glyph));
+    ctx.strokeStyle = "#fff"; ctx.lineJoin = "round"; ctx.lineWidth = 2 * (F[G[p.glyph].f].bold + grow / (2 * p.size)); ctx.stroke(path(p.glyph));
+    ctx.restore();
+    const box = corners(p).reduce((a, [x, y]) => [Math.min(a[0], x), Math.min(a[1], y), Math.max(a[2], x), Math.max(a[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+    const px0 = Math.max(0, Math.floor((box[0] - l) / res) - 2), px1 = Math.min(W - 1, Math.ceil((box[2] - l) / res) + 2);
+    const py0 = Math.max(0, Math.floor((t - box[3]) / res) - 2), py1 = Math.min(H - 1, Math.ceil((t - box[1]) / res) + 2);
+    const w = px1 - px0 + 1, h = py1 - py0 + 1;
+    const data = ctx.getImageData(px0, py0, w, h).data;
+    const m = new Uint8Array(w * h); for (let k = 0; k < w * h; k++) m[k] = data[k * 4 + 3] > 0 ? 1 : 0;
+    return { px0, py0, w, h, m };
+  });
+  const out = [];
+  for (let i = 0; i < placed.length; i++) for (let j = i + 1; j < placed.length; j++) {
+    const A = masks[i], B = masks[j];
+    const x0 = Math.max(A.px0, B.px0), x1 = Math.min(A.px0 + A.w, B.px0 + B.w), y0 = Math.max(A.py0, B.py0), y1 = Math.min(A.py0 + A.h, B.py0 + B.h);
+    let hit = null;
+    for (let y = y0; y < y1 && !hit; y++) for (let x = x0; x < x1; x++) {
+      if (A.m[(y - A.py0) * A.w + (x - A.px0)] && B.m[(y - B.py0) * B.w + (x - B.px0)]) { hit = [l + x * res, t - y * res]; break; }
+    }
+    if (hit) out.push({ i, j, at: hit });
+  }
+  return out;
+}
+// different cells must not share pixels (backdrop cells may sit under front cells)
+function crossCell(placed) {
+  const list = placed.filter(Boolean);
+  return touchPairs(list, 1).filter(h => list[h.i].cell !== list[h.j].cell && list[h.i].backdrop === list[h.j].backdrop)
+    .map(h => ({ ...h, a: list[h.i], b: list[h.j] }));
+}
+
+// ---------------------------------------------------------------- cell assignment (mirrors engine.assign_cells)
+function assignCells(items, grid) {
+  // items: [{glyph,x,y,size,scale,rotate,color,z,backdrop,tag}] -> rows or throws (mirror of engine.assign_cells)
+  const n = items.length, parent = [...Array(n).keys()];
+  const find = a => { while (parent[a] !== a) { parent[a] = parent[parent[a]]; a = parent[a]; } return a; };
+  touchPairs(items, 2).forEach(({ i, j }) => { if (items[i].backdrop === items[j].backdrop) parent[find(i)] = find(j); });
+  const groups = {};
+  for (let i = 0; i < n; i++) (groups[find(i)] ||= []).push(i);
+  const list = Object.values(groups);
+  const front = grid.order.filter(c => !grid.cells[c][2]), back = grid.order.filter(c => grid.cells[c][2]);
+  if (items.some(p => p.backdrop) && !back.length) throw new Error("háttér-glyphek vannak, de a rácsnak nincs háttér-cellája");
+  const loose = list.filter(g => g.length === 1 && !items[g[0]].backdrop).map(g => g[0]), looseSet = new Set(loose);
+  const islands = list.filter(g => !(g.length === 1 && looseSet.has(g[0])));
+  const load = Object.fromEntries(grid.order.map(c => [c, 0])), plan = new Map(), idx = c => grid.order.indexOf(c);
+  const cost = (g, c) => {
+    let over = 0, total = 0;
+    g.forEach(i => { const L = encode(toCmd(items[i], c, grid)).length; over += Math.max(0, L - LIMIT); total += L; });
+    return [over, total];
+  };
+  islands.slice().sort((a, b) => b.length - a.length).forEach(g => {
+    const pool = items[g[0]].backdrop ? back : front;
+    const fits = pool.filter(c => load[c] + g.length <= grid.cap(c));
+    if (!fits.length) throw new Error(`${g.length} egymást érintő glyph nem fér egy cellába (${grid.label})`);
+    const cs = Object.fromEntries(fits.map(c => [c, cost(g, c)]));
+    fits.sort((a, b) => (cs[a][0] - cs[b][0]) || (load[a] - load[b]) || (cs[a][1] - cs[b][1]) || (idx(a) - idx(b)));
+    plan.set(g, fits[0]); load[fits[0]] += g.length;
+  });
+  const rows = [], used = Object.fromEntries(grid.order.map(c => [c, new Set()]));
+  const row = (i, c, L) => { rows.push({ cell: c, layer: L, z: items[i].z, tag: items[i].tag || "", text: encode(toCmd(items[i], c, grid)) }); used[c].add(L); };
+  grid.order.forEach(c => {
+    const members = islands.filter(g => plan.get(g) === c).flat().sort((a, b) => items[a].z - items[b].z);
+    if (members.length > grid.cap(c)) throw new Error(`a ${c} cellában ${members.length} glyph > ${grid.cap(c)}`);
+    members.forEach((i, k) => row(i, c, k + 1));
+  });
+  // loose glyphs: one layer (depth plane) per tag set, the front-most that keeps every command within 50
+  const memo = new Map(), cost1 = (i, c) => { const k = i + "|" + c; if (!memo.has(k)) memo.set(k, cost([i], c)); return memo.get(k); };
+  const match = (todo, cands) => {
+    const pairs = [];
+    todo.forEach((i, k) => cands.forEach(c => pairs.push({ co: cost1(i, c), k, ci: idx(c), i, c })));
+    pairs.sort((a, b) => (a.co[0] - b.co[0]) || (a.co[1] - b.co[1]) || (a.k - b.k) || (a.ci - b.ci));
+    const gi = new Set(), gc = new Set(), out = []; let over = 0;
+    pairs.forEach(p => { if (!gi.has(p.i) && !gc.has(p.c)) { gi.add(p.i); gc.add(p.c); out.push([p.i, p.c]); over += p.co[0]; } });
+    return [out, over];
+  };
+  const sets = new Map();
+  loose.slice().sort((a, b) => items[a].z - items[b].z).forEach(i => { const k = items[i].tag || ""; if (!sets.has(k)) sets.set(k, []); sets.get(k).push(i); });
+  [...sets.values()].sort((a, b) => (b.length - a.length) || (items[a[0]].z - items[b[0]].z)).forEach(members => {
+    let todo = members.slice();
+    while (todo.length) {
+      const Ls = [...Array(grid.depth).keys()].map(k => grid.depth - k), room = {};
+      Ls.forEach(L => room[L] = front.filter(c => !used[c].has(L)));
+      const whole = Ls.filter(L => room[L].length >= todo.length);
+      let L, out;
+      if (whole.length) {
+        const trials = whole.map(L => [L, ...match(todo, room[L])]);
+        const zero = trials.find(t => t[2] === 0);
+        [L, out] = zero || trials.slice().sort((a, b) => (a[2] - b[2]) || (b[0] - a[0]))[0];
+        if (!zero) { const ok = out.filter(([i, c]) => cost1(i, c)[0] === 0); if (ok.length) out = ok; }   // over 50: leave the plane
+      } else {
+        L = Ls.slice().sort((a, b) => (room[b].length - room[a].length) || (b - a))[0];
+        if (!room[L].length) throw new Error("nincs több szabad sign a rácsban");
+        [out] = match(todo.slice(0, room[L].length), room[L]);
+      }
+      out.forEach(([i, c]) => row(i, c, L));
+      const done = new Set(out.map(([i]) => i));
+      todo = todo.filter(i => !done.has(i));
+    }
+  });
+  // repair: a loose glyph still over 50 moves to any free sign, or swaps with another loose glyph
+  const at = new Map(rows.map(r => [r.z, r])), lz = loose.slice().sort((a, b) => items[a].z - items[b].z);
+  const set = (i, c, L) => { const r = at.get(items[i].z); r.cell = c; r.layer = L; r.text = encode(toCmd(items[i], c, grid)); };
+  lz.forEach(i => {
+    const r = at.get(items[i].z);
+    if (cost1(i, r.cell)[0] === 0) return;
+    for (let L = grid.depth; L >= 1; L--) for (const c of front) {
+      if (!used[c].has(L) && cost1(i, c)[0] === 0) { used[r.cell].delete(r.layer); set(i, c, L); used[c].add(L); return; }
+    }
+    for (const j of lz) {
+      const q = at.get(items[j].z);
+      if (j !== i && cost1(i, q.cell)[0] === 0 && cost1(j, r.cell)[0] === 0) {
+        const [c1, L1, c2, L2] = [r.cell, r.layer, q.cell, q.layer]; set(i, c2, L2); set(j, c1, L1); return;
+      }
+    }
+  });
+  rows.sort((a, b) => (idx(a.cell) - idx(b.cell)) || (a.layer - b.layer));
+  return rows;
+}
+
+// ---------------------------------------------------------------- state
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+const concepts = DATA.concepts.filter(c => c.rows);
+let cur = null, grid = makeGrid(), rows = [], sel = -1, view = "art", sky = "#86aecb", hits = [];
+function load(key) {
+  cur = concepts.find(c => c.key === key) || concepts[concepts.length - 1];
+  let saved = null;
+  try { saved = JSON.parse(store.get("signart:" + cur.key) || "null"); } catch (e) {}
+  if (Array.isArray(saved)) saved = { grid: cur.grid, rows: saved };      // older saves: rows only
+  grid = makeGrid(saved?.grid || cur.grid);
+  rows = saved?.rows || cur.rows.map((r, i) => ({ cell: r.cell, layer: r.layer, text: r.text, z: r.z ?? i, tag: r.tag || "" }));
+  sel = -1; store.set("signart:last", cur.key);
+  document.querySelectorAll(".card").forEach(el => el.setAttribute("aria-current", String(el.dataset.key === cur.key)));
+  document.getElementById("ctitle").textContent = cur.title;
+  document.getElementById("cidea").textContent = cur.idea;
+  document.getElementById("exportbox").hidden = true;
+  const ld = document.getElementById("loader"); ld.hidden = !cur.loader;
+  if (cur.loader) { document.getElementById("loadertext").value = cur.loader; ld.querySelector(".n").textContent = cur.loader.length; }
+  gridPanel(); refresh();
+}
+function save() { store.set("signart:" + cur.key, JSON.stringify({ grid: grid.spec, rows })); }
+function relayer() {
+  // layers are depth planes (loose glyphs share one on purpose): renumber a cell only if it has clashes
+  grid.order.forEach(c => {
+    const rs = rows.filter(r => r.cell === c), ls = rs.map(r => r.layer);
+    const ok = ls.every(l => Number.isInteger(l) && l >= 1 && l <= grid.cap(c)) && new Set(ls).size === ls.length;
+    if (!ok) rs.sort((a, b) => (a.layer - b.layer) || ((a.z ?? 0) - (b.z ?? 0))).forEach((r, k) => r.layer = k + 1);
+  });
+  rows.sort((a, b) => (grid.order.indexOf(a.cell) - grid.order.indexOf(b.cell)) || (a.layer - b.layer));
+}
+function placedRows() {
+  return rows.map((r, i) => { const c = parse(r.text), p = layout(c, r.cell, grid); if (p) { p.layer = r.layer; p.row = i; p.z = r.z ?? i; p.tag = r.tag || ""; } return p; });
+}
+
+// ---------------------------------------------------------------- grid panel
+function gridPanel(msg, bad) {
+  const set = (id, v) => document.getElementById(id).value = v;
+  set("g-cols", grid.cols); set("g-rows", grid.rows); set("g-depth", grid.depth);
+  set("g-gapx", grid.gap_x); set("g-gapy", grid.gap_y); set("g-bg", grid.backdrop.length);
+  document.getElementById("glabel").textContent = grid.label;
+  const first = grid.order.slice(0, 4).join(" → ");
+  document.getElementById("orderhint").textContent = `Beviteli sorrend: ${first} … cellán belül L1 (hátsó) → L${grid.depth} (első)`;
+  const m = document.getElementById("gmsg");
+  if (msg) { m.textContent = msg; m.classList.toggle("bad", !!bad); }
+}
+function regrid() {
+  const v = id => Math.max(0, parseFloat(String(document.getElementById(id).value).replace(",", ".")) || 0);
+  const cols = Math.max(1, Math.round(v("g-cols"))), rws = Math.max(1, Math.round(v("g-rows"))), nbg = Math.round(v("g-bg"));
+  const backdrop = [...Array(nbg).keys()].map(k => [Math.min(cols - 1, Math.floor(cols / 2) + k - Math.floor(nbg / 2)), Math.floor(rws / 2)].map(x => Math.max(0, x)));
+  const depth = Math.max(1, Math.round(v("g-depth")));
+  const spec = { cols, rows: rws, depth, gap_x: v("g-gapx"), gap_y: v("g-gapy"), backdrop, backdrop_depth: depth };
+  let items = placedRows().filter(Boolean).map(p => ({ ...p, backdrop: p.backdrop && nbg > 0 }));
+  const ng = makeGrid(spec);
+  const f = (v("g-scale") || 100) / 100;
+  if (document.getElementById("g-center").checked || Math.abs(f - 1) > 1e-9) items = placeArt(items, ng, f, document.getElementById("g-center").checked ? v("g-above") : null);
+  try {
+    const nrows = assignCells(items, ng);
+    grid = ng; rows = nrows; sel = -1; save();
+    const used = new Set(rows.map(r => r.cell)).size;
+    gridPanel(`Kész: ${rows.length} sign ${used} cellában (${grid.label}).`);
+    refresh();
+  } catch (e) { gridPanel(e.message + " Növeld a mélységet vagy a cellák számát.", true); }
+}
+
+// scale the design about its centre; optionally centre it over the build, bottom `above` signs over the top boards
+function placeArt(items, g, f, above) {
+  const [l, b, r, t] = bounds(items, 0), cx = (l + r) / 2, cy = (b + t) / 2;
+  const nx = above === null ? cx : g.centerX;
+  const ny = above === null ? cy : g.topY + above * SIGN_H + (t - b) * f / 2;
+  return items.map(p => ({ ...p, x: nx + (p.x - cx) * f, y: ny + (p.y - cy) * f, size: p.size * f }));
+}
+
+// ---------------------------------------------------------------- rendering
+const stage = document.getElementById("stage");
+let viewXf = null;
+function boardPoints(g) { return g.order.map(n => ({ glyph: "■", x: g.xy[n][0], y: g.xy[n][1], size: 12, scale: 1, rotate: 0 })); }
+function drawScene(canvas, placed, opts, g = grid) {
+  const dpr = window.devicePixelRatio || 1, W = canvas.clientWidth * dpr, H = canvas.clientHeight * dpr;
+  if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = opts.sky; ctx.fillRect(0, 0, W, H);
+  const list = placed.filter(Boolean);
+  const [l, b, r, t] = bounds(opts.boards ? list.concat(boardPoints(g)) : list, 40);
+  const k = Math.min(W / (r - l), H / (t - b)), ox = (W - (r - l) * k) / 2 - l * k, oy = (H - (t - b) * k) / 2 + t * k;
+  const xf = [k, 0, 0, -k, ox, oy];
+  ctx.setTransform(...xf);
+  if (opts.boards) {
+    g.order.forEach(n => { ctx.fillStyle = g.cells[n][2] ? "rgba(138,106,67,.45)" : "rgba(138,106,67,.85)"; ctx.fillRect(g.xy[n][0] - 20, g.xy[n][1] - 10, 40, 20); });
+  }
+  sorted(list, g).forEach(p => opts.cells ? drawGlyph(ctx, p, TINT[g.order.indexOf(p.cell) % TINT.length], 0.67)
+    : drawGlyph(ctx, p, rgba(opts.lit === false || p.font ? p.color : lit(p.color), 255), p.color[3] / 255));
+  if (opts.sel != null && placed[opts.sel]) {
+    const p = placed[opts.sel]; ctx.save(); glyphXform(ctx, p);
+    const u = 1 / (k * 2 * p.size);
+    ctx.strokeStyle = "#6de3f0"; ctx.lineWidth = 3 * u; ctx.setLineDash([6 * u, 4 * u]); ctx.stroke(path(p.glyph)); ctx.restore();
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (opts.boards || opts.cells) {
+    ctx.font = `${12 * dpr}px ${getComputedStyle(document.body).fontFamily}`; ctx.textAlign = "center";
+    if (opts.boards) g.order.forEach(name => { ctx.fillStyle = "#e8e2d2"; ctx.fillText(name, ox + g.xy[name][0] * k, oy + (-g.xy[name][1] + 24) * k + 10 * dpr); });
+    if (opts.cells) list.forEach(p => { ctx.fillStyle = "#fff"; ctx.fillText(`${p.cell}·${p.layer}`, ox + p.x * k, oy - p.y * k + 4 * dpr); });
+  }
+  if (opts.hits) opts.hits.forEach(h => {
+    ctx.strokeStyle = "#ef6b5b"; ctx.lineWidth = 2.5 * dpr; ctx.beginPath();
+    ctx.arc(ox + h.at[0] * k, oy - h.at[1] * k, 11 * dpr, 0, Math.PI * 2); ctx.stroke();
+  });
+  return xf;
+}
+function render() {
+  const placed = placedRows();
+  viewXf = drawScene(stage, placed, { sky, cells: view === "cells", boards: document.getElementById("o-boards").checked,
+    hits: document.getElementById("o-hits").checked ? hits : null, sel: sel >= 0 ? sel : null });
+}
+let hitTimer = null;
+function refresh(fast) {
+  relayer(); renderRows(); render(); stats();
+  clearTimeout(hitTimer);
+  hitTimer = setTimeout(() => { hits = crossCell(placedRows()); render(); stats(); }, fast ? 250 : 0);
+}
+
+// ---------------------------------------------------------------- UI: stats, rows, inspector
+function stats() {
+  const parsed = rows.map(r => parse(r.text));
+  const over = rows.filter(r => r.text.length > LIMIT).length;
+  const neg = parsed.filter(c => c.pos < 0).length;
+  const full = grid.order.filter(c => rows.filter(r => r.cell === c).length > grid.cap(c));
+  const cells = new Set(rows.map(r => r.cell)).size;
+  const pills = [cur.mode === "detailed" ? `<span class="pill warn">részletes mód: csak mentés-szerkesztéssel (később mod)</span>`
+      : `<span class="pill ok">gépelhető: bárki bemásolhatja a játékban</span>`,
+    `<span class="pill">${rows.length} sign · ${cells} cella · ${grid.label}</span>`,
+    `<span class="pill ${over ? "bad" : "ok"}">${over ? over + " túl hosszú" : "mind ≤ 50 karakter"}</span>`,
+    `<span class="pill ${hits.length ? "bad" : "ok"}">${hits.length ? hits.length + " cellaközi ütközés" : "nincs cellaközi ütközés"}</span>`];
+  if (full.length) pills.push(`<span class="pill bad">${full.join(", ")}: több réteg, mint a mélység</span>`);
+  if (grid.backdrop.length) pills.push(`<span class="pill warn">háttér-cella: kísérleti</span>`);
+  document.getElementById("stats").innerHTML = pills.join("");
+}
+function thumb(canvas, ch, color, mirror) {
+  const dpr = window.devicePixelRatio || 1, s = canvas.clientWidth * dpr || 26 * dpr;
+  canvas.width = s; canvas.height = s;
+  const ctx = canvas.getContext("2d");
+  if (!G[ch]) return;
+  const [x0, y0, x1, y1] = G[ch].bb, k = (s * 0.8) / Math.max(x1 - x0, y1 - y0, 1e-3), kx = mirror ? -k : k;
+  ctx.setTransform(kx, 0, 0, -k, s / 2 - kx * (x0 + x1) / 2, s / 2 + k * (y0 + y1) / 2);
+  ctx.fillStyle = color; ctx.fill(path(ch));
+}
+function renderRows() {
+  const box = document.getElementById("rows"); box.innerHTML = "";
+  grid.order.forEach(cell => {
+    const idx = rows.map((r, i) => i).filter(i => rows[i].cell === cell);
+    if (!idx.length) return;
+    const g = document.createElement("section"); g.className = "cellgroup" + (grid.cells[cell][2] ? " bg" : "");
+    const cap = grid.cap(cell);
+    g.innerHTML = `<div class="gh"><b>${cell}</b><span>${grid.cells[cell][2] ? "háttér, a rács mögött · " : ""}${idx.length}/${cap} sign${idx.length > cap ? " — túl sok" : ""}</span></div>`;
+    idx.forEach(i => {
+      const r = rows[i], c = parse(r.text);
+      const el = document.createElement("div"); el.className = "srow"; el.setAttribute("aria-selected", String(i === sel)); el.dataset.i = i;
+      el.innerHTML = `<span class="ly">L${r.layer}</span><canvas></canvas><input id="cmd-${cur.key}-${i}" spellcheck="false" aria-label="${cell} L${r.layer} parancs">` +
+        `<span class="n ${r.text.length > LIMIT ? "over" : ""}">${r.text.length}</span><span><button class="copy">Másol</button><button class="x" title="Sign törlése" aria-label="Sign törlése">×</button></span>`;
+      const inp = el.querySelector("input"); inp.value = r.text;
+      if (c.warnings.length) inp.classList.add("badtext");
+      if (c.warnings.length) { const w = document.createElement("div"); w.className = "warn"; w.textContent = c.warnings.join(" · "); el.appendChild(w); }
+      g.appendChild(el);
+      requestAnimationFrame(() => thumb(el.querySelector("canvas"), c.glyph, rgba(c.color, 255), c.scale < 0));
+      inp.addEventListener("focus", () => select(i, false));
+      inp.addEventListener("change", () => { rows[i].text = inp.value; save(); refresh(true); });
+      el.querySelector(".copy").addEventListener("click", ev => copyText(rows[i].text, ev.currentTarget, inp));
+      el.querySelector(".x").addEventListener("click", () => { rows.splice(i, 1); sel = -1; save(); refresh(true); });
+      el.addEventListener("click", ev => { if (ev.target === el || ev.target.tagName === "CANVAS" || ev.target.classList.contains("ly")) select(i); });
+    });
+    box.appendChild(g);
+  });
+  inspector();
+}
+function copyText(text, btn, fallbackInput) {
+  const done = () => { btn.textContent = "Kész"; btn.classList.add("done"); setTimeout(() => { btn.textContent = "Másol"; btn.classList.remove("done"); }, 1200); };
+  try { navigator.clipboard.writeText(text).then(done, () => { fallbackInput?.select(); }); } catch (e) { fallbackInput?.select(); }
+}
+function select(i, focusRow = true) {
+  sel = i;
+  document.querySelectorAll(".srow").forEach(el => el.setAttribute("aria-selected", String(+el.dataset.i === i)));
+  if (focusRow) document.querySelector(`.srow[data-i="${i}"]`)?.scrollIntoView({ block: "nearest" });
+  inspector(); render();
+}
+function inspector() {
+  const box = document.getElementById("insp"), nud = document.getElementById("nudge");
+  if (sel < 0 || !rows[sel]) { box.textContent = "Kattints egy alakzatra a képen vagy egy sorra jobbra."; nud.hidden = true; return; }
+  const r = rows[sel], c = parse(r.text), g = G[c.glyph];
+  box.innerHTML = `<dl class="kv"><dt>Hely</dt><dd>${r.cell} · L${r.layer}</dd><dt>Glyph</dt><dd>${c.glyph} ${g ? g.n + " (" + g.f + ")" : ""}</dd>` +
+    `<dt>size / pos / voffset</dt><dd>${c.size} / ${c.pos} / ${c.voffset}</dd><dt>rotate / scale</dt><dd>${c.rotate}° / ${c.scale}</dd>` +
+    `<dt>Szín</dt><dd>${shortHex(c.color)}</dd><dt>Karakter</dt><dd>${r.text.length} / ${LIMIT}</dd></dl>`;
+  nud.hidden = false;
+}
+function nudge(field, d) {
+  if (sel < 0) return;
+  const c = parse(rows[sel].text);
+  if (field === "mirror") {
+    // flip in place: keep the glyph centre where it is
+    const p = layout(c, rows[sel].cell, grid); p.scale = -p.scale;
+    const n = toCmd(p, rows[sel].cell, grid); rows[sel].text = encode(n);
+  } else {
+    c[field] = field === "scale" ? Math.round((c[field] + d) * 100) / 100 : c[field] + d;
+    if (field === "size") c.size = Math.max(1, c.size);
+    rows[sel].text = encode(c);
+  }
+  save();
+  const inp = document.querySelector(`.srow[data-i="${sel}"] input`); if (inp) inp.value = rows[sel].text;
+  refresh(true);
+}
+
+// ---------------------------------------------------------------- shelf, palette, tests
+function shelf() {
+  const box = document.getElementById("shelf");
+  const rounds = [...new Set(concepts.map(c => c.round))];
+  rounds.slice().reverse().forEach(rd => {
+    const h = document.createElement("h2"); h.textContent = rd.replace("round", "") + ". kör"; box.appendChild(h);
+    concepts.filter(c => c.round === rd).forEach(c => {
+      const b = document.createElement("button"); b.className = "card"; b.dataset.key = c.key;
+      const mode = c.mode === "detailed" ? "részletes · mentés" : "gépelhető";
+      b.innerHTML = `<canvas></canvas><div><b></b><span>${mode} · ${c.signs} sign · ${c.grid?.label || "3×3×5"}</span></div>`;
+      b.querySelector("b").textContent = c.title;
+      b.addEventListener("click", () => load(c.key));
+      box.appendChild(b);
+      requestAnimationFrame(() => {
+        const g = makeGrid(c.grid);
+        const placed = c.rows.map(r => { const p = layout(parse(r.text), r.cell, g); if (p) p.layer = r.layer; return p; });
+        drawScene(b.querySelector("canvas"), placed, { sky: "#0f1a26", lit: false }, g);
+      });
+    });
+  });
+}
+const PAL = {
+  "Formák": [[0x25A0, 0x25FF], [0x2580, 0x259F]],
+  "Vonalak, nyilak": [[0x2500, 0x257F], [0x2190, 0x21FF], [0x2B00, 0x2BFF]],
+  "Rúnák, betűk": [[0x16A0, 0x16F0], [0x21, 0x7E], [0xA1, 0x17F]],
+  "Szimbólumok": [[0x2600, 0x27BF], [0x2200, 0x23FF], [0x3000, 0x303F]],
+  "Emoji": [[0x1F300, 0x1FAFF]],
+};
+function palette(tab) {
+  const tabs = document.getElementById("ptabs"), gridEl = document.getElementById("pgrid");
+  tabs.innerHTML = ""; gridEl.innerHTML = "";
+  Object.keys(PAL).forEach(t => { const b = document.createElement("button"); b.className = "btn"; b.textContent = t; if (t === tab) b.classList.add("primary"); b.onclick = () => palette(t); tabs.appendChild(b); });
+  const chars = Object.keys(G).filter(ch => PAL[tab].some(([a, z]) => ch.codePointAt(0) >= a && ch.codePointAt(0) <= z));
+  chars.sort((a, b) => a.codePointAt(0) - b.codePointAt(0)).forEach(ch => {
+    const b = document.createElement("button"); b.title = `${ch} ${G[ch].n}`; b.setAttribute("aria-label", G[ch].n); b.dataset.ch = ch;
+    b.innerHTML = "<canvas></canvas>"; gridEl.appendChild(b);
+    b.onclick = () => {
+      if (sel >= 0) { const c = parse(rows[sel].text); c.glyph = ch; rows[sel].text = encode(c); save(); refresh(true); }
+      else navigator.clipboard?.writeText(ch).catch(() => {});
+    };
+  });
+  requestAnimationFrame(() => gridEl.querySelectorAll("button").forEach(b => thumb(b.querySelector("canvas"), b.dataset.ch, "#e8e2d2")));
+}
+function tests() {
+  const box = document.getElementById("tests");
+  DATA.tests.forEach(t => {
+    const d = document.createElement("div"); d.className = "test";
+    const cls = t.status === "ok" ? "ok" : t.status === "fail" ? "bad" : "warn";
+    const label = t.status === "ok" ? "igazolva" : t.status === "fail" ? "nem működik" : "tesztelendő";
+    d.innerHTML = `<div class="top"><b></b><span class="pill ${cls}">${label}</span></div><code></code><p></p>`;
+    d.querySelector("b").textContent = t.name; d.querySelector("code").textContent = t.cmd; d.querySelector("p").textContent = t.note;
+    box.appendChild(d);
+  });
+}
+
+// ---------------------------------------------------------------- events
+document.getElementById("v-art").onclick = () => { view = "art"; setPressed("v-art", "v-cells"); render(); };
+document.getElementById("v-cells").onclick = () => { view = "cells"; setPressed("v-cells", "v-art"); render(); };
+function setPressed(on, off) { document.getElementById(on).setAttribute("aria-pressed", "true"); document.getElementById(off).setAttribute("aria-pressed", "false"); }
+document.querySelectorAll("[data-light]").forEach(b => b.onclick = () => {
+  light = b.dataset.light; sky = LIGHTS[light].sky;
+  document.querySelectorAll("[data-light]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); render();
+});
+document.getElementById("o-boards").onchange = render;
+document.getElementById("o-hits").onchange = render;
+document.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { const [f, d] = b.dataset.n.split(":"); nudge(f, parseFloat(d)); });
+document.getElementById("regrid").onclick = regrid;
+document.getElementById("loadercopy").onclick = ev => copyText(cur.loader, ev.currentTarget, document.getElementById("loadertext"));
+document.getElementById("reset").onclick = () => { store.del("signart:" + cur.key); load(cur.key); };
+document.getElementById("addrow").onclick = () => {
+  const cell = sel >= 0 ? rows[sel].cell : (grid.order.find(c => rows.filter(r => r.cell === c).length < grid.cap(c)) || grid.order[0]);
+  const z = Math.max(0, ...rows.map(r => r.z ?? 0)) + 1;
+  rows.push({ cell, layer: 999, z, text: "<#da4><size=60><voffset=640><pos=300>ᛟ" }); save(); refresh(true);
+  select(rows.findIndex(r => r.z === z));
+};
+document.getElementById("export").onclick = () => {
+  const box = document.getElementById("exportbox");
+  box.value = JSON.stringify({ key: cur.key, title: cur.title, grid: grid.spec, rows: rows.map(r => ({ cell: r.cell, layer: r.layer, text: r.text })) }, null, 1);
+  box.hidden = false; box.select();
+};
+stage.addEventListener("click", ev => {
+  if (!viewXf) return;
+  const dpr = window.devicePixelRatio || 1, rect = stage.getBoundingClientRect(), x = (ev.clientX - rect.left) * dpr, y = (ev.clientY - rect.top) * dpr;
+  const ctx = stage.getContext("2d"), placed = placedRows();
+  for (const p of sorted(placed, grid).reverse()) {
+    ctx.setTransform(...viewXf); ctx.save(); glyphXform(ctx, p);
+    const hit = ctx.isPointInPath(path(p.glyph), x, y); ctx.restore();
+    if (hit) { select(p.row); return; }
+  }
+  select(-1);
+});
+document.addEventListener("keydown", ev => {
+  if (sel < 0 || ev.target.tagName === "INPUT" || ev.target.tagName === "TEXTAREA") return;
+  const m = ev.shiftKey ? 10 : 1, map = { ArrowLeft: ["pos", -2], ArrowRight: ["pos", 2], ArrowUp: ["voffset", 2], ArrowDown: ["voffset", -2],
+    "+": ["size", 1], "=": ["size", 1], "-": ["size", -1], "[": ["rotate", 5], "]": ["rotate", -5], "<": ["scale", -0.05], ">": ["scale", 0.05], ",": ["scale", -0.05], ".": ["scale", 0.05] };
+  const a = map[ev.key]; if (!a) return;
+  ev.preventDefault(); nudge(a[0], a[1] * (a[0] === "scale" ? 1 : m));
+});
+new ResizeObserver(() => render()).observe(stage);
+
+shelf(); palette("Formák"); tests();
+load(store.get("signart:last") || concepts[concepts.length - 1].key);
+</script>

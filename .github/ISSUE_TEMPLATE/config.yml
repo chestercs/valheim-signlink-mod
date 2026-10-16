@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Read the README first
+    url: https://github.com/chestercs/valheim-signlink-mod#limits
+    about: The known limits (big pictures, the vanilla sign editor, GIFs, multiplayer sizes) are listed there.

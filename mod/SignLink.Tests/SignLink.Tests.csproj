@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The plugin's pure C# picture code (no Unity) against vectors from the Python pipeline:
+       ../../sign.sh modtest (signart/encoder_vectors.py writes vectors/, then this runs). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../SignLink/Pictures/PyMath.cs" />
+    <Compile Include="../SignLink/Pictures/PixelText.cs" />
+    <Compile Include="../SignLink/Pictures/Resampler.cs" />
+    <Compile Include="../SignLink/Pictures/RawPixels.cs" />
+    <Compile Include="../SignLink/Pictures/ImageHeader.cs" />
+    <Compile Include="../SignLink/Pictures/GifDecoder.cs" />
+    <Compile Include="../SignLink/Pictures/TextReadback.cs" />
+    <Compile Include="../SignLink/Pictures/SignGlow.cs" />
+    <Compile Include="../SignLink/Pictures/SaveCost.cs" />
+    <Compile Include="../SignLink/Pictures/PictureOptions.cs" />
+    <Compile Include="../SignLink/Pictures/TextTransform.cs" />
+    <Compile Include="../SignLink/Pictures/GlyphData.cs" />
+    <Compile Include="../SignLink/Pictures/Snippets.cs" />
+    <Compile Include="../SignLink/Pictures/Fit.cs" />
+    <Compile Include="../SignLink/Pictures/FitTexts.cs" />
+    <Compile Include="../SignLink/Signs/FloorPlan.cs" />
+    <Compile Include="../SignLink/Presets/Preset.cs" />
+    <Compile Include="../SignLink/Presets/ArtLibrary.cs" />
+    <Compile Include="../SignLink/Signs/StackMath.cs" />
+    <Compile Include="../SignLink/Signs/SignRecipe.cs" />
+    <Compile Include="../SignLink/Animation/AnimBlob.cs" />
+    <Compile Include="../SignLink/Animation/FrameTimes.cs" />
+    <Compile Include="../SignLink/Api/MainThread.cs" />
+    <Compile Include="../SignLink/Api/Password.cs" />
+    <Compile Include="../SignLink/Api/HttpRules.cs" />
+    <Compile Include="../SignLink/UI/Jobs.cs" />
+    <Compile Include="../SignLink/UI/Change.cs" />
+    <Compile Include="../SignLink/UI/ThumbCache.cs" />
+    <Compile Include="../SignLink/UI/ListRows.cs" />
+    <Compile Include="../SignLink/ConfigMoves.cs" />
+    <Compile Include="../SignLink/UI/WindowSizing.cs" />
+    <Compile Include="../SignLink/UI/TextHistory.cs" />
+    <Compile Include="../SignLink/Pictures/SignPicture.cs" />
+    <Compile Include="../SignLink/Signs/SignClip.cs" />
+    <Compile Include="../SignLink/UI/Hatch.cs" />
+    <Compile Include="../SignLink/UI/HotkeyText.cs" />
+    <Compile Include="../SignLink/UI/SourceFollow.cs" />
+    <Compile Include="../SignLink/UI/FineStep.cs" />
+    <Compile Include="../SignLink/Signs/SupportMath.cs" />
+    <EmbeddedResource Include="../SignLink/Art/**/*" LogicalName="SignLink.Art.%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

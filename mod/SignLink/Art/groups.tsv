@@ -1,0 +1,211 @@
+# the Art tab's groups, in order; a piece not listed is a classic
+#group	Classics
+#group	The cat's family
+#group	The cat's friends
+#group	Animals of Valheim
+#group	The boar family
+#group	The neck family
+#group	Hens, chicks and eggs
+#group	Forest and farm
+#group	Wild animals
+#group	Sea and rivers
+#group	Creatures
+#group	Scenes
+#group	Kitchen icons
+#group	Heroes and bosses
+#group	The world
+pixel/Cat (moving, tail and blink)	The cat's family
+pixel/Kitten (moving, batting yarn)	The cat's family
+pixel/Black cat (moving, stretch and tail)	The cat's family
+pixel/Calico cat (moving, asleep)	The cat's family
+pixel/White cat (moving, washing)	The cat's family
+pixel/Siamese cat (moving, walking)	The cat's family
+pixel/Hound (moving, tail and panting)	The cat's family
+pixel/Puppy (moving, bouncing)	The cat's family
+pixel/Old dog (moving, ear and blink)	The cat's family
+pixel/Wolf cub (moving, howling)	The cat's family
+pixel/Cat and hound (moving, nuzzling)	The cat's family
+pixel/Basket kitten (moving, peeking)	The cat's family
+pixel/Cat and butterfly (moving, swiping)	The cat's family
+pixel/Kittens at play (moving, pouncing)	The cat's family
+pixel/Cat loaf (moving, slow blink)	The cat's family
+pixel/Cat with fish (moving, licking lips)	The cat's family
+pixel/Barrel cat (moving, peeking)	The cat's family
+pixel/Shield cat (moving, asleep)	The cat's family
+pixel/Cat and bird (moving, stalking)	The cat's family
+pixel/Mother cat (moving, kittens snuggling)	The cat's family
+pixel/Viking cat (moving, proud nod)	The cat's family
+pixel/Yawning cat (moving)	The cat's family
+pixel/Mead mug kitten (moving, peeking)	The cat's family
+pixel/Sled dog (moving, ear flick)	The cat's friends
+pixel/Dog with a bone (moving, chewing)	The cat's friends
+pixel/Puppy (moving, chasing its tail)	The cat's friends
+pixel/Cat and piglet (moving, napping)	The cat's friends
+pixel/Cat and fawn (moving, touching noses)	The cat's friends
+pixel/Cat and raven (moving, hopping)	The cat's friends
+pixel/Cat, hen and chicks (moving, walking)	The cat's friends
+pixel/Cat and neck (moving, staring)	The cat's friends
+pixel/Piglet and puppy (moving, tug of war)	The cat's friends
+pixel/Cat on a lox (moving, riding)	The cat's friends
+pixel/Hound and wolf cub (moving, howling)	The cat's friends
+pixel/Friends (moving, photo)	The cat's friends
+pixel/Boar (moving, snuffling)	Animals of Valheim
+pixel/Piglet (moving, hopping)	Animals of Valheim
+pixel/Deer (moving, grazing)	Animals of Valheim
+pixel/Fawn (moving, ears and tail)	Animals of Valheim
+pixel/Neck (moving, tongue and blink)	Animals of Valheim
+pixel/Lox (moving, chewing)	Animals of Valheim
+pixel/Wolf (moving, howling)	Animals of Valheim
+pixel/Hen (moving, pecking)	Animals of Valheim
+pixel/Chick (moving, peeping)	Animals of Valheim
+pixel/Seagull (moving, flying)	Animals of Valheim
+pixel/Crow (moving, hopping and cawing)	Animals of Valheim
+pixel/Fish (moving, jumping)	Animals of Valheim
+pixel/Beehive (moving, bees)	Animals of Valheim
+pixel/Tame boar (moving, petted)	The boar family
+pixel/Charging boar (moving)	The boar family
+pixel/Boar and torch (moving, backing away)	The boar family
+pixel/Mother boar (moving, piglets snuggling)	The boar family
+pixel/Piglet born (moving, red puff)	The boar family
+pixel/Piglets at play (moving, chasing)	The boar family
+pixel/Sleeping piglet (moving)	The boar family
+pixel/Boar at the trough (moving, eating)	The boar family
+pixel/Muddy boar (moving, rolling)	The boar family
+pixel/Two-star boar (moving, proud)	The boar family
+pixel/Piglet with carrot (moving, nibbling)	The boar family
+pixel/Boar family (moving, walking)	The boar family
+pixel/Flower crown boar (moving, blinking)	The boar family
+pixel/Boar trophy	The boar family
+pixel/Neck in the muck (moving, shuffling)	The neck family
+pixel/Neck in the rain (moving, blinking)	The neck family
+pixel/Neck stars (moving, snapping in turn)	The neck family
+pixel/Neck bite (moving, snapping)	The neck family
+pixel/Sunbathing neck (moving, water lily opening)	The neck family
+pixel/Neck egg (moving, hatching)	The neck family
+pixel/Neck and fly (moving, tongue)	The neck family
+pixel/Swimming neck (moving, paddling)	The neck family
+pixel/Sleeping neck (moving, breathing)	The neck family
+pixel/Cat and neck (moving, poking)	The neck family
+pixel/Neck with flower (moving, swaying)	The neck family
+pixel/Neck tail on a spit (moving, roasting)	The neck family
+pixel/Hen laying an egg (moving)	Hens, chicks and eggs
+pixel/Egg hatching (moving)	Hens, chicks and eggs
+pixel/Brooding hen (moving, breathing)	Hens, chicks and eggs
+pixel/Chicks pecking (moving)	Hens, chicks and eggs
+pixel/Chick and beetle (moving, chasing)	Hens, chicks and eggs
+pixel/Hen with chicks (moving, peeking)	Hens, chicks and eggs
+pixel/Egg basket (moving, chick peeking)	Hens, chicks and eggs
+pixel/Fried egg (moving, sizzling)	Hens, chicks and eggs
+pixel/Sleeping chick (moving, in a shell)	Hens, chicks and eggs
+pixel/Panicking hen (moving, running)	Hens, chicks and eggs
+pixel/Viking hen (moving, strutting)	Hens, chicks and eggs
+pixel/Cat guarding eggs (moving)	Hens, chicks and eggs
+pixel/Rune egg (moving, glowing)	Hens, chicks and eggs
+pixel/Fox (moving, tail and ears)	Forest and farm
+pixel/Hare (moving, hopping)	Forest and farm
+pixel/Owl (moving, blink and head turn)	Forest and farm
+pixel/Squirrel (moving, nibbling)	Forest and farm
+pixel/Hedgehog (moving, waddling)	Forest and farm
+pixel/Frog (moving, croak and jump)	Forest and farm
+pixel/Goat (moving, chewing)	Forest and farm
+pixel/Pony (moving, mane and tail)	Forest and farm
+pixel/Sheep (moving, grazing)	Forest and farm
+pixel/Duck and ducklings (moving, swimming)	Forest and farm
+pixel/Bat (moving, hanging and flapping)	Forest and farm
+pixel/Mouse (moving, peeking and nibbling)	Forest and farm
+pixel/Snail (moving, creeping)	Forest and farm
+pixel/Butterfly (moving, fluttering)	Forest and farm
+pixel/Bear cub (moving, waving)	Forest and farm
+pixel/Beaver (moving, gnawing)	Forest and farm
+pixel/Moose (moving, chewing)	Forest and farm
+pixel/Bull moose (moving, bellowing)	Wild animals
+pixel/Bull moose (moving, wading)	Wild animals
+pixel/Rabbit (moving, nibbling a carrot)	Wild animals
+pixel/Rabbit (moving, at its burrow)	Wild animals
+pixel/Bear (moving, walking)	Wild animals
+pixel/Bear (moving, fishing)	Wild animals
+pixel/Bear (moving, scratching its back)	Wild animals
+pixel/Wolves (moving, howling at the moon)	Wild animals
+pixel/Wolves (moving, trotting)	Wild animals
+pixel/Giraffe (moving, eating leaves)	Wild animals
+pixel/Seal (moving, clapping)	Sea and rivers
+pixel/Seal (moving, diving)	Sea and rivers
+pixel/Seal pup (moving, on the ice)	Sea and rivers
+pixel/Salmon (moving, leaping a waterfall)	Sea and rivers
+pixel/Perch (moving, swimming)	Sea and rivers
+pixel/Pike (moving, snapping)	Sea and rivers
+pixel/Herring shoal (moving)	Sea and rivers
+pixel/Fish on a hook (moving, wriggling)	Sea and rivers
+pixel/Sea serpent (moving, coils in the waves)	Sea and rivers
+pixel/Sea serpent (moving, roaring)	Sea and rivers
+pixel/Sea turtle (moving, swimming)	Sea and rivers
+pixel/Greyling (moving, peek and wave)	Creatures
+pixel/Greydwarf (moving, walk)	Creatures
+pixel/Greydwarf shaman (moving, poison puff)	Creatures
+pixel/Troll (moving, club swing)	Creatures
+pixel/Skeleton (moving, rattle)	Creatures
+pixel/Draugr	Creatures
+pixel/Blob (moving, bounce)	Creatures
+pixel/Leech (moving, wiggle)	Creatures
+pixel/Surtling (moving, flicker)	Creatures
+pixel/Deathsquito (moving, buzz)	Creatures
+pixel/Fuling (moving, torch)	Creatures
+pixel/Drake (moving, flap)	Creatures
+pixel/Fjord at dusk	Scenes
+pixel/Campfire (moving, flames and sparks)	Scenes
+pixel/Portal (moving, swirl)	Scenes
+pixel/Longship (moving, rocking on waves)	Scenes
+pixel/Windmill (moving, sails)	Scenes
+pixel/Smelter (moving, smoke)	Scenes
+pixel/Wall torch (moving)	Scenes
+pixel/Northern lights (moving)	Scenes
+pixel/Snowy cabin (moving, snowfall)	Scenes
+pixel/Swamp storm (moving, rain and lightning)	Scenes
+pixel/Fishing float (moving, bobbing)	Scenes
+pixel/Cooking station (moving, sausage)	Scenes
+pixel/Kitchen (spices)	Kitchen icons
+pixel/Kitchen (vegetables)	Kitchen icons
+pixel/Kitchen (fruit and berries)	Kitchen icons
+pixel/Kitchen (mushrooms)	Kitchen icons
+pixel/Kitchen (meat, raw)	Kitchen icons
+pixel/Kitchen (meat, cooked)	Kitchen icons
+pixel/Kitchen (sausages)	Kitchen icons
+pixel/Kitchen (fish)	Kitchen icons
+pixel/Kitchen (eggs)	Kitchen icons
+pixel/Kitchen (bread and baking)	Kitchen icons
+pixel/Kitchen (grain and flour)	Kitchen icons
+pixel/Kitchen (honey)	Kitchen icons
+pixel/Kitchen (sweets)	Kitchen icons
+pixel/Kitchen (soup and stew)	Kitchen icons
+pixel/Kitchen (drinks)	Kitchen icons
+pixel/Kitchen (cookware)	Kitchen icons
+pixel/Kitchen (knives and utensils)	Kitchen icons
+pixel/Kitchen (firewood)	Kitchen icons
+pixel/Kitchen (leftovers)	Kitchen icons
+pixel/Kitchen (salt and preserves)	Kitchen icons
+pixel/Kitchen (food, all)	Kitchen icons
+pixel/Kitchen (feast)	Kitchen icons
+pixel/Kitchen (fire, moving)	Kitchen icons
+pixel/Kitchen (cauldron, moving)	Kitchen icons
+pixel/Kitchen (frying pan, moving)	Kitchen icons
+glyph/Elder	Heroes and bosses
+glyph/Bonemass	Heroes and bosses
+glyph/Haldor	Heroes and bosses
+glyph/Hugin	Heroes and bosses
+glyph/Viking warrior	Heroes and bosses
+glyph/Valkyrie	Heroes and bosses
+glyph/Troll face	Heroes and bosses
+glyph/Greydwarf shaman	Heroes and bosses
+glyph/Yggdrasil	The world
+glyph/Portal	The world
+glyph/Anvil and hammer	The world
+glyph/Mead horn	The world
+glyph/Crossed axes	The world
+glyph/Runestone	The world
+glyph/Longhouse	The world
+glyph/Burial chamber	The world
+glyph/Cauldron	The world
+glyph/Clan banner	The world
+glyph/Rune compass	The world
+glyph/Fjord sunrise	The world
+glyph/Portal (moving, glyph swirl)	The world

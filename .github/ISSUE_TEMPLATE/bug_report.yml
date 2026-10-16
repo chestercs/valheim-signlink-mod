@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in SignLink does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. A few details make it much faster to find.
+  - type: input
+    id: signlink
+    attributes:
+      label: SignLink version
+      description: The window's title shows it (for example 1.0.1).
+      placeholder: "1.0.1"
+    validations:
+      required: true
+  - type: input
+    id: valheim
+    attributes:
+      label: Valheim version
+      description: The main menu shows it in a corner.
+      placeholder: "1.0.20"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Single player
+        - On a server (dedicated)
+        - On a server (hosted from a game)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to make it happen again
+      placeholder: |
+        1. Select a sign
+        2. On 2 Content pick ...
+        3. ...
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other mods
+      description: Your mod list, or the mods that touch signs or the UI.
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        Drop the file `BepInEx/LogOutput.log` here (your mod manager can open the profile folder), or paste the lines around the error. Screenshots help too.
