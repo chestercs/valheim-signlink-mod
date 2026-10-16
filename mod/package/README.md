@@ -16,7 +16,11 @@ the mod**, because they are ordinary signs saved in the world. Only the player w
 | **Glyph art** | **Signposts and labels** |
 | ![Glyph art emblems on a gable](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/glyph-art.jpg) | ![Signposts made with the text templates](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/text-templates.jpg) |
 
-Source, screenshots and the full documentation: [github.com/chestercs/valheim-signlink-mod](https://github.com/chestercs/valheim-signlink-mod)
+**Links:** [GitHub](https://github.com/chestercs/valheim-signlink-mod) (source, documentation) ·
+[Wiki](https://github.com/chestercs/valheim-signlink-mod/wiki) ·
+[Nexus Mods](https://www.nexusmods.com/valheim/mods/4453) ·
+[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/) ·
+[Buy me a coffee](https://buymeacoffee.com/chestercs)
 
 ## What it does
 

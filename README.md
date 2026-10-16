@@ -14,9 +14,12 @@
   <img alt="BepInEx 5" src="https://img.shields.io/badge/BepInEx-5.4-2f5d8a">
   <img alt="Client-side" src="https://img.shields.io/badge/side-client-6a4c93">
   <img alt="Code MIT, art CC BY 4.0" src="https://img.shields.io/badge/licence-MIT%20%2B%20CC%20BY%204.0-informational">
+  <a href="https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/"><img alt="Thunderstore" src="https://img.shields.io/thunderstore/v/PetyusPolisz/SignLink?label=Thunderstore"></a>
+  <a href="https://www.nexusmods.com/valheim/mods/4453"><img alt="Nexus Mods" src="https://img.shields.io/badge/Nexus%20Mods-SignLink-d98f40"></a>
 </p>
 
 <p align="center">
+  <a href="https://github.com/chestercs/valheim-signlink-mod/wiki"><b>Wiki</b></a> ·
   <a href="docs/art-library.md"><b>Art showcase</b></a> ·
   <a href="mod/package/README.md"><b>Player guide</b></a> ·
   <a href="docs/limits.md">Limits</a> ·
@@ -39,9 +42,9 @@ put it on. The result is ordinary sign text, saved in the world like any other s
 - **The server needs nothing.** No server plugin, no config sync, nothing to install for your friends.
 - **Remove the mod and it stays.** The pictures remain as normal signs.
 
-> **Version 1.0.1.** Download `SignLink-1.0.1.zip` from the
-> [Releases](https://github.com/chestercs/valheim-signlink-mod/releases) page and import it into your mod manager (see
-> [Install](#install)). Thunderstore and Nexus Mods listings come later.
+> **Version 1.0.1.** Get it on **[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/)**
+> (r2modman, Thunderstore Mod Manager), **[Nexus Mods](https://www.nexusmods.com/valheim/mods/4453)** (Vortex or by
+> hand) or from [Releases](https://github.com/chestercs/valheim-signlink-mod/releases). See [Install](#install).
 
 ## What you can make
 
@@ -214,12 +217,15 @@ SignLink stays inside what the game itself can do. It is honest about it (the me
 
 ## Install
 
-**With a mod manager (recommended):** download `SignLink-1.0.1.zip` from
-[Releases](https://github.com/chestercs/valheim-signlink-mod/releases), then in r2modman or the Thunderstore Mod Manager
-choose *Settings › Import local mod* and pick the zip (if it asks for the author, type `PetyusPolisz`). BepInExPack Valheim comes with it as a dependency.
+**With a mod manager (recommended):** find **SignLink** in r2modman or the Thunderstore Mod Manager and install it,
+or press *Install with Mod Manager* on [its Thunderstore page](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/).
+BepInExPack Valheim comes with it as a dependency.
+
+**With Vortex:** *Mod Manager Download* on [the Nexus Mods page](https://www.nexusmods.com/valheim/mods/4453).
 
 **By hand:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/), then
-copy `plugins/SignLink.dll` from the zip into `BepInEx/plugins`.
+unpack `SignLink-1.0.1-nexus.zip` (from Nexus Mods or [Releases](https://github.com/chestercs/valheim-signlink-mod/releases))
+into the Valheim folder: the mod goes to `BepInEx/plugins/SignLink/`.
 
 Put your pictures into `BepInEx/config/SignLink/images`. The *Open folder* button in the window opens it.
 
@@ -286,7 +292,6 @@ or to generate a client from. The full security model is in [`mod/README.md`](mo
   will show, then save it as a piece and place it from the window.
 - **Art animations on the same player as GIFs.** Moving art pieces played locally from one module, smooth, with
   nothing extra stored in the world.
-- **Listings on Thunderstore and Nexus Mods.**
 
 ## For developers and tinkerers
 
@@ -324,6 +329,8 @@ Commons:
 [The Wild Hunt of Odin](https://commons.wikimedia.org/wiki/File:Peter_Nicolai_Arbo_-_The_wild_Hunt_of_Odin_-_NG.M.00258_-_National_Museum_of_Art,_Architecture_and_Design.jpg)
 (Peter Nicolai Arbo, 1872) and
 [Impression, Sunrise](https://commons.wikimedia.org/wiki/File:Monet_-_Impression,_Sunrise.jpg) (Claude Monet, 1872).
+
+If you like SignLink, you can [buy me a coffee](https://buymeacoffee.com/chestercs).
 
 Valheim is a trademark of Iron Gate AB. SignLink is a fan-made mod and is not affiliated with Iron Gate or Coffee
 Stain.

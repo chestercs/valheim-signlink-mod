@@ -39,13 +39,31 @@ package and uploads nothing.
 - The 0.x changelog is [`changelog-0.x.md`](changelog-0.x.md); `mod/CHANGELOG.md` is for players from 1.0.0 on.
 - Left out of the repository, kept on the author's computer (`.gitignore`): `signart/rigs/` (real base coordinates),
   `.private/` (the window's design notes), `CLAUDE.md` and `signart/ingame_tests.json` (the in-game log).
-- The GitHub repository is private for now; the 1.0.0 release is a draft with `SignLink-1.0.0.zip` (import it in
-  r2modman or the Thunderstore Mod Manager: *Settings › Import local mod*). Making the repository public and
-  publishing the release are the author's steps; a wiki from `docs/` can follow once it is public (GitHub Free has
-  wikis on public repositories only).
-
 - Fixes after 1.0.0 go to the branch `dev` on the author's Gogs server (CHANGELOG "Unreleased"); `main` takes them
   with the next release.
+
+## Live since 1.0.1 (2026-10-16)
+
+- Thunderstore: https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/ (team PetyusPolisz; categories Mods,
+  Client-side, Building, Utility, AI Generated). Its page is the package README of the uploaded version: a change
+  there needs a new version.
+- Nexus Mods: https://www.nexusmods.com/valheim/mods/4453 (Construction; `SignLink-1.0.1-nexus.zip`, requires
+  BepInExPack Valheim 5.4.2351; description in BBCode, gallery with two single player / multiplayer comparisons;
+  permissions: re-upload, conversion, modification and asset use allowed with credit). Mod Rewards opt-in once Nexus
+  lists the mod on its rewards page.
+- GitHub: public, release v1.0.1 (both zips), wiki, social preview, homepage = the Thunderstore page,
+  `.github/FUNDING.yml` (Buy Me a Coffee). GitHub `main` gets one commit per release on top of the last.
+- Every page links the others: README (badges, Install), the release notes, the Nexus description, the package README
+  (from the next version on Thunderstore).
+
+### A new version
+
+1. Work on `dev`; bump the version in the five places (`./sign.sh package` checks them), CHANGELOG entry.
+2. `./sign.sh mod`, `./sign.sh cstest`, `./sign.sh package`: `SignLink-<v>.zip` and `SignLink-<v>-nexus.zip`.
+3. Gogs: `main` fast-forwards to `dev`, tag. GitHub: one commit on top of `main` with the release tree, tag, release
+   with both zips.
+4. Thunderstore: upload the zip (same team and categories). Nexus: *Files* › add the nexus zip (Main, version), mark
+   the old one Old, add a changelog line, update the mod version.
 
 ### Multiplayer test (2026-10-16, the author's dedicated test server)
 
@@ -68,8 +86,8 @@ package and uploads nothing.
 ### Still open
 
 - `docs/media/window-steps.gif` still shows an older window.
-- The author's tests: a pure-mod install from the release zip on a fresh game start.
-- Thunderstore and Nexus Mods listings, when the author asks.
+- 1.0.2 (on `dev`): the Nexus link on the Thunderstore page (package README), and the deep review's code items:
+  ZDOID caches cleared on a world change, a no-build check on content writes, the API accept thread's wait.
 
 ## Before the upload
 
