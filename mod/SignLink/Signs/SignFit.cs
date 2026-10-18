@@ -112,9 +112,13 @@ namespace SignLink.Signs
             Fit from = Read(root, out double c0x, out double c0y, out bool known);
             string name = SignMarks.Name(root);
             bool anim = StoredAnims.TryUnpack(StoredAnims.Blob(root), out string[] frames, out float fps);
+            // Moving off (Playing) stays off: storing the frames again clears it (1.0.2, review: a reset or a resize set a
+            // piece moving for everyone again)
+            bool still = anim && StoredAnims.Still(SignFinder.Zdo(root));
             IList<string> texts = anim ? frames : SignBuilder.Content(root);
             FitTexts.Result r = FitTexts.ForRefit(texts, from, c0x, c0y, known, to, light);   // the very texts the preview shows (0.20.129)
             List<Sign> made = Place(root, r.Texts, anim ? fps : 0f, name, r.Fit);
+            if (still) Plugin.Stored.SetMoving(made[0], false);
             Write(made[0], r.Fit, r.C0x, r.C0y, r.Known);
             got = r.Fit;
             return made;

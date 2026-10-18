@@ -5,10 +5,11 @@ using System.Reflection;
 
 namespace SignLink.Pictures
 {
-    /// <summary>The paintings that come with SignLink (mod/SignLink/Stock, public domain, embedded in the DLL): each is put
-    /// into the images folder once, so it works like any picture a player adds (Resolution, Max, the recipe). A list in the
-    /// folder (.signlink-stock) remembers what was put there: a picture the player deletes stays deleted, and a painting
-    /// a later version adds still arrives.</summary>
+    /// <summary>The pictures that come with SignLink (mod/SignLink/Stock: six paintings and a moving GIF, public domain,
+    /// embedded in the DLL): each is put into the images folder once, so it works like any picture a player adds
+    /// (Resolution, Max, the recipe; the GIF moves for every SignLink player, as every computer with the mod has its file).
+    /// A list in the folder (.signlink-stock) remembers what was put there: a picture the player deletes stays deleted, and
+    /// a picture a later version adds still arrives.</summary>
     internal static class StockPictures
     {
         const string Prefix = "SignLink.Stock.", ListFile = ".signlink-stock";
@@ -21,6 +22,8 @@ namespace SignLink.Pictures
             done = true;
             try
             {
+                Directory.CreateDirectory(folder);                          // at the plugin's start too (review: a friend who never
+                                                                            // opens the window has the horse all the same)
                 string list = Path.Combine(folder, ListFile);
                 var placed = new HashSet<string>(File.Exists(list) ? File.ReadAllLines(list) : new string[0], StringComparer.OrdinalIgnoreCase);
                 Assembly asm = typeof(StockPictures).Assembly;
@@ -30,21 +33,28 @@ namespace SignLink.Pictures
                     if (!res.StartsWith(Prefix, StringComparison.Ordinal)) continue;
                     string name = res.Substring(Prefix.Length);
                     if (placed.Contains(name)) continue;
-                    string path = Path.Combine(folder, name);
-                    if (!File.Exists(path))
-                        using (Stream s = asm.GetManifestResourceStream(res))
-                        using (FileStream f = File.Create(path))
-                            s.CopyTo(f);
-                    added.Add(name);
+                    try                                                     // one that cannot be written does not stop the rest (review)
+                    {
+                        string path = Path.Combine(folder, name);
+                        if (!File.Exists(path))
+                            using (Stream s = asm.GetManifestResourceStream(res))
+                            using (FileStream f = File.Create(path))
+                                s.CopyTo(f);
+                        added.Add(name);
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.Log.LogWarning($"images: the stock picture {name} could not be put into the images folder: {e.Message}");
+                    }
                 }
                 if (added.Count == 0) return;
                 File.AppendAllLines(list, added);
                 File.SetAttributes(list, File.GetAttributes(list) | FileAttributes.Hidden);
-                Plugin.Log.LogInfo($"images: {added.Count} stock painting(s) put into the images folder ({string.Join(", ", added.ToArray())})");
+                Plugin.Log.LogInfo($"images: {added.Count} stock picture(s) put into the images folder ({string.Join(", ", added.ToArray())})");
             }
             catch (Exception e)
             {
-                Plugin.Log.LogWarning($"images: the stock paintings could not be put into the images folder: {e.Message}");
+                Plugin.Log.LogWarning($"images: the stock pictures could not be put into the images folder: {e.Message}");
             }
         }
     }

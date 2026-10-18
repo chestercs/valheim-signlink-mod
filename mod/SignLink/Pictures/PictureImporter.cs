@@ -84,13 +84,29 @@ namespace SignLink.Pictures
     {
         public static string Folder => Path.Combine(Paths.ConfigPath, Path.Combine("SignLink", "images"));
 
-        /// <summary>Opens the images folder in the system's file browser, made first when it is not there yet (the Picture
-        /// list's Open folder, Settings › About's, 0.20.119).</summary>
-        public static void OpenFolder()
+        /// <summary>Opens the images folder, or the folder of it the list shows (dir, 1.0.2), in the system's file browser,
+        /// made first when it is not there yet (the Picture list's Open folder, Settings › About's, 0.20.119).</summary>
+        public static void OpenFolder(string dir = "")
         {
             Directory.CreateDirectory(Folder);
-            Application.OpenURL("file:///" + Folder.Replace(Path.DirectorySeparatorChar, '/'));
+            string at = FolderPath(dir);
+            if (!Directory.Exists(at)) at = Folder;
+            Application.OpenURL(new Uri(at).AbsoluteUri);                   // escaped: a '#' or a '%' in a folder's name (review)
         }
+
+        /// <summary>A picture's name as a sign keeps it (PictureNames.Relative): its path under the images folder with '/'
+        /// between the folders ("cat.gif", "funny/cat.gif").</summary>
+        public static string Relative(string file) => PictureNames.Relative(Folder, file);
+
+        /// <summary>The folder part of such a name ("" for the images folder itself).</summary>
+        public static string DirOf(string name) => PictureNames.DirOf(name);
+
+        /// <summary>The file a name from a sign or a request means, under the images folder only (PictureNames.Under), or null
+        /// when it is no such name; the file need not exist.</summary>
+        public static string PathFor(string name) => string.IsNullOrEmpty(name) ? null : PictureNames.Under(Folder, name);
+
+        /// <summary>The folder of the images folder a name means ("" the folder itself); the images folder when it is no name.</summary>
+        public static string FolderPath(string dir) => PictureNames.Under(Folder, dir) ?? Folder;
 
         /// <summary>Pictures larger than this are refused before decoding: Unity's decoder holds about 12 bytes per pixel at
         /// once on the main thread (the game stalls, and may run out of memory), and a sign picture uses at most a million
@@ -119,19 +135,59 @@ namespace SignLink.Pictures
             catch (Exception) { return null; }
         }
 
-        /// <summary>The pictures in the images folder, sorted by name; withUnreadable: the known other formats too.</summary>
-        public static List<string> Files(bool withUnreadable = false)
+        /// <summary>Is the file a GIF, by its first bytes alone (the whole file is read on a worker then: 1.0.2, review, a 35 MB
+        /// GIF read on the game's thread at the put).</summary>
+        public static bool IsGifFile(string file)
+        {
+            var head = new byte[6];
+            using (FileStream f = File.OpenRead(file))
+            {
+                int n = 0, got;
+                while (n < head.Length && (got = f.Read(head, n, head.Length - n)) > 0) n += got;
+            }
+            return GifDecoder.IsGif(head);
+        }
+
+        /// <summary>The pictures in the images folder, or in a folder of it (dir, as a name's folder part: "" the folder itself;
+        /// 1.0.2, the owner: folders copied into the images folder, walked in the window), sorted by name; withUnreadable: the
+        /// known other formats too.</summary>
+        public static List<string> Files(string dir = "", bool withUnreadable = false)
         {
             var list = new List<string>();
             try
             {
                 Directory.CreateDirectory(Folder);
-                StockPictures.Place(Folder);                                   // the paintings that come with SignLink, once
-                foreach (string f in Directory.GetFiles(Folder))
-                {
-                    string ext = Path.GetExtension(f).ToLowerInvariant();
-                    if (Array.IndexOf(Readable, ext) >= 0 || (withUnreadable && Array.IndexOf(Unreadable, ext) >= 0)) list.Add(f);
-                }
+                StockPictures.Place(Folder);                                   // the pictures that come with SignLink, once
+                string at = FolderPath(dir);
+                if (Directory.Exists(at))
+                    foreach (string f in Directory.GetFiles(at))
+                    {
+                        string ext = Path.GetExtension(f).ToLowerInvariant();
+                        if (Array.IndexOf(Readable, ext) >= 0 || (withUnreadable && Array.IndexOf(Unreadable, ext) >= 0)) list.Add(f);
+                    }
+                list.Sort(StringComparer.OrdinalIgnoreCase);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning($"images: {e.Message}");
+            }
+            return list;
+        }
+
+        /// <summary>The folders in the images folder, or in a folder of it (dir as Files takes it): full paths, sorted by name;
+        /// hidden ones (a name starting with a dot, or the system's hidden mark) are left out.</summary>
+        public static List<string> Folders(string dir = "")
+        {
+            var list = new List<string>();
+            try
+            {
+                string at = FolderPath(dir);
+                if (Directory.Exists(at))
+                    foreach (string d in Directory.GetDirectories(at))
+                    {
+                        if (Path.GetFileName(d).StartsWith(".", StringComparison.Ordinal) || (File.GetAttributes(d) & FileAttributes.Hidden) != 0) continue;
+                        list.Add(d);
+                    }
                 list.Sort(StringComparer.OrdinalIgnoreCase);
             }
             catch (Exception e)
@@ -264,20 +320,22 @@ namespace SignLink.Pictures
         /// <summary>A GIF to sign texts (any thread): its first frame, at full size, is the still; a moving GIF's frames
         /// are made ready for the screen here, on the worker (shrunk to at most ScreenSide a side, in Unity's row
         /// order), each as it is decoded: no full-size copy of every frame (0.20.132, review). Frames that could never
-        /// fit the screens' budget are not decoded at all: the still only, and the note says so. cancelled stops the
-        /// decode (the window closed, another file picked).</summary>
-        public static EncodedPicture EncodeGif(byte[] file, PictureOptions o, Func<bool> cancelled = null)
+        /// fit the screens' budget, or that the GIFs playing here leave no room for now (ScreenNote, with target), are not
+        /// decoded at all: the still only, and the note says so. cancelled stops the decode (the window closed, another
+        /// file picked).</summary>
+        public static EncodedPicture EncodeGif(byte[] file, PictureOptions o, Func<bool> cancelled = null, Sign target = null)
         {
-            string note = o.Animate ? ScreenNote(file) : null;
+            string note = o.Animate ? ScreenNote(file, (w, h) => o.PlanFor(w, h).W, target) : null;
             bool moving = o.Animate && note == null;
             byte[] still = null;
             int k = 0, sw = 0, sh = 0;
-            GifImage gif = GifDecoder.Decode(file, maxFrames: moving ? int.MaxValue : 1, cancelled: cancelled, frame: (canvas, w, h) =>
+            GifImage gif = GifDecoder.Decode(file, maxBytes: SignLink.Animation.ScreenPlayer.FrameCap, maxFrames: moving ? int.MaxValue : 1, cancelled: cancelled,
+                                             frameBytes: (w, h) => ScreenFrameBytes(w, h, o.PlanFor(w, h).W), frame: (canvas, w, h) =>
             {
                 if (still == null)
                 {
                     still = GifFrameRgba(canvas);                           // the still: the first frame at full size
-                    ScreenShape(w, h, out k, out sw, out sh);
+                    ScreenShape(w, h, o.PlanFor(w, h).W, out k, out sw, out sh);
                 }
                 return moving ? ShrinkFlip(canvas, w, h, k, sw, sh) : null;
             });
@@ -287,46 +345,88 @@ namespace SignLink.Pictures
             return pic;
         }
 
-        /// <summary>Why a GIF's frames could never play over its still: the frames it keeps (GifDecoder.Measure, from its
-        /// blocks), shrunk for the screen, are over the screens' whole budget; null when they fit, or when its blocks do not
-        /// tell (the decode says why). Checked before any frame is decoded (0.20.132, review).</summary>
-        public static string ScreenNote(byte[] file)
+        /// <summary>Why a GIF's frames would not play over its still, from its blocks before any frame is decoded (0.20.132,
+        /// review): the frames it keeps (GifDecoder.Measure), shrunk for the screen, are over the screens' whole budget; or,
+        /// given the sign they go on, the GIFs playing here leave no room for them even once the far and paused ones park
+        /// (ScreenPlayer.MakeRoom, asked on the main thread: call this off it), so the still goes on alone and the sign
+        /// plays when room frees (ScreenRestore; 1.0.2: every frame was decoded first and dropped at the start). Null when
+        /// they would play, or when its blocks do not tell (the decode says why).</summary>
+        public static string ScreenNote(byte[] file, Func<int, int, int> planWidth, Sign target = null)
         {
-            if (!GifDecoder.Measure(file, out int w, out int h, out int kept) || kept < 2) return null;
-            long bytes = ScreenBytes(w, h, kept), budget = SignLink.Animation.ScreenPlayer.Budget;
-            if (bytes <= budget) return null;
-            Plugin.Log.LogWarning($"the GIF stays a still: its {kept} frames would be {bytes >> 20} MB (the screens hold at most {budget >> 20} MB)");
-            return $"; too big to play over the picture (its frames would be {bytes >> 20} MB, the screens hold at most {budget >> 20} MB)";
+            if (!GifDecoder.Inspect(file, out int w, out int h, out int count) || count < 2) return null;
+            int kept = ScreenKept(w, h, count, planWidth(w, h));
+            long bytes = ScreenBytes(w, h, kept, planWidth(w, h)), budget = SignLink.Animation.ScreenPlayer.Budget;
+            if (bytes > budget)
+            {
+                Plugin.Log.LogWarning($"the GIF stays a still: its {kept} frames would be {bytes >> 20} MB (the screens hold at most {budget >> 20} MB)");
+                return $"; too big to play over the picture (its frames would be {bytes >> 20} MB, the screens hold at most {budget >> 20} MB)";
+            }
+            if (target == null) return null;
+            long room = MainThread.Run(() =>
+            {
+                SignLink.Animation.ScreenPlayer screens = Plugin.Screens;
+                long own = 0;                                               // the stack's own screen goes first (Place)
+                if (target) foreach (Sign s in SignFinder.Stack(target)) own += screens.Frees(s);
+                return screens.MakeRoom(bytes - own, target, Time.unscaledTime) ? bytes : screens.Room + own;
+            });
+            if (room >= bytes) return null;
+            Plugin.Log.LogInfo($"the GIF stays a still for now: its {kept} frames would be {bytes >> 20} MB, the screens have room for {Math.Max(0, room) >> 20} MB");
+            return $"; it stays still for now: its frames would be {bytes >> 20} MB, the screens have room for {Math.Max(0, room) >> 20} MB";
         }
 
         /// <summary>A GIF's frames for its screen alone (any thread), each shrunk as it is decoded: a screen restored from the
         /// file (ScreenRestore), an Update whose still is counted already. Null for a GIF of one frame.</summary>
-        public static ScreenFrames GifScreen(byte[] file, Func<bool> cancelled = null)
+        public static ScreenFrames GifScreen(byte[] file, Func<int, int, int> planWidth, Func<bool> cancelled = null)
         {
             int k = 0, sw = 0, sh = 0;
-            GifImage gif = GifDecoder.Decode(file, cancelled: cancelled, frame: (canvas, w, h) =>
+            GifImage gif = GifDecoder.Decode(file, maxBytes: SignLink.Animation.ScreenPlayer.FrameCap, cancelled: cancelled,
+                                             frameBytes: (w, h) => ScreenFrameBytes(w, h, planWidth(w, h)), frame: (canvas, w, h) =>
             {
-                if (sw == 0) ScreenShape(w, h, out k, out sw, out sh);
+                if (sw == 0) ScreenShape(w, h, planWidth(w, h), out k, out sw, out sh);
                 return ShrinkFlip(canvas, w, h, k, sw, sh);
             });
             return gif.Frames.Count < 2 ? null : Screen(gif, sw, sh);
         }
 
-        /// <summary>The screen's size for a GIF of w x h: shrunk by a whole factor k to at most ScreenSide a side (a box
-        /// average: a 4K GIF is not 24 MB a frame).</summary>
-        static void ScreenShape(int w, int h, out int k, out int W, out int H)
+        /// <summary>The screen's size for a GIF of w x h shown planW pixels wide on its sign: shrunk by a whole factor k (a
+        /// box average) to at most ScreenSide a side, and to at most twice the sign's pixels (1.0.2, the author: a 720 px
+        /// GIF on a 214 px sign held 185 MB moving; the moving picture a little finer than its still, a quarter of the
+        /// memory). planW 0: the side alone. Every computer works it out from the sign's own recipe: the same size for
+        /// everyone, nothing sent.</summary>
+        static void ScreenShape(int w, int h, int planW, out int k, out int W, out int H)
         {
             k = Math.Max(1, (int)Math.Ceiling(Math.Max(w, h) / (double)ScreenSide));
+            if (planW > 0) k = Math.Max(k, (int)Math.Ceiling(w / (2.0 * planW)));
             W = Math.Max(1, w / k);
             H = Math.Max(1, h / k);
         }
 
-        /// <summary>What a screen of `frames` frames of a w x h GIF holds (ScreenShape's size, RGB24).</summary>
-        public static long ScreenBytes(int w, int h, int frames)
+        /// <summary>The screen's width for a GIF of w x h shown planW pixels wide (ScreenShape).</summary>
+        public static int ScreenWidth(int w, int h, int planW)
         {
-            ScreenShape(w, h, out _, out int W, out int H);
+            ScreenShape(w, h, planW, out _, out int W, out _);
+            return W;
+        }
+
+        /// <summary>What a screen of `frames` frames of a w x h GIF shown planW pixels wide holds (ScreenShape's size, RGB24).</summary>
+        public static long ScreenBytes(int w, int h, int frames, int planW)
+        {
+            ScreenShape(w, h, planW, out _, out int W, out int H);
             return (long)frames * W * H * 3;
         }
+
+        /// <summary>One screen frame's bytes for a w x h GIF shown planW pixels wide.</summary>
+        public static long ScreenFrameBytes(int w, int h, int planW) => ScreenBytes(w, h, 1, planW);
+
+        /// <summary>How many of a GIF's count frames its screen keeps: every k-th past ScreenPlayer.FrameCap, counted at the
+        /// screen's size (1.0.2, review: the full-size frames counted, so a GIF on a small sign lost every second frame for
+        /// nothing).</summary>
+        public static int ScreenKept(int w, int h, int count, int planW) =>
+            GifDecoder.Kept(count, ScreenFrameBytes(w, h, planW), SignLink.Animation.ScreenPlayer.FrameCap);
+
+        /// <summary>The key frames are kept and shared under: the file (Stamp) and the screen's width, so signs showing a GIF at
+        /// one size share its frames and another size is frames of its own.</summary>
+        public static string ScreenKey(string stamp, int screenW) => stamp == null ? null : stamp + "@" + screenW;
 
         /// <summary>The decoded (shrunk, flipped) frames as a screen's, each with its delay.</summary>
         static ScreenFrames Screen(GifImage g, int W, int H)
@@ -425,8 +525,15 @@ namespace SignLink.Pictures
         {
             ScreenFrames s = pic.Screen;
             pic.Screen = null;                                       // the player owns the frames from here
-            if (!PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out string why))
+            bool played = PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out string why);
+            // the room asked before the decode went to a paused or far GIF meanwhile (ScreenRestore played it again; review):
+            // asked once more, as ScreenRestore.Finish asks; still refused, the frames park for the restore to find
+            if (!played && why != null && why.StartsWith("too big to play", StringComparison.Ordinal) &&
+                Plugin.Screens.MakeRoom(s.Bytes, target, Time.unscaledTime))
+                played = PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out why);
+            if (!played)
             {
+                if (why != null && why.StartsWith("too big to play", StringComparison.Ordinal)) Plugin.Screens.Park(s, Time.unscaledTime);
                 pic.Note = $"; it stays still here: {why}";
                 Plugin.Log.LogWarning($"the GIF stays a still: {why}");
                 return;
@@ -483,10 +590,10 @@ namespace SignLink.Pictures
             if (Busy) return;
             try
             {
-                byte[] bytes = File.ReadAllBytes(file);
                 PictureOptions o = options.Clone();
-                bool gif = GifDecoder.IsGif(bytes);
-                int w = 0, h = 0;
+                bool gif = PictureImporter.IsGifFile(file);                 // a GIF's bytes are read on the worker (1.0.2, review:
+                int w = 0, h = 0;                                           // 35 MB on the game's thread); PNG and JPG the game
+                byte[] bytes = gif ? null : File.ReadAllBytes(file);        // decodes here
                 byte[] rgba = gif ? null : PictureImporter.Decode(bytes, out w, out h);
                 Busy = true;
                 cancel = false;
@@ -494,9 +601,11 @@ namespace SignLink.Pictures
                 {
                     try
                     {
-                        EncodedPicture pic = gif ? PictureImporter.EncodeGif(bytes, o, () => cancel) : PictureImporter.Encode(rgba, w, h, o);
-                        pic.Name = Path.GetFileName(file);
-                        if (pic.Screen != null) pic.Screen.Key = PictureImporter.Stamp(file);   // parked under it when the stack changes
+                        string key = gif ? PictureImporter.Stamp(file) : null;   // with the bytes: a file written meanwhile is another
+                        if (gif) bytes = File.ReadAllBytes(file);
+                        EncodedPicture pic = gif ? PictureImporter.EncodeGif(bytes, o, () => cancel, target) : PictureImporter.Encode(rgba, w, h, o);
+                        pic.Name = PictureImporter.Relative(file);         // with its folder: the sign says where the file is
+                        if (pic.Screen != null) pic.Screen.Key = PictureImporter.ScreenKey(key, pic.Screen.W);   // parked under it when the stack changes
                         MainThread.Post(() => Finish(target, pic, o, done));
                     }
                     catch (Exception e)
@@ -524,7 +633,7 @@ namespace SignLink.Pictures
                 try
                 {
                     EncodedPicture pic = PictureImporter.Encode(rgba, w, h, srcW, srcH, o);
-                    pic.Name = Path.GetFileName(file);
+                    pic.Name = PictureImporter.Relative(file);
                     MainThread.Post(() => Finish(target, pic, o, done));
                 }
                 catch (Exception e)
@@ -536,14 +645,13 @@ namespace SignLink.Pictures
 
         /// <summary>Places a moving GIF whose still is encoded already (the cost line's texts) once its frames are decoded
         /// for the screen on a worker (0.20.132, review: an Update decoded and encoded the still again too). Frames that
-        /// could never fit the screens' budget are not decoded: the still alone, and the note says so.</summary>
+        /// could never fit the screens' budget, or that the other GIFs leave no room for now, are not decoded: the still
+        /// alone, and the note says so (ScreenNote).</summary>
         public void StartScreen(Sign target, string file, EncodedPicture still, PictureOptions options, Action<Sign> done = null)
         {
             if (Busy) return;
             try
             {
-                byte[] bytes = File.ReadAllBytes(file);
-                string key = PictureImporter.Stamp(file);
                 PictureOptions o = options.Clone();
                 Busy = true;
                 cancel = false;
@@ -551,9 +659,12 @@ namespace SignLink.Pictures
                 {
                     try
                     {
-                        string note = PictureImporter.ScreenNote(bytes);
-                        ScreenFrames frames = note == null ? PictureImporter.GifScreen(bytes, () => cancel) : null;
-                        if (frames != null) frames.Key = key;                // parked under it when the stack changes
+                        string key = PictureImporter.Stamp(file);           // with the bytes, on the worker (1.0.2, review)
+                        byte[] bytes = File.ReadAllBytes(file);
+                        int planW = still.Plan.W;                           // the still's: the screen goes over it
+                        string note = PictureImporter.ScreenNote(bytes, (gw, gh) => planW, target);
+                        ScreenFrames frames = note == null ? PictureImporter.GifScreen(bytes, (gw, gh) => planW, () => cancel) : null;
+                        if (frames != null) frames.Key = PictureImporter.ScreenKey(key, frames.W);   // parked under it when the stack changes
                         EncodedPicture pic = still.With(frames);
                         if (note != null) pic.Note = note;
                         MainThread.Post(() => Finish(target, pic, o, done));

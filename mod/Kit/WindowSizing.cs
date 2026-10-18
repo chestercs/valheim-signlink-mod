@@ -1,6 +1,6 @@
 using System;
 
-namespace SignLink.UI
+namespace PetyusPolisz.Kit
 {
     /// <summary>The window's size in screen pixels (0.20.46, Width and Height apart; the author: it does not set the
     /// height ... even at Very large the mod does not reach the top and bottom of the monitor). Width is a share of the

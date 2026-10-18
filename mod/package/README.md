@@ -5,16 +5,13 @@ the mod**, because they are ordinary signs saved in the world. Only the player w
 
 ![The Starry Night in a wooden frame on a Valheim house at night](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/framed-painting.jpg)
 
-**204 ready-made art pieces come with the mod, and 150 of them are animated** ([see them all](https://github.com/chestercs/valheim-signlink-mod/blob/main/docs/art-library.md)):
-
-![Animated pixel animals of Valheim](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/art/animals.gif)
-![Animated pixel scenes from Valheim](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/art/scenes.gif)
-
 | Floor mural | Ceiling fresco |
 |---|---|
 | ![The Great Wave as a floor mosaic](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/floor-mural.jpg) | ![The Creation of Adam on a ceiling](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/ceiling.jpg) |
 | **Glyph art** | **Signposts and labels** |
 | ![Glyph art emblems on a gable](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/glyph-art.jpg) | ![Signposts made with the text templates](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/text-templates.jpg) |
+| **QR code** | **Tilted** |
+| ![A QR code of a link framed on a stone wall; phones read it](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/qr-code.jpg) | ![A painting leaning back on an easel](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/easel-tilt.jpg) |
 
 **Links:** [GitHub](https://github.com/chestercs/valheim-signlink-mod) (source, documentation) ·
 [Wiki](https://github.com/chestercs/valheim-signlink-mod/wiki) ·
@@ -29,7 +26,7 @@ the mod**, because they are ordinary signs saved in the world. Only the player w
   necks, hens and chicks, forest animals, bears, wolves and moose, seals, fish and sea serpents, a fjord at dusk) and
   kitchen icons for chest labels. The animated ones go on moving; switch *Moving* off for a still.
 - **Text with templates.** Write coloured text, or put ready pieces in a click: a coloured block to paint a wall or a
-  floor, a label, a symbol from a palette (runes, arrows, frames, emoji), a two-colour pattern.
+  floor, a label, a symbol from a palette (runes, arrows, frames, emoji), a two-colour pattern, a QR code that phones read.
 - **Pictures on signs.** PNG, JPG or GIF (its first frame) become sign text in game, sized in metres (phone photos
   the right way up). A sign shows up to 50 000 pixels; a bigger picture goes over copies of the sign stacked a
   fraction of a millimetre apart, so it stays one flat, seamless picture (up to a million pixels, in single player).
@@ -43,9 +40,9 @@ the mod**, because they are ordinary signs saved in the world. Only the player w
   ceiling), rotate it, resize and move what it holds along its face. The place you set stays put whatever the tilt.
 - **Move or turn the sign itself** from a millimetre to a metre at a time (buttons, arrow keys or the Turn slider,
   3 Place), as far as the game still holds it up (up to 5 m: a sign standing on a floor goes metres towards or away, one
-  on a wall barely off it) and any angle, without making it again; a step that would leave it too weakly held, so the
-  game would break it, is refused. Steps show for you at once; *Apply sign coord changes* makes them everyone's, *Undo*
-  takes them back.
+  on a wall barely off it) and any angle, without making it again. Steps show for you at once; *Apply sign coord changes*
+  makes them everyone's, a tilt and a rotation too, *Undo steps* takes them back. Where the game would not hold the sign up, the steps and the pose still
+  show, and only the button is refused, in red.
 - **Animations saved in the world.** They play for every SignLink player on a shared clock and survive restarts;
   players without the mod see the first frame.
 - **Glowing or lit.** Pictures glow in their own colours day and night, or take the scene's light like normal sign
@@ -57,8 +54,9 @@ the mod**, because they are ordinary signs saved in the world. Only the player w
 
 1. Install with r2modman or the Thunderstore Mod Manager (BepInExPack Valheim is installed with it).
 2. Put your pictures (PNG, JPG or GIF) into `BepInEx/config/SignLink/images` (*Open folder* on the Picture source opens it;
-   r2modman: *Settings › Browse profile folder*). Six public-domain paintings are already there to start with (Van Gogh,
-   Hokusai, Michelangelo, Monet and two by Arbo).
+   r2modman: *Settings › Browse profile folder*). Folders inside it are fine: the list shows them, → opens one and ← goes
+   back up; a sign remembers its picture's folder. Six public-domain paintings and a moving GIF are already there to start with
+   (Van Gogh, Hokusai, Michelangelo, Monet, two by Arbo, and Muybridge's galloping horse).
 3. In game, build a sign where the picture should go, then press **PageUp** (or type `/signlink` in the chat; the key
    can be changed or switched off on Settings, and the game's own sign editor has an *Open in SignLink* button).
 4. Select the sign on **1 Sign**: *Pick in view* (the window hides until you click a sign; the one under the cursor
@@ -66,15 +64,15 @@ the mod**, because they are ordinary signs saved in the world. Only the player w
    opens SignLink on that sign: on 3 Place to edit a sign SignLink made, on 2 Content for a new one; the hotkey does
    the same while a sign is selected. A selected sign stays selected while the window is closed, until you go far from it.
    Until a sign is selected, *2 Content* and *3 Place* stay grey.
-5. **2 Content**: write a *Text*, pick a built-in piece under *Art*, or pick a
-   *Picture* file, look at the preview and the cost, and set its light (glowing, or lit by the scene like the game's
+5. **2 Content**: pick a built-in piece under *Art*, pick a *Picture* file, or write a
+   *Text*, look at the preview and the cost, and set its light (glowing, or lit by the scene like the game's
    own sign text). A picture has a **Resolution** (how many pixels wide it is: the only thing that sets what it
    costs; a new picture starts at *Max (multiplayer)*, the most that fits a server, and *Native* takes every pixel
    the file has) and a **Width** in metres, which makes the pixels
    bigger or smaller (with *Fine Width steps*, on by default, the exact size takes a few pixels more or less). On *Text* the templates
    write ready pieces in a click: a coloured *Block* in metres (paint a wall or a floor, translucent if you like),
-   a *Label*, a *Symbol* from a palette (arrows, shapes, frames, runes, symbols, emoji), a *Pattern* in two colours.
-   The live preview shows every pick (a text, a piece, a picture) on the selected sign, for you only, until step 6 puts it on.
+   a *Label*, a *Symbol* from a palette (arrows, shapes, frames, runes, symbols, emoji), a *Pattern* in two colours, a *QR* code of a link or a text (phones read it; error correction, size and colours to choose).
+   The live preview shows every pick (a piece, a picture, a text) on the selected sign, for you only, until step 6 puts it on.
 6. **3 Place**: size it, move it, tilt or turn it if you like (the highlight shows where it goes), then press the button
    at the bottom (*Update content*, *Update sign* or *Update sign and content*: what changes). Nothing goes on the sign
    before that.
@@ -134,10 +132,10 @@ Settings are on the window's *Settings* tab; each one is also a line in the conf
 | 1 - Menu / WindowX, WindowY | -1 | the file | where the window was dragged (-1: the default place) |
 | 3 - Sign options / Highlight | on | Settings › Sign options | while the window is open, the selected sign and the sign under the cursor are outlined in the world, with where the content goes |
 | 3 - Sign options / HighlightContent | on | Settings › Sign options | with Highlight on, where the content goes is framed too: green over what will show, red where a wall or a floor stands in front of it, grey stripes seen from behind (off: the sign's board alone) |
-| 3 - Sign options / PreventEditor | on | Settings › Sign options | on signs holding SignLink content, E opens SignLink instead of the game's editor (whose Enter would cut the picture to 50 characters), and the hover text stays one short line |
 | 3 - Sign options / RefreshSeconds | 2 s | Settings › Sign options | how often changed signs are re-read (2 s is the game's own pace; lower only for animations a tool writes over the network) |
 | 4 - Playback / PlayAnimations, PlayGifs | on, on | Playing (Pause all / Play all) | glyph animations and moving GIFs play on this computer, each with its own button |
 | 4 - Playback / Distance | 64 m | Settings › Playback | farther animations and GIFs pause |
+| 4 - Playback / GifMemoryMB | 256 | Settings › Playback | the memory the moving GIFs' frames may take here: 256, 512 or 1024 MB (1024 wants a PC with 16 GB of RAM); lowered, the farthest GIFs stop until the rest fit |
 | 5 - Pictures / PngTransparency | on | Settings | how every picture is made from now on: a PNG's see-through parts stay empty (every sign of a picture stays under 400 KB, always) |
 | 5 - Pictures / MovingGifs | on | 2 Content (Moving, on a GIF) | a GIF goes on moving over its still wherever its file is in the images folder; the switch keeps your last choice |
 | 5 - Pictures / FineWidth | on | Settings | A picture's Width and Height move finely (dragged, typed, Shift + mouse wheel); your Resolution stays, the exact size takes the pixels nearest it (a few more or less), never over the multiplayer limit; off: the next size it takes for the same data |
@@ -165,6 +163,12 @@ signs. Optional: delete `BepInEx/config/SignLink/` (your images), `BepInEx/cache
   the ground, with only its picture out, avoids both.
 - A GIF moves over its picture on every computer that has the GIF file in its `BepInEx/config/SignLink/images`
   folder (give the file to your friends); everyone else sees its first frame. Its frames are not saved in the world.
+- A GIF reads with up to 5 000 frames and 1 500 million pixels in all (about 720 frames of 1920 x 1080). To move, its
+  frames are shrunk to at most twice the sign's pixels (and 1024 a side; SignLink 1.0.2); every moving GIF shares the GIF
+  memory (256 MB; 512 or 1024 in Settings › Playback on a PC with the RAM), the same GIF on many signs counting once. A GIF
+  whose frames at that size pass about four fifths of it (200 MB of 256) plays every second, third ... frame (the same speed); one too big
+  to move goes on still. The Moving row says which before you put it on. A GIF beside you takes the room of GIFs idle
+  far away or paused; one that waits for room starts the moment room frees.
 - The live preview builds a piece, or a sign's content moved, of up to 40 000 glyphs; a bigger one shows only the
   highlight's rectangle until it goes on (a picture or a text always shows).
 
@@ -172,6 +176,17 @@ signs. Optional: delete `BepInEx/config/SignLink/` (your images), `BepInEx/cache
 
 SignLink is made by ChesTeRcs (team PetyusPolisz). It was written with Claude (Anthropic's AI) under their direction
 and tested on their worlds with Valheim 1.0.20. The code is MIT licensed (LICENSE); the art library is CC BY 4.0
-(LICENSE-ART): playing with the pieces needs no credit, sharing the pieces themselves does. The six paintings that
+(LICENSE-ART): playing with the pieces needs no credit, sharing the pieces themselves does. The six paintings and the GIF that
 come with it are public domain: The Starry Night (Van Gogh), The Great Wave off Kanagawa (Hokusai), The Creation of Adam (Michelangelo),
-Impression, Sunrise (Monet), and The Wild Hunt of Odin and Valkyrien (Arbo).
+Impression, Sunrise (Monet), The Wild Hunt of Odin and Valkyrien (Arbo), and Muybridge's galloping horse (1887).
+
+SignLink lives on [Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/),
+[Nexus Mods](https://www.nexusmods.com/valheim/mods/4453) and [GitHub](https://github.com/chestercs/valheim-signlink-mod)
+(source, [wiki](https://github.com/chestercs/valheim-signlink-mod/wiki),
+[bug reports](https://github.com/chestercs/valheim-signlink-mod/issues/new/choose)).
+
+## Art showcase
+
+**204 ready-made art pieces come with the mod, and 150 of them are animated** ([see them all](https://github.com/chestercs/valheim-signlink-mod/blob/main/docs/art-library.md)):
+
+![Animated pixel animals of Valheim](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/art/animals.gif)

@@ -40,6 +40,13 @@ ART_MODULES = [("concepts.lib_pets", "The cat's family"), ("concepts.lib_cats2",
                ("concepts.lib_creatures", "Creatures"), ("concepts.lib_scenes", "Scenes"),
                ("concepts.lib_kitchen", "Kitchen icons"), ("concepts.lib_folk", "Heroes and bosses"),
                ("concepts.lib_world", "The world")]
+# the Art tab's groups, best first (the author, 2026-10-17: rank them by which is best): the most polished and the
+# most Valheim first, the families of one animal last; groups.tsv carries the order to SignLink. Then the author's
+# own order (the same day): Scenes, Creatures, Animals of Valheim, Kitchen icons first; the two cat groups together,
+# low, just above the necks
+GROUP_ORDER = ["Scenes", "Creatures", "Animals of Valheim", "Kitchen icons", "Heroes and bosses", "The world",
+               "Sea and rivers", "Forest and farm", "Wild animals", CLASSICS, "The boar family", "Hens, chicks and eggs",
+               "The cat's family", "The cat's friends", "The neck family"]
 
 FS, GS = "\u001e", "\u001d"
 ABOVE = 40.0                    # bottom edge 1 m above the sign
@@ -141,11 +148,12 @@ def main():
     piece(glyph, "Midnight light", round7.glow_aurora())
     piece(glyph, "Mjolnir", round1.mjolnir())
     piece(glyph, "Moon halo", round5.moon_glow())
-    groups = [CLASSICS]
-    lines = []
+    groups = GROUP_ORDER
+    assert sorted(set(g for _, g in ART_MODULES) | {CLASSICS}) == sorted(groups), "every group ranked once"
+    lines, seen = [], set()
     for mod, group in ART_MODULES:
-        if group not in groups:
-            groups.append(group)
+        if group not in seen:
+            seen.add(group)
             if group in moved:
                 lines.append(f"{moved[group]}\t{group}")         # first in its group
         lines += [f"{n}\t{group}" for n in library(glyph, pixel, mod)]

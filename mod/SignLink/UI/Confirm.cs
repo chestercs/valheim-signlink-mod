@@ -1,6 +1,7 @@
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
@@ -57,17 +58,14 @@ namespace SignLink.UI
             {
                 // the way out first (0.20.186, the author: start by telling them "change resolution lower in content page")
                 if (lighter != null) GUILayout.Label(lighter, Theme.Notice);
-                GUILayout.Label($"{what ?? "This"} is very large. Put it on the sign anyway?", Theme.Warn);
-                GUILayout.Label((save >= 0 ? SaveCost.WaitLine(load, save) : $"Every player who arrives here builds it for about {load:0.#} s, besides its download") +
-                                ". The objects around it can arrive only after it, so a player who logs in next to it may not see the " +
-                                "buildings there until then.", Theme.Label);
+                GUILayout.Label($"{what ?? "This"} is very large. Put it on anyway?", Theme.Warn);
+                GUILayout.Label(save >= 0 ? SaveCost.WaitLine(load, save) : $"{load:0.#} s to build for each arriving player", Theme.Label);
                 if (save >= 0)
-                    GUILayout.Label($"It adds {SaveCost.Label(save)} to the world save.", Theme.Label);
+                    GUILayout.Label($"World save: +{SaveCost.Label(save)}", Theme.Label);
                 if (largest > SignText.NetworkLimit)                        // single player only: in multiplayer the limits stop it first
-                    GUILayout.Label($"One sign holds {SaveCost.Label(largest)}: more than the 512 KB other players can receive, so this " +
-                                    "world cannot go on a server with it.", Theme.Warn);
+                    GUILayout.Label($"One sign: {SaveCost.Label(largest)}, over 512 KB: no server", Theme.Warn);
                 else if (largest > PixelText.NetworkKb * 1024)
-                    GUILayout.Label($"One sign holds {SaveCost.Label(largest)}: close to the 512 KB other players can receive.", Theme.Label);
+                    GUILayout.Label($"One sign: {SaveCost.Label(largest)}, near 512 KB", Theme.Label);
                 using (Widgets.Horizontal())
                 {
                     GUI.enabled = w.HasTarget && problem == null;

@@ -1,6 +1,7 @@
 using System;
 using SignLink.Pictures;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
@@ -69,14 +70,9 @@ namespace SignLink.UI
             using (Widgets.Vertical(Theme.Section))
             {
                 int posed = Array.IndexOf(PoseTilts, Mathf.Round(Tilt * 10f) / 10f), pick;
-                using (Widgets.Horizontal())
-                {
-                    GUILayout.Label("The sign", Theme.Label, Widgets.W(Widgets.LabelW));
-                    // small, as the pivot's chips were (0.20.78, the author: the Standing / Face up / Face down buttons as
-                    // small as the middle / bottom edge buttons being removed now)
-                    pick = Widgets.Toolbar(posed, Poses, Theme.Chip, Widgets.W(Mathf.Min(300f, Widgets.RestW)));
-                    GUILayout.FlexibleSpace();
-                }
+                // small, as the pivot's chips were (0.20.78, the author: the Standing / Face up / Face down buttons as
+                // small as the middle / bottom edge buttons being removed now)
+                pick = Widgets.Choice("The sign", posed, Poses, 300f);
                 if (pick >= 0 && pick != posed)
                 {
                     float to = PoseTilts[pick];
@@ -107,9 +103,6 @@ namespace SignLink.UI
                 turnRow?.Invoke();
                 float turn = Widgets.Number(key + "turn", "Rotate (clockwise)", Turn, -180f, 180f, 5f, "°", "0.#", snap: HalfDegree);   // a piece that cannot move still turns
                 if (Mathf.Abs(turn - Turn) > 1e-4f) Turn = HalfDegree(turn);   // a value the sign had already stays as it is
-                Widgets.Hint("Turn swings the sign round where it stands, as the hammer turns a piece (Apply sign coord changes keeps it). " +
-                             "Rotate spins it on its own face with what it shows. Tilt and Rotate show for you at once; the button " +
-                             "at the bottom puts them on.");
             }
         }
 
@@ -138,9 +131,7 @@ namespace SignLink.UI
                 // the same lines whatever the tilt, the tilt's own words on a line of their own: a hint that grew a line
                 // as the Tilt slider below it crossed 45° moved the slider under the mouse (0.20.75)
                 bool up = Tilt >= 45f, down = Tilt <= -45f;
-                Widgets.Hint("Right and Up slide the content along the sign's face as you read it. The sign itself moves and turns " +
-                             "under Sign, below.");
-                Widgets.Hint(up ? "Face up: Up runs away from you." : down ? "Face down: Up runs towards you." : "Standing: Up runs up the sign.");
+                Widgets.Hint("2D coordinates on the sign's face");               // 1.0.2, the author: relative to the sign
             }
         }
     }

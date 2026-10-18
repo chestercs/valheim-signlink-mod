@@ -35,8 +35,6 @@ namespace SignLink
         {
             new[] { "1 - Menu|ShowGhost", "3 - Sign options|Highlight" },
             new[] { "5 - Pictures|PlayGifs", "5 - Pictures|MovingGifs" },                        // 0.20.160
-            new[] { "3 - Signs in the world|PictureSigns", "3 - Sign options|PreventEditor" },
-            new[] { "3 - Viewer|PictureSigns", "3 - Sign options|PreventEditor" },               // 0.19
         };
 
         /// <summary>Entries no version keeps any more, under every section they ever had ("Section|Key"): HoverSprites
@@ -47,7 +45,9 @@ namespace SignLink
         /// the author: remove Multiplayer-safe? yes), AllowOnServers (0.20.44: SignLink makes and removes signs in
         /// multiplayer too; the multiplayer limits keep the content small, a ward still protects, and the switch was the
         /// player's own, never a protection for the server), WindowSize (0.20.46: Width and Height apart; OldSize keeps
-        /// its size).</summary>
+        /// its size), PreventEditor and its older names PictureSigns (1.0.2: the short hover line on a picture sign and E
+        /// opening SignLink are always on; off, the game read a picture's whole text by the crosshair with a stutter, and a
+        /// file that said off kept it off once the switch left the window).</summary>
         static readonly string[] Dropped =
         {
             "3 - Viewer|HoverSprites", "3 - Signs in the world|HoverSprites", "Viewer|HoverSprites",
@@ -57,6 +57,7 @@ namespace SignLink
             "1 - Menu|WindowSize", "4 - Menu|WindowSize",
             "3 - Sign options|ShowAll",                                     // starts off every game (0.20.123)
             "5 - Pictures|FineWidthSteps",                                  // FineWidth, on by default (0.20.124)
+            "3 - Sign options|PreventEditor", "3 - Signs in the world|PictureSigns", "3 - Viewer|PictureSigns",   // always on (1.0.2)
         };
 
         /// <summary>For the orphaned entries ("Section|Key" to the value as written) that have a new home: the move, in

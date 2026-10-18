@@ -28,6 +28,9 @@ namespace SignLink.Signs
         public bool C0Known;
         /// <summary>A stored animation's blob (AnimBlob), null when the sign holds none.</summary>
         public byte[] Anim;
+        /// <summary>Its Moving is off (Playing: StoredAnims.StillKey): the copy keeps it off (1.0.2, the night's test: a
+        /// switched-off piece pasted moved, its recipe saying still). Older clips have no such line: moving.</summary>
+        public bool Still;
 
         public string Pack()
         {
@@ -44,6 +47,7 @@ namespace SignLink.Signs
                     N(C0x), N(C0y), C0Known ? "1" : "0",
                 })).Append('\n');
             if (anim) sb.Append("anim=").Append(Convert.ToBase64String(Anim)).Append('\n');
+            if (anim && Still) sb.Append("still=1\n");
             return sb.Append(End).Append(texts).ToString();
         }
 
@@ -75,6 +79,7 @@ namespace SignLink.Signs
                 if (key == "recipe") c.Recipe = Uri.UnescapeDataString(value);
                 else if (key == "name") c.Name = Uri.UnescapeDataString(value);
                 else if (key == "anim") c.Anim = Convert.FromBase64String(value);
+                else if (key == "still") c.Still = value == "1";
                 else if (key == "fit")
                 {
                     string[] v = value.Split(',');

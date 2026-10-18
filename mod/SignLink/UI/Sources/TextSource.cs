@@ -4,6 +4,7 @@ using SignLink.Pictures;
 using SignLink.Signs;
 using TMPro;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI.Sources
 {
@@ -170,31 +171,51 @@ namespace SignLink.UI.Sources
 
         public override void OnClose() => DropPreview();
 
+        /// <summary>The templates, the Light row, the editor's row of buttons (Insert, then the box's own) and the box
+        /// under them, the line of what holds it back last (1.0.2, the author: the buttons by Insert, Insert in the
+        /// way-on yellow whenever it can be pressed, the light up over the editor; before, the buttons and the light
+        /// sat under the box, Insert in the template's group).</summary>
         public override void Draw(Session s, SignLinkWindow w, float now)
         {
             bool can = Source.Ready(s);                                     // a text is written for a sign
             bool tooLong = s.HasTarget && s.Held.Text.Length > MaxChars;
-            Widgets.Hint("One sign's text, any length, tags as the game reads them. The selected sign shows it as you type, for you only, until the button puts it on.");
+            int room = MaxChars - text.Length;                              // a QR code must fit the box
             GUI.enabled = can;
-            List<Snippets.Line> lines = templates.Draw(w, can);
-            if (lines != null && lines.Count > 0)
+            templates.Draw(w, room);
+
+            // the light, read off the text (a glowing tag anywhere: glowing; none: lit like any sign text); a click
+            // rewrites the text at a later Layout
             {
-                int caret = Caret();
-                w.Later(() => SetText(Snippets.Insert(text, lines, caret)));
+                bool empty = shown.Length == 0;
+                int at = empty ? -1 : SignGlow.IsGlowing(shown) ? 0 : 1;
+                GUI.enabled = can && !empty;
+                int pick = Widgets.Choice("Light", at, LightRow.PictureNames, 320f);
+                if (pick >= 0 && pick != at)
+                {
+                    GlowMode m = pick == 0 ? GlowMode.Glowing : GlowMode.Lit;
+                    w.Later(() => SetText(SignGlow.Apply(text, m)));
+                }
             }
-            Keys(w);                                                        // Ctrl+Z, Ctrl+Y: before the box takes the keys
-            GUI.SetNextControlName(AreaName);
-            using (Widgets.Scroll(ref scroll, 220))
-                text = GUILayout.TextArea(text, MaxChars, Theme.Field, GUILayout.ExpandHeight(true));   // the verb follows at the next Layout (Tick)
+            Widgets.Space(6);
+            Widgets.Rule();                                                 // the light above, the editor below (1.0.2, the owner: a separation)
+            Widgets.Space(4);
+
+            // Reset: what the sign holds (0.20.147, the author: on a sign holding Huginn and Muninn it loaded the first
+            // layer as a text, and putting that on left one sign of three; why not fix it instead?): a text into
+            // the editor; a piece or a picture back in its own source, the sign's own (the pose and size chosen stay)
+            bool aText = s.Held.Recipe.Kind == SignRecipe.Kinds.Text || (s.Held.Recipe.Kind == SignRecipe.Kinds.None && s.Stack.Count <= 1);
+            bool known = s.Held.Recipe.Kind == SignRecipe.Kinds.Art || s.Held.Recipe.Kind == SignRecipe.Kinds.Picture;
             using (Widgets.Horizontal())
             {
-                // Reset: what the sign holds (0.20.147, the author: on a sign holding Huginn and Muninn it loaded the first
-                // layer as a text, and putting that on left one sign of three; why not fix it instead?): a text into
-                // the editor; a piece or a picture back in its own source, the sign's own (the pose and size chosen stay)
-                bool aText = s.Held.Recipe.Kind == SignRecipe.Kinds.Text || (s.Held.Recipe.Kind == SignRecipe.Kinds.None && s.Stack.Count <= 1);
-                bool known = s.Held.Recipe.Kind == SignRecipe.Kinds.Art || s.Held.Recipe.Kind == SignRecipe.Kinds.Picture;
+                GUI.enabled = can && templates.Problem(room) == null;       // a template picked and ready: Insert lights up
+                if (Widgets.SmallGoButton("Insert", Widgets.W(100)))        // the picked template's lines at the caret
+                {
+                    List<Snippets.Line> lines = templates.Lines();
+                    int caret = Caret();
+                    if (lines != null && lines.Count > 0) w.Later(() => SetText(Snippets.Insert(text, lines, caret)));
+                }
                 GUI.enabled = can && !s.Held.Empty && (aText ? !tooLong : known && s.Missing == null);
-                if (Widgets.Button("Reset", Theme.SmallButton, Widgets.W(100)))   // the sign's text as made (0.20.71: Reset instead of "load from the sign")
+                if (Widgets.Button("Reset", Theme.SmallButton, Widgets.W(80)))   // the sign's text as made (0.20.71: Reset instead of "load from the sign")
                     w.Later(() =>
                     {
                         if (aText) SetText(s.Held.Made);
@@ -205,42 +226,27 @@ namespace SignLink.UI.Sources
                         }
                     });
                 GUI.enabled = can && shown.Length > 0;
-                if (Widgets.Button("Clear the text", Theme.SmallButton, Widgets.W(120))) w.Later(() => SetText(""));
+                if (Widgets.Button("Clear", Theme.SmallButton, Widgets.W(80))) w.Later(() => SetText(""));
                 GUI.enabled = can && history.CanUndo;
-                if (Widgets.Button("Undo", Theme.SmallButton, Widgets.W(80))) w.Later(() => Step(history.Undo()));
+                if (Widgets.Button("Undo", Theme.SmallButton, Widgets.W(70))) w.Later(() => Step(history.Undo()));
                 GUI.enabled = can && history.CanRedo;
-                if (Widgets.Button("Redo", Theme.SmallButton, Widgets.W(80))) w.Later(() => Step(history.Redo()));
+                if (Widgets.Button("Redo", Theme.SmallButton, Widgets.W(70))) w.Later(() => Step(history.Redo()));
                 GUI.enabled = true;
-                if (s.HasTarget && !s.Held.Empty && !aText)                // a picture or a piece first: its length is no text's
-                    GUILayout.Label(known && s.Missing == null ? "The sign holds a picture or a piece: Reset brings it back."
-                                          : "The sign holds a picture or a piece SignLink cannot load here.", Theme.SideNote);
-                else if (tooLong)
-                    GUILayout.Label($"The sign holds {s.Held.Text.Length} characters: too long to edit here (Copy, Paste or the API handle it).", Theme.Warn);
+                GUILayout.Label("Ctrl+Z", Theme.KeyHint, GUILayout.ExpandWidth(false));   // Keys (1.0.2: keys shown)
+                GUILayout.Label("Ctrl+Y", Theme.KeyHint, GUILayout.ExpandWidth(false));
             }
+            Keys(w);                                                        // Ctrl+Z, Ctrl+Y: before the box takes the keys
+            GUI.enabled = can;
+            GUI.SetNextControlName(AreaName);
+            using (Widgets.Scroll(ref scroll, 220))
+                text = GUILayout.TextArea(text, MaxChars, Theme.Area, GUILayout.ExpandHeight(true));   // the verb follows at the next Layout (Tick)
+            GUI.enabled = true;
+            // what holds the editor back, under the box
             if (!can) Widgets.Hint(Source.NotReady(s));
-
-            // the light, the last group under its own title (0.20.69, as LightRow.Draw); read off the text (a glowing tag
-            // anywhere: glowing; none: lit like any sign text), and a click rewrites the text at a later Layout
-            Widgets.Header("Light");
-            using (Widgets.Vertical(Theme.Section))
-            {
-                bool empty = shown.Length == 0;
-                int at = empty ? -1 : SignGlow.IsGlowing(shown) ? 0 : 1;
-                using (Widgets.Horizontal())
-                {
-                    GUILayout.Label("Light", Theme.Label, Widgets.W(Widgets.LabelW));
-                    GUI.enabled = can && !empty;
-                    int pick = Widgets.Toolbar(at, LightRow.PictureNames, Theme.Chip, Widgets.W(Mathf.Min(320f, Widgets.RestW)));
-                    GUILayout.FlexibleSpace();
-                    GUI.enabled = true;
-                    if (pick >= 0 && pick != at)
-                    {
-                        GlowMode m = pick == 0 ? GlowMode.Glowing : GlowMode.Lit;
-                        w.Later(() => SetText(SignGlow.Apply(text, m)));
-                    }
-                }
-                Widgets.Hint("Glowing puts the glowing font's tag in front of the text; Lit by the scene takes such tags out. Your own tags stay as typed.");
-            }
+            else if (s.HasTarget && !s.Held.Empty && !aText)                // a picture or a piece first: its length is no text's
+                GUILayout.Label(known && s.Missing == null ? "Holds a piece" : "Holds a piece (unreadable)", Theme.SideNote);
+            else if (tooLong)
+                GUILayout.Label($"{s.Held.Text.Length} characters: too long", Theme.Warn);
         }
 
         public override void DrawSize(Session s, SignLinkWindow w)
@@ -248,8 +254,7 @@ namespace SignLink.UI.Sources
             bool empty = shown.Length == 0, movable = !empty && Movable(s), was = GUI.enabled;
             GUI.enabled = was && Source.Ready(s);
             size.Draw(s, Size(s, out Vector2 shownM) ? shownM : Vector2.zero, movable, empty ? null
-                : movable ? "Scales the text's own size tags."
-                : "Cannot be resized: no size tag of its own (the game sizes it), lines without a line height, or tags SignLink does not scale.",
+                : movable ? null : "Fixed size",
                 SnapScale);                                                 // its exact sizes for Shift + wheel (0.20.98)
             GUI.enabled = was;
         }

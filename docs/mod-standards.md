@@ -60,8 +60,15 @@ the hotbar, crouch, dodge and the mouse look stay off: a click on the window mus
 - Tab and E: `InventoryGui.Update` opens the inventory without checking text input (`InventoryGui.cs:526`), so
   a prefix skips `InventoryGui.Show`.
 
-The window draws its own styles (`UI/Theme.cs`: Unity's default skin draws windows half transparent), as solid as
+The window draws its own styles (`Kit/Theme.cs`; the window kit in `mod/Kit`, its parts in `mod/Kit/README.md`: Unity's default skin draws windows half transparent), as solid as
 its opacity (0.8 by default; **Opacity** below), and scales with the screen height.
+
+**Words in the window** (1.0.2, the author: no long texts, one word for every explanation): a control says what it is
+by its own label; the grey lines under rows are a word or two, or only what stops a button (a limit, no support, a
+ward). Every hotkey shows where it works, in small dim frames at the right of its group's title (`Widgets.Keys`,
+`Theme.KeyHint`): Shift+wheel beside groups with sliders, the arrows beside Positioning fine-tune, ↑ ↓ beside the Art and
+Picture lists (← → too beside Art's: they shut and open the pick's group), Ctrl+Z / Ctrl+Y beside Undo and Redo, the
+window's key and Esc beside Close.
 
 The window opens only when no other UI is open (menu, inventory, map, console, text input, chat). Esc closes it. With a
 sign picked it opens on 3 Place when SignLink made what the sign holds (an edit), on 2 Content when the sign is empty or
@@ -171,6 +178,8 @@ and turned the yellow green wherever a picture overlapped the board. The board's
 render queue 3150 (after the veil, no depth test), a neon lime, opaque, and their vertex colours `BoardGlow` (2.2)
 times brighter in linear space: over 1 the game's bloom makes them glow where the camera renders in HDR (the log says
 "camera HDR" once), else they show at full strength. The hover frame's board keeps its cool white, unlit.
+While nothing would hold the sign where its steps or the pose to come put it (`ContentTab.PoseProblem`), the selection's
+board bars take `Ghost.Unheld` (a hot scarlet, apart from the content's crimson) at the same glow (`Ghost.Hold`, 1.0.2).
 
 **The content's bars lie on the text's plane** (`Ghost.OnText`, 0.20.101): green and red are decided by depth where the
 bars are, so the bars sit a millimetre in front of the text (the text itself is 2 cm in front of the board's face:
@@ -204,6 +213,12 @@ the sign was made, its centre of mass moves): asking only whether anything was t
 broke. A step towards better support stays allowed. Since 0.20.109 this is the move's limit, with `SignMove.MaxM` (5 m
 from where it was built) against a step gone wrong; the fixed 50 cm along the face and 10 cm off it went, and steps go
 up to a metre.
+Since 1.0.2 the steps and turns go anywhere within those limits and only Apply is refused (the author: the rotation
+sliders stopped where the sign had no support): the game does not weigh a sign with steps not applied
+(`Patches.StepWearPatch` skips its `WearNTear.UpdateWear`), the steps together are weighed against where it stands for
+everyone (`SignMove.Weigh`, the same rule), and `SignMove.Write` refuses while it would not be held (*Changes* says why in
+red). A new tilt or rotation is weighed the same way before the footer's button and the Sign group's Apply (`ContentTab.PoseProblem`,
+`SignPose.Check`). Without the patch (a game update) every step is refused as before.
 
 **Face up and face down keep the content in the world** (`Fit.Laid`, 0.20.107): the content's place is kept in the frame
 as built (Right, Up, Out); the rows show it on the face (Up runs towards the picture's top: away from you face up,
@@ -403,23 +418,23 @@ names it, under the bar). Making and removing signs is allowed everywhere since 
 | 1 Sign | Copy | a sign that holds something |
 | 1 Sign | Paste | a sign, editable (over content: asks twice; over a multiplayer limit it fails and says why) |
 | 1 Sign | Delete | a sign, editable |
-| 1 Sign | 2 Content ▸ | a sign |
+| 1 Sign | Next ▸ (to 2 Content; 1.0.2: "Next", the clearest word) | a sign |
 | 1 Sign | Stop the tool's animation (a GIF's Pause / Play is on Playing since 0.20.117) | a tool's animation playing on the stack |
 | 2 Content | the source strip, every list, Reload, Open folder | always |
 | the tab strip | 2 Content, 3 Place | a selected sign (`SignLinkWindow.NeedsSign`, 0.20.73); the picker is on 1 Sign only |
 | 2 Content | Light (every source's last group, under its own title, 0.20.69), a picture's pixel options, the text box, Reset (the sign's text) | `Source.Ready`: a sign, editable (`Source.NotReady` says so under the rows) |
 | 2 Content | Hide list (Picture, Art) | something picked: with nothing picked the list is all there is (0.20.69) |
-| 2 Content | 3 Place ▸ | a sign, nothing picked wrong (`Source.Problem`), within the multiplayer limits (`Source.Limit`), no `Reason` |
+| 2 Content | Next ▸ (to 3 Place) | a sign, nothing picked wrong (`Source.Problem`), within the multiplayer limits (`Source.Limit`), no `Reason` |
 | 3 Place | the pose rows, Move the sign, the content rows | a sign and no `Reason` (the content rows also need content, picked or held) |
 | 3 Place | Undo changes | the chosen fit or light differs from the sign's (0.20.40: a new pick or new picture settings are not its to undo) |
 | 3 Place | Content positioning, Content size (sections) | content that can move or be resized: otherwise shown closed, the title grey (0.20.77) |
 | 3 Place | Reset to default (Content positioning) | content that can move, off the sign's middle (Right, Up; the size and the pose stay) |
 | 3 Place | Right / Up | with the content rows: along the sign's face as you read it (no third direction: a sign's content has no depth, 0.20.27) |
-| 3 Place | Apply sign coord changes, Undo (Move the sign) | steps or turns not applied yet (`SignMove.HasPending`); Apply writes them and makes the signs again where they stand (`SignPose.Remake`, 0.20.72: every player sees it at once); closing the window or selecting another sign undoes them (`SignMove.Revert`) |
+| 3 Place | Apply sign coord changes, Undo steps (the Sign group) | steps or turns not applied yet (`SignMove.HasPending`), or a tilt or rotation waiting (refused while `SignMove.Unheld` or `ContentTab.PoseProblem` says why; a pose goes on through `SignFit.Refit` with the content's place along the face kept, `Fit.Laid`); Apply writes them and makes the signs again where they stand (`SignPose.Remake`, 0.20.72: every player sees it at once); closing the window or selecting another sign undoes them (`SignMove.Revert`) |
 | 3 Place | Reset to default (Changes) | moved, turned, tilted or rotated since it was built, or steps not applied (at once, for everyone: the signs made again where and as built; steps never applied are dropped) |
 | 3 Place | Rotate, Tilt, the pose buttons (Sign rotations) | a sign (an empty one too: its pose changes with an *Apply*) |
 | 3 Place | the verb button | per `Change.Decide`: greyed as "Select a sign first", "As it is", the problem or the multiplayer limit; "Working ..." while busy |
-| Playing | Delete (a saved animation's frames; a GIF's movement: its recipe says still) | the sign is editable (a ward) |
+| Playing | Moving off and on, for everyone (a saved animation: `signlink_anim_still`, the mark of the frames kept; a GIF: its recipe's Animate) | the sign is editable (a ward) |
 | Playing | Pause / Play (both kinds, here only) | always |
 | Settings | Playback: Pause beyond (from Playing, 0.20.54) | always |
 | Playing | Pause all GIFs, Pause all glyph animations (0.20.163) | always |
@@ -441,7 +456,7 @@ on 2 Content (`AreaMeter`: "250 KB / 600 KB multiplayer limit within 100 m; with
 title (0.20.34, `SignLinkWindow.AreaTitle`: around the selected sign, else around the player); every
 write refuses it as well (`SignText.RequireRoom` in `SignBuilder.SetContent`, `SignPose.Set` when it makes the signs
 again, `SignPose.Remake`, `StoredAnims.Store`, the API's text write, clone and synced animations). Removing is
-always allowed; single player has no limit and no meter.
+always allowed; single player has no limit, and its Area bar only informs (grey and amber, against a server's 600 KB).
 
 **A picture's cost is estimated while it is counted again** (0.20.125; the author: the calculation runs 3-4 times or keeps
 flicking the button below, which flashes yellow ... let's make a smooth solution). A Width, Height or Resolution step changes the
@@ -510,8 +525,11 @@ changes or the game restarts; one whose frames find no room in the screens' budg
 
 **A GIF is decoded once** (`ScreenPlayer.Park`, 0.20.14): a screen whose sign goes (the stack rewritten by
 `SignBuilder.SetContent`, made again by `SignPose.Set`, or unloaded) parks its frames under the file's stamp
-(`PictureImporter.Stamp`: name, length, write time), within the same 256 MB budget as the playing screens; the oldest
-parked set goes when a screen needs the room. `ScreenRestore` takes parked frames before it reads the file, and the
+(`PictureImporter.Stamp`: name, length, write time), within the same budget as the playing screens (`ScreenPlayer.Budget`,
+Settings › Playback › GIF memory since 1.0.2); the oldest parked set goes when a screen needs the room. A GIF waiting for
+room is looked at again as soon as room frees (`ScreenRestore.RoomFreed`), and screens idle far away or paused park to
+make room for a nearer one (`ScreenPlayer.MakeRoom`); its file's size and frame count are kept by stamp (`Measured`), so
+the wait reads nothing. `ScreenRestore` takes parked frames before it reads the file, and the
 window asks for a scan at once after any change (`Restore.Soon` on `Session.Changed`), so a moving GIF refits like a
 still (its texts moved in place, `Change.Decide` → *Refit*; 0.20.7-0.20.13 forced an *Update* because a refit lost the
 screen) and plays on within a frame or two. A screen the player stops drops its frames. What really needs a new
@@ -563,6 +581,15 @@ which `SignLinkWindow.OnGUI` applies at a Layout event with `GUIUtility.hotContr
 - **Playback.** Every SignLink client plays what it finds on a sign within range. The frame comes from the
   synchronised world time (`ZNet.GetTimeSeconds()`), so all players see the same frame. Playback is
   culled by distance, a global frame budget limits the cost, and a menu toggle turns all of it off.
+- **Moving off, for everyone.** The Playing tab's Moving switch sets the int `signlink_anim_still` on the sign: the
+  mark of the frames switched off (`StoredAnims.Mark`, a hash of the blob's length and ends), so frames a SignLink 1.0.1
+  player puts there later, unaware of the key, move (1.0.2, review). No SignLink client plays the frames it marks, and the sign shows its first frame. The frames stay, so Moving
+  turns back on without putting the piece again. An art piece's recipe says `still` too, so 2 Content's Moving switch
+  agrees. New frames (`Store`) and new content (`ClearBlob`) clear it; the same frames stored again keep it (a refit,
+  `SignFit.Refit`; an art piece put again with the frames it holds, `ArtSource.Act`), and Copy and Paste carry
+  it (the clip's `still=1`). A GIF's Moving is its recipe's
+  Animate. SignLink 1.0.1 knows neither: its players still see a glyph animation switched off move (a GIF follows the
+  recipe there too).
 - **Text refresh.** Vanilla rewrites the text widget every 2 s (`Sign.cs:39`, `:141-163`). Patch it so an
   animated sign is left alone; animate only when the sign is viewable (`m_isViewable`). `Signs/FastRefresh.cs`
   re-reads changed signs sooner for animations a tool writes over the network (`/anim` in `zdo` mode); since

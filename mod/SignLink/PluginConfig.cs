@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using BepInEx.Configuration;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink
 {
@@ -17,10 +18,10 @@ namespace SignLink
         public static ConfigEntry<float> MenuOpacity;
         public static ConfigEntry<bool> Highlight, HighlightContent;
         public static ConfigEntry<float> WindowX, WindowY;
-        public static ConfigEntry<bool> PreventEditor;
         public static ConfigEntry<bool> PngTransparency, MovingGifs;
         public static ConfigEntry<bool> PlayAnimations, PlayGifs;
         public static ConfigEntry<float> PlayDistance;
+        public static ConfigEntry<int> GifMemory;
         public static ConfigEntry<float> RefreshSeconds;
         public static ConfigEntry<bool> PictureFineWidth;
         public static ConfigEntry<bool> ApiEnabled;
@@ -76,10 +77,10 @@ namespace SignLink
                 Desc("The window's width as a share of the screen's, up to 1 (the whole screen); 0 is automatic: as wide as " +
                      "80 % of the screen's height, on any screen shape. It never gets narrower than the rows need at the text " +
                      "size. The window's edges and corners resize it too.", 3,
-                     new AcceptableValueRange<float>(0f, UI.WindowSizing.WidthMost)));
+                     new AcceptableValueRange<float>(0f, WindowSizing.WidthMost)));
             MenuHeight = cfg.Bind("1 - Menu", "Height", 0.86f,
                 Desc("The window's height as a share of the screen's: 1 reaches from the top of the screen to the bottom.", 3,
-                     new AcceptableValueRange<float>(UI.WindowSizing.HeightLeast, UI.WindowSizing.HeightMost)));
+                     new AcceptableValueRange<float>(WindowSizing.HeightLeast, WindowSizing.HeightMost)));
             MenuOpacity = cfg.Bind("1 - Menu", "Opacity", 0.8f,
                 Desc("How solid the window is: 1 is opaque, 0.5 shows the world through it. The text stays readable.", 2,
                      new AcceptableValueRange<float>(0.5f, 1f)));
@@ -93,11 +94,6 @@ namespace SignLink
             HighlightContent = cfg.Bind("3 - Sign options", "HighlightContent", true,
                 Desc("With Highlight on: where the content goes is framed too, green over what will show, red where a " +
                      "wall or a floor stands in front of it, grey stripes seen from behind (off: the sign's board alone).", 3));
-            PreventEditor = cfg.Bind("3 - Sign options", "PreventEditor", true,
-                Desc("Short line when you look at a picture sign. On: a sign with a picture or glyph art shows one short " +
-                     "line, what it is, and E opens it in SignLink. Off: the game shows the sign's whole text by the " +
-                     "crosshair, thousands of characters for a picture, and the game can stutter. The game's own sign editor " +
-                     "never opens on these signs: it would cut the picture.", 2));
             PlayAnimations = cfg.Bind("4 - Playback", "PlayAnimations", true,
                 Desc("Play the glyph animations saved on signs (moving art pieces, the API's animations). Off: they show " +
                      "their first frame, as players without SignLink see them.", 4));
@@ -106,6 +102,11 @@ namespace SignLink
                 Desc("Play moving GIFs over their pictures. Off freezes them on their current frame.", 3));
             PlayDistance = cfg.Bind("4 - Playback", "Distance", 64f,
                 Desc("Glyph animations and GIFs farther than this many metres pause.", 2, new AcceptableValueRange<float>(8f, 200f)));
+            // the author (1.0.2): 512 and 1024 too; lowered, the farthest screens park until the rest fit (ScreenPlayer.Trim)
+            GifMemory = cfg.Bind("4 - Playback", "GifMemoryMB", 256,
+                Desc("The memory the moving GIFs' frames may take on this computer, in MB: 256, 512 or 1024. More GIFs move at " +
+                     "once with more; 1024 wants a PC with 16 GB of RAM, as the game itself takes several GB. Lowered, the " +
+                     "farthest GIFs stop until the rest fit.", 1, new AcceptableValueList<int>(256, 512, 1024)));
             RefreshSeconds = cfg.Bind("3 - Sign options", "RefreshSeconds", 2f,
                 Desc("How often changed sign texts are re-read, in seconds. 2 is the game's own pace (nothing extra runs); " +
                      "lower it only for animations a tool writes into signs over the network, or to see other players' " +
@@ -229,7 +230,7 @@ namespace SignLink
             KeyboardShortcut k = MenuKey.Value;
             var mods = new List<string>();
             foreach (KeyCode m in k.Modifiers) mods.Add(m.ToString());
-            return keyParts = UI.HotkeyText.Parts(k.MainKey.ToString(), mods);
+            return keyParts = HotkeyText.Parts(k.MainKey.ToString(), mods);
         }
 
         /// <summary>The same in one line ("" for no key).</summary>

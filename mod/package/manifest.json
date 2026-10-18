@@ -1,6 +1,6 @@
 {
   "name": "SignLink",
-  "version_number": "1.0.1",
+  "version_number": "1.0.2",
   "website_url": "https://github.com/chestercs/valheim-signlink-mod",
   "description": "Pictures on signs that every player sees, vanilla included: PNG, JPG and GIF with transparency, sized in metres, tilted onto floors and ceilings, plus built-in glyph and pixel art and animations saved in the world.",
   "dependencies": [

@@ -1,6 +1,7 @@
 using System;
 using SignLink.Pictures;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
@@ -16,35 +17,26 @@ namespace SignLink.UI
         public static readonly string[] PictureNames = { "Glowing", "Lit by the scene" },
                                         PieceNames = { "As made", "Glowing", "Lit by the scene" };
 
-        /// <summary>Draws the group: its title, the row and its hint, the last group of a source (0.20.69, the author: in
+        /// <summary>Draws the group: its title and the row (no hint under it since 1.0.2, the author: no long texts), the last group of a source (0.20.69, the author: in
         /// 2 Content the light goes to the very bottom everywhere after all; not into the footer, just the last of the
         /// groups ... with a group of its own, as the resolution has). A click reaches the choice at a later Layout (the button
         /// shown chosen changes). A light the row does not offer shows as its first choice.</summary>
-        public static void Draw(Session s, SignLinkWindow w, GlowMode[] lights, string[] names, string asMadeHint)
+        public static void Draw(Session s, SignLinkWindow w, GlowMode[] lights, string[] names)
         {
             int at = Math.Max(0, Array.IndexOf(lights, s.Chosen.Light));
             Widgets.Header("Light");
             using (Widgets.Vertical(Theme.Section))
             {
-                using (Widgets.Horizontal())
                 {
-                    GUILayout.Label("Light", Theme.Label, Widgets.W(Widgets.LabelW));
-                    int pick = Widgets.Toolbar(at, names, Theme.Chip, Widgets.W(Mathf.Min(names.Length * 140f, Widgets.RestW)));   // small (0.20.85)
-                    GUILayout.FlexibleSpace();
+                    int pick = Widgets.Choice("Light", at, names, names.Length * 140f);   // small (0.20.85)
                     if (pick != at)
                     {
                         GlowMode m = lights[pick];
                         w.Later(() => w.Session.Chosen.Light = m);
                     }
                 }
-                Widgets.Hint(Hint(lights[at], asMadeHint));
             }
         }
 
-        /// <summary>What a light choice does, in one line.</summary>
-        public static string Hint(GlowMode m, string asMade) =>
-            m == GlowMode.Glowing ? "Glowing: its own colours, bright day and night."
-            : m == GlowMode.Lit ? "Lit by the scene: like the game's own sign text, true colours by day, dark at night."
-            : asMade;
     }
 }

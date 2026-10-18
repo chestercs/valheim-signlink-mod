@@ -142,6 +142,35 @@ what costs. The game pays the same once whenever a sign's text appears: a 50 000
 - The resolution and frame rate of a screen are practically free. Vanilla clients see the sign's text
   instead.
 
+## GIFs: what reads and what moves
+
+The checks run before any frame is decoded (`Pictures/GifDecoder.cs`, from the GIF's blocks), and 2 Content's Moving row
+says the outcome before the put (`GifDecoder.Motion` for the frames; the room, from the screen's size at the sign's
+Resolution, `PictureSource.RoomForGif`).
+
+| Limit | Value | When over it |
+|---|---|---|
+| One frame | 16 million pixels (4000 x 4000) | not read |
+| Frames | 5 000 | not read |
+| Pixels of all frames | 1 500 million (about 720 frames of 1920 x 1080) | not read |
+| One GIF's frames kept | about four fifths of the GIF memory: 200 MB of 256 (`ScreenPlayer.FrameCap`), counted at the screen's size (1.0.2) | every k-th frame is kept, its delay k times as long: the same speed |
+| A screen's frame | at most twice the sign's pixels across, and 1024 pixels a side (`PictureImporter.ScreenSide`), shrunk by a whole factor (1.0.2) | |
+| All screens together | the GIF memory: 256 MB by default, 512 or 1024 in Settings › Playback (`ScreenPlayer.Budget`), RGB24 frames, a frame shared by several signs counted once | over it alone: the GIF goes on still; with the other screens playing: it waits for room, and screens idle far away or paused park to make room for a GIF beside the player (`ScreenPlayer.MakeRoom`); lowered, the farthest screens park until the rest fit (`Trim`) |
+| Uploads a game frame | 5 ms for every screen together (`ScreenPlayer.FrameBudgetMs`), the nearest first; 50 ms a second a screen | the rest show their frame at the next game frame |
+
+The file size alone decides nothing: a GIF compresses its frames, and what counts is their pixels once decoded (3 bytes
+each). The 35 MB GIF a player could not put on (2026-10-16, measured 2026-10-17: 720 x 416, 433 frames) needed 185 MB at
+its full size, more than another GIF playing nearby left; sized to its 214 px sign it takes 46 MB.
+
+**Measured at 1024 MB (2026-10-18, a 32 GB PC).** Two 1024 x 576 screens (300 and 200 frames, 844 MB) beside three
+small ones, 959 MB held: 85-119 FPS, a frame upload 0.15 ms; a GIF decodes in 4-5 s on the worker. Away over the
+Playback Distance the screens idle but keep their frames while the signs' zone is loaded; out of the zone all park, and
+coming back the four from memory start 2 s apart. 1024 lowered to 256: the two big screens stop within a frame, their
+parked sets go, and the signs wait quietly (one log line each, no retries) until the memory is raised, when they decode
+again in 4-5 s. A 600-frame GIF (1062 MB at the screen's size) keeps every 2nd frame (506 MB) at the same speed. Nothing
+leaks: after the test the managed memory in use is back at its start, but the Mono heap keeps what the decodes used (the
+game's working set went 4.5 → 7.3 GB), which is why 1024 wants a 16 GB PC.
+
 ## Animation: frame rates
 
 | Path | Who sees it | Ceiling | What limits it |

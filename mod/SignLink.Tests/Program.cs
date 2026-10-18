@@ -1096,12 +1096,43 @@ static class Program
             var manyClock = System.Diagnostics.Stopwatch.StartNew();
             try { GifDecoder.Decode(Synthetic(4, 4, 5001, 4, 4, 0)); }
             catch (ArgumentException e) { tooMany = e.Message; }
-            Check(tooMany != null && tooMany.Contains("too complex") && manyClock.ElapsedMilliseconds < 2000, $"gif: 5001 frames are refused before decoding ({tooMany})");
+            Check(tooMany != null && tooMany.Contains("too long or too large") && manyClock.ElapsedMilliseconds < 2000, $"gif: 5001 frames are refused before decoding ({tooMany})");
             string tooBig = null;
             var bigClock = System.Diagnostics.Stopwatch.StartNew();
             try { GifDecoder.Decode(Synthetic(4000, 4000, 100, 4000, 4000, 0)); }
             catch (ArgumentException e) { tooBig = e.Message; }
-            Check(tooBig != null && tooBig.Contains("too complex") && bigClock.ElapsedMilliseconds < 2000, $"gif: 1.6 G frame pixels are refused before decoding ({tooBig})");
+            Check(tooBig != null && tooBig.Contains("too long or too large") && bigClock.ElapsedMilliseconds < 2000, $"gif: 1.6 G frame pixels are refused before decoding ({tooBig})");
+            // 1.0.2: a long GIF keeps every frame while its frames at the screen's size fit the cap (1.0.1 counted the
+            // full-size frames, so a GIF on a small sign lost every second frame for nothing)
+            Check(GifDecoder.Stride(433, 360L * 208 * 3, 200L << 20) == 1 && GifDecoder.Kept(433, 360L * 208 * 3, 200L << 20) == 433,
+                  "gif stride: 433 frames of 360 x 208 (93 MB) are kept whole under 200 MB");
+            Check(GifDecoder.Stride(433, 720L * 416 * 3, 200L << 20) == 2 && GifDecoder.Kept(433, 720L * 416 * 3, 200L << 20) == 217,
+                  "gif stride: at 720 x 416 (389 MB) every second frame");
+
+            // 1.0.2: pictures in folders of the images folder; a name from another player's sign names nothing outside it
+            string imgRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "signlink-images-test");
+            string sep = System.IO.Path.DirectorySeparatorChar.ToString();
+            Check(PictureNames.Relative(imgRoot, System.IO.Path.Combine(imgRoot, "funny", "cat.gif")) == "funny/cat.gif" &&
+                  PictureNames.Relative(imgRoot, System.IO.Path.Combine(imgRoot, "cat.gif")) == "cat.gif" &&
+                  PictureNames.Relative(imgRoot, System.IO.Path.Combine(System.IO.Path.GetTempPath(), "elsewhere", "cat.gif")) == "cat.gif",
+                  "picture names: a path under the images folder names its folders with '/', one elsewhere its file alone");
+            Check(PictureNames.DirOf("funny/cats/cat.gif") == "funny/cats" && PictureNames.DirOf("cat.gif") == "" && PictureNames.DirOf("") == "",
+                  "picture names: the folder part");
+            Check(PictureNames.Under(imgRoot, "funny/cat.gif") == System.IO.Path.GetFullPath(System.IO.Path.Combine(imgRoot, "funny", "cat.gif")) &&
+                  PictureNames.Under(imgRoot, "cat.gif") == System.IO.Path.GetFullPath(System.IO.Path.Combine(imgRoot, "cat.gif")) &&
+                  PictureNames.Under(imgRoot, "") == System.IO.Path.GetFullPath(imgRoot).TrimEnd(sep[0]),
+                  "picture names: a name gives its path under the images folder");
+            string[] outside = { "../cat.gif", "funny/../../cat.gif", "/cat.gif", "C:/cat.gif", "funny\\cat.gif", "funny//cat.gif", "./cat.gif",
+                                 "CON.gif", "funny/NUL", " /cat.gif", "funny/ ", "cat\0.gif", "funny./cat.gif", "cat.gif ", "COM0.gif", "lpt0" };
+            bool allNull = true;
+            foreach (string o in outside) allNull &= PictureNames.Under(imgRoot, o) == null;
+            Check(allNull, "picture names: a step out of the folder, a rooted path, a '\\', an empty step, a device name or a bad character is no name");
+            Check(GifDecoder.Kept(0, 1, 1) == 0, "gif stride: no frames keep none");
+            Check(GifDecoder.Inspect(Synthetic(4, 4, 3, 4, 4, 0), out int iw, out int ih, out int ic) && iw == 4 && ih == 4 && ic == 3,
+                  "gif inspect: size and frame count from the blocks");
+            Check(!GifDecoder.Inspect(Synthetic(4, 4, 5001, 4, 4, 0), out _, out _, out _), "gif inspect: too many frames is not taken");
+            Check(GifDecoder.Measure(Synthetic(4, 4, 3, 4, 4, 0), out _, out _, out int byScreen, 100, int.MaxValue, (w, h) => 40) && byScreen == 2,
+                  "gif measure: the frame bytes given decide the stride (3 x 40 over 100: every second)");
             GifImage offCanvas = GifDecoder.Decode(Synthetic(4, 4, 2, 4, 4, 10));                    // every frame right of the canvas
             Check(offCanvas.Frames.Count == 2 && offCanvas.DelaysMs[0] == 50 && offCanvas.DelaysMs[1] == 50, "gif: frames off the canvas keep their delays");
 
@@ -1190,18 +1221,18 @@ static class Program
             List<SignLink.ConfigMoves.Move> plan = SignLink.ConfigMoves.Plan(old);
             string Got(string k) { foreach (SignLink.ConfigMoves.Move e in plan) if (e.To == k) return e.Value; return null; }
             Check(plan.Count > 0 && plan[0].From == "1 - API|Enabled" && plan[0].To == "9 - Developer API|Enabled", "config moves: a move knows where it came from");
-            Check(plan.Count == 5 && Got("9 - Developer API|Password") == "secret-of-twelve" && Got("9 - Developer API|Enabled") == "true" &&
-                  Got("3 - Sign options|PreventEditor") == "false" &&
+            Check(plan.Count == 4 && Got("9 - Developer API|Password") == "secret-of-twelve" && Got("9 - Developer API|Enabled") == "true" &&
+                  Got("3 - Sign options|PreventEditor") == null &&
                   Got("1 - Menu|Scale") == "1.3" && Got("4 - Playback|Distance") == "32",
-                  "config moves: every 0.19 entry goes to its 0.20 section; unknown and 0.20 ones stay");
+                  "config moves: every 0.19 entry goes to its 0.20 section; unknown, 0.20 and dropped ones stay");
             Check(Got("3 - Signs in the world|HoverSprites") == null && Got("4 - Playback|FastRefresh") == null &&
                   Got("2 - Building|AllowOnServers") == null, "config moves: a dropped setting is not moved");
             List<string> stale = SignLink.ConfigMoves.Stale(old);
-            Check(stale.Count == 8 && stale.Contains("3 - Viewer|HoverSprites") && stale.Contains("3 - Signs in the world|HoverSprites") &&
+            Check(stale.Count == 9 && stale.Contains("3 - Viewer|HoverSprites") && stale.Contains("3 - Signs in the world|HoverSprites") &&
                   stale.Contains("Viewer|HoverSprites") && stale.Contains("3 - Viewer|FastRefresh") && stale.Contains("4 - Playback|FastRefresh") &&
-                  stale.Contains("5 - Pictures|MultiplayerSafe") &&
+                  stale.Contains("5 - Pictures|MultiplayerSafe") && stale.Contains("3 - Viewer|PictureSigns") &&
                   stale.Contains("5 - Building|AllowOnServers") && stale.Contains("2 - Building|AllowOnServers"),
-                  "config moves: a dropped setting leaves the file from every section it had (FastRefresh since 0.20.17, MultiplayerSafe since 0.20.39, AllowOnServers since 0.20.44)");
+                  "config moves: a dropped setting leaves the file from every section it had (FastRefresh since 0.20.17, MultiplayerSafe since 0.20.39, AllowOnServers since 0.20.44, PictureSigns since 1.0.2)");
             Check(SignLink.ConfigMoves.Stale(new Dictionary<string, string> { ["1 - Menu|Scale"] = "1" }).Count == 0, "config moves: nothing stale is nothing");
             // 0.20.123: Show all is no setting any more, it starts off every game (the author: forget Show all signs
             // after a game restart, a logout and the like)
@@ -1228,25 +1259,28 @@ static class Program
             Check(To("3 - Sign options|Highlight").Count == 1 && To("3 - Sign options|Highlight")[0].Value == "false" &&
                   To("3 - Sign options|RefreshSeconds").Count == 1 && To("3 - Sign options|RefreshSeconds")[0].Value == "0.5",
                   "config moves: the frame switch is Highlight, the re-read pace a sign option");
-            List<SignLink.ConfigMoves.Move> prevent = To("3 - Sign options|PreventEditor");
-            Check(prevent.Count == 2 && prevent[0].From == "3 - Signs in the world|PictureSigns" && !prevent[0].Superseded &&
-                  prevent[0].Value == "true" && prevent[1].From == "3 - Viewer|PictureSigns" && prevent[1].Superseded,
-                  "config moves: two old homes of one setting: the newer one's value goes, the older one only leaves the file");
+            // 1.0.2: the hover line's switch (PreventEditor, PictureSigns before 0.20.45) is gone, the line is always on: every
+            // home it had leaves the file, none is moved
+            List<string> gone = SignLink.ConfigMoves.Stale(old);
+            Check(To("3 - Sign options|PreventEditor").Count == 0 && gone.Contains("3 - Signs in the world|PictureSigns") &&
+                  gone.Contains("3 - Viewer|PictureSigns") &&
+                  SignLink.ConfigMoves.Stale(new Dictionary<string, string> { ["3 - Sign options|PreventEditor"] = "false" }).Count == 1,
+                  "config moves: the hover line's switch leaves the file from every home it had (always on since 1.0.2)");
             Console.WriteLine("sign options moves checked");
         }
 
         // 0.20.46: Width and Height apart (the author: my problem with the window size setting is that it does not
         // set the height ... even at Very large the mod does not reach the top and bottom of the monitor)
         {
-            SignLink.UI.WindowSizing.Size(3840, 2160, 0.45f, 1f, 2f, out float w1, out float h1, out float s1);
+            PetyusPolisz.Kit.WindowSizing.Size(3840, 2160, 0.45f, 1f, 2f, out float w1, out float h1, out float s1);
             Check(h1 == 2160f && Math.Abs(w1 - 1728f) < 0.5f && s1 == 2f, $"window: 100 % height fills the screen from top to bottom ({w1} x {h1})");
-            SignLink.UI.WindowSizing.Size(3840, 2160, 1f, 0.86f, 2f, out float w2, out float h2, out _);
+            PetyusPolisz.Kit.WindowSizing.Size(3840, 2160, 1f, 0.86f, 2f, out float w2, out float h2, out _);
             Check(w2 == 3840f && Math.Abs(h2 - 1857.6f) < 0.5f, $"window: the width goes up to the whole screen (0.20.50, the author: up to 100%; {w2} x {h2})");
-            SignLink.UI.WindowSizing.Size(3840, 2160, 0.2f, 0.4f, 2f, out float w3, out float h3, out _);
+            PetyusPolisz.Kit.WindowSizing.Size(3840, 2160, 0.2f, 0.4f, 2f, out float w3, out float h3, out _);
             Check(w3 == 1240f && h3 == 1120f, $"window: never narrower or lower than the rows need at the text size ({w3} x {h3})");
-            SignLink.UI.WindowSizing.Size(800, 600, 0.45f, 0.86f, 1.5f, out float w4, out _, out float s4);
+            PetyusPolisz.Kit.WindowSizing.Size(800, 600, 0.45f, 0.86f, 1.5f, out float w4, out _, out float s4);
             Check(w4 == 800f && Math.Abs(s4 - 800f / 620f) < 0.001f, $"window: a screen too narrow for the rows takes smaller text ({w4}, {s4})");
-            SignLink.UI.WindowSizing.Size(1920, 1080, 9f, -1f, 1f, out float w5, out float h5, out _);
+            PetyusPolisz.Kit.WindowSizing.Size(1920, 1080, 9f, -1f, 1f, out float w5, out float h5, out _);
             Check(w5 == 1920f && h5 == 560f, $"window: shares out of range are clamped ({w5} x {h5})");
             Check(SignLink.ConfigMoves.OldSize(new Dictionary<string, string> { ["1 - Menu|WindowSize"] = "VeryLarge", ["4 - Menu|WindowSize"] = "Small" },
                                                out float ow, out float oh) && ow == 0.5f && oh == 0.92f,
@@ -1266,12 +1300,12 @@ static class Program
         // screen shape, and the rows' ranges are what the screen can show at the text size (no stretch of a row that
         // moves nothing)
         {
-            SignLink.UI.WindowSizing.Size(3440, 1440, 0f, 0.86f, 1440f / 1080f, out float wu, out _, out _);
-            SignLink.UI.WindowSizing.Size(5120, 1440, 0f, 0.86f, 1440f / 1080f, out float ws, out _, out _);
-            SignLink.UI.WindowSizing.Size(1920, 1080, 0f, 0.86f, 1f, out float wf, out _, out _);
+            PetyusPolisz.Kit.WindowSizing.Size(3440, 1440, 0f, 0.86f, 1440f / 1080f, out float wu, out _, out _);
+            PetyusPolisz.Kit.WindowSizing.Size(5120, 1440, 0f, 0.86f, 1440f / 1080f, out float ws, out _, out _);
+            PetyusPolisz.Kit.WindowSizing.Size(1920, 1080, 0f, 0.86f, 1f, out float wf, out _, out _);
             Check(Math.Abs(wu - 1152f) < 0.5f && Math.Abs(ws - 1152f) < 0.5f && Math.Abs(wf - 864f) < 0.5f,
                   $"window: automatic width is 80 % of the screen's height on 21:9, 32:9 and 16:9 alike ({wu}, {ws}, {wf})");
-            SignLink.UI.WindowSizing.Size(1024, 768, 0f, 0.86f, 768f / 1080f, out float w43, out _, out _);
+            PetyusPolisz.Kit.WindowSizing.Size(1024, 768, 0f, 0.86f, 768f / 1080f, out float w43, out _, out _);
             Check(Math.Abs(w43 - 614.4f) < 0.5f, $"window: on 4:3 the automatic width is 80 % of the height too ({w43})");
             Check(SignLink.ConfigMoves.OldSize(new Dictionary<string, string> { ["1 - Menu|WindowSize"] = "Large" }, out float lw, out float lh) &&
                   lw == 0f && lh == 0.86f, "window: the old Large is the automatic size");
@@ -1282,10 +1316,10 @@ static class Program
         // (the author: let the window be resized by grabbing the GUI's edge, at the corners and the edges too, but
         // still so that it cannot be pulled off the screen)
         {
-            const int L = SignLink.UI.WindowSizing.Left, R = SignLink.UI.WindowSizing.Right, T = SignLink.UI.WindowSizing.Top,
-                      B = SignLink.UI.WindowSizing.Bottom;
+            const int L = PetyusPolisz.Kit.WindowSizing.Left, R = PetyusPolisz.Kit.WindowSizing.Right, T = PetyusPolisz.Kit.WindowSizing.Top,
+                      B = PetyusPolisz.Kit.WindowSizing.Bottom;
             void Drag(int edges, float dx, float dy, out float x, out float y, out float w, out float h) =>
-                SignLink.UI.WindowSizing.Drag(100, 100, 800, 600, dx, dy, edges, 620, 560, 1920, 1080, out x, out y, out w, out h);
+                PetyusPolisz.Kit.WindowSizing.Drag(100, 100, 800, 600, dx, dy, edges, 620, 560, 1920, 1080, out x, out y, out w, out h);
             Drag(R, 50, 0, out float x1, out float y1, out float w1, out float h1);
             Check(x1 == 100 && y1 == 100 && w1 == 850 && h1 == 600, "window drag: the right edge widens it");
             Drag(L, -40, 0, out float x2, out _, out float w2, out _);
@@ -1300,7 +1334,7 @@ static class Program
             Check(x6 == 0 && y6 == 0 && w6 == 900 && h6 == 700, "window drag: the top-left corner, not past the top and the left");
             Drag(T, 200, 100, out _, out float y7, out float w7, out float h7);
             Check(y7 == 140 && h7 == 560 && w7 == 800, "window drag: the top edge down to what the rows need; across it nothing moves");
-            SignLink.UI.WindowSizing.Drag(0, 0, 1920, 1080, 10, 10, R | B, 2000, 1200, 1920, 1080, out float x8, out float y8, out float w8, out float h8);
+            PetyusPolisz.Kit.WindowSizing.Drag(0, 0, 1920, 1080, 10, 10, R | B, 2000, 1200, 1920, 1080, out float x8, out float y8, out float w8, out float h8);
             Check(x8 == 0 && y8 == 0 && w8 == 1920 && h8 == 1080, "window drag: rows wider than the screen: the whole screen");
             Console.WriteLine("window drag checked");
         }
@@ -1308,7 +1342,7 @@ static class Program
         // 0.20.62: the Text editor's Undo and Redo (the author: the text editor has no undo, no Ctrl+Z and Ctrl+Y,
         // and no buttons for them)
         {
-            var h = new SignLink.UI.TextHistory();
+            var h = new PetyusPolisz.Kit.TextHistory();
             h.Seen("", 0);
             h.Seen("H", 1.0); h.Seen("He", 1.2); h.Seen("Hel", 1.5); h.Seen("Hello", 1.9);   // typing: one step
             Check(h.CanUndo && !h.CanRedo && h.Undo() == "" && !h.CanUndo && h.CanRedo, "history: a burst of typing is one step");
@@ -1323,12 +1357,12 @@ static class Program
             Check(!h.CanRedo && h.Undo() == "Hello world", "history: a new change drops what redo had");
             h.Reset("other sign");
             Check(!h.CanUndo && !h.CanRedo && h.Current == "other sign", "history: another sign starts over");
-            var big = new SignLink.UI.TextHistory();
+            var big = new PetyusPolisz.Kit.TextHistory();
             big.Seen("", 0);
             for (int i = 1; i <= 150; i++) big.Seen("x" + i, i * 10.0, discrete: true);
             int steps = 0;
             while (big.CanUndo) { big.Undo(); steps++; }
-            Check(steps == SignLink.UI.TextHistory.Most, $"history: at most {SignLink.UI.TextHistory.Most} steps back ({steps})");
+            Check(steps == PetyusPolisz.Kit.TextHistory.Most, $"history: at most {PetyusPolisz.Kit.TextHistory.Most} steps back ({steps})");
             Console.WriteLine("text history checked");
         }
 
@@ -1441,6 +1475,9 @@ static class Program
             SignLink.Signs.SignClip back = SignLink.Signs.SignClip.Unpack(moving.Pack());
             Check(back.Anim != null && back.Anim.Length == 5 && back.Anim[3] == 250 && back.Texts.Count == 1 && back.Texts[0] == "frame one",
                   "clip: a moving piece's saved frames come back with it");
+            Check(!back.Still && !moving.Pack().Contains("still="), "clip: a piece that moves says nothing more (older clips paste moving)");
+            moving.Still = true;
+            Check(SignLink.Signs.SignClip.Unpack(moving.Pack()).Still, "clip: Moving off (Playing) goes with the frames");
             Check(SignLink.Signs.SignClip.Unpack("\u0002SignLink clip 1\nanim=***\n\u0003abc").Anim == null, "clip: frames it cannot read are dropped");
             Console.WriteLine("clip checked");
         }
@@ -1592,16 +1629,16 @@ static class Program
         // 0.20.82: the hotkey as people write it: the modifiers first, in Ctrl, Alt, Shift order, by their short names
         // (the author: BepInEx wrote "PageUp + LeftShift")
         {
-            string[] Keys(string main, params string[] mods) => SignLink.UI.HotkeyText.Parts(main, mods);
+            string[] Keys(string main, params string[] mods) => PetyusPolisz.Kit.HotkeyText.Parts(main, mods);
             Check(string.Join("|", Keys("PageUp", "LeftShift")) == "Shift|Page Up", $"hotkey: Shift first ({string.Join("|", Keys("PageUp", "LeftShift"))})");
-            Check(SignLink.UI.HotkeyText.Combo("PageUp", new[] { "LeftShift" }) == "Shift + Page Up", "hotkey: joined with +");
+            Check(PetyusPolisz.Kit.HotkeyText.Combo("PageUp", new[] { "LeftShift" }) == "Shift + Page Up", "hotkey: joined with +");
             Check(string.Join("|", Keys("F5", "RightShift", "LeftAlt", "LeftControl")) == "Ctrl|Alt|Shift|F5", "hotkey: Ctrl, Alt, Shift, then the key");
             Check(string.Join("|", Keys("Alpha7", "LeftShift", "RightShift")) == "Shift|7", "hotkey: a modifier once, digits plain");
-            Check(SignLink.UI.HotkeyText.Name("Keypad5") == "Num 5" && SignLink.UI.HotkeyText.Name("Return") == "Enter" &&
-                  SignLink.UI.HotkeyText.Name("Escape") == "Esc" && SignLink.UI.HotkeyText.Name("ScrollLock") == "Scroll Lock" &&
-                  SignLink.UI.HotkeyText.Name("UpArrow") == "Up" && SignLink.UI.HotkeyText.Name("Insert") == "Insert",
+            Check(PetyusPolisz.Kit.HotkeyText.Name("Keypad5") == "Num 5" && PetyusPolisz.Kit.HotkeyText.Name("Return") == "Enter" &&
+                  PetyusPolisz.Kit.HotkeyText.Name("Escape") == "Esc" && PetyusPolisz.Kit.HotkeyText.Name("ScrollLock") == "Scroll Lock" &&
+                  PetyusPolisz.Kit.HotkeyText.Name("UpArrow") == "Up" && PetyusPolisz.Kit.HotkeyText.Name("Insert") == "Insert",
                   "hotkey: key names");
-            Check(SignLink.UI.HotkeyText.Combo("None", new string[0]) == "" && Keys("None").Length == 0, "hotkey: none");
+            Check(PetyusPolisz.Kit.HotkeyText.Combo("None", new string[0]) == "" && Keys("None").Length == 0, "hotkey: none");
             Console.WriteLine("hotkey text checked");
         }
 
@@ -1609,11 +1646,11 @@ static class Program
         // with their own slot, also after a sign whose content no source loads (Session.Blank, 0.20.89), which loads into
         // no source: the strip went back to the source of an older load (Text at first) instead of the player's own
         {
-            const int Text = 0, Picture = 2;
+            const int Art = 0, Picture = 1, Text = 2;                       // the strip: Art, Picture, Text (2026-10-16)
             object own = new object(), blank = new object(), blank2 = new object(), picture = new object();
             var f = new SignLink.UI.SourceFollow();
-            int at = f.Follow(own, false, Text);
-            Check(at == Text, "strip: the own slot at first, as it is");
+            int at = f.Follow(own, false, Art);
+            Check(at == Art, "strip: the own slot at first, as it is (Art, the strip's first)");
             at = Picture;                                                   // the player switches to Picture on their own slot
             at = f.Follow(own, false, at);
             Check(at == Picture && f.Follow(blank, true, at) == Picture, "strip: a blank slot leaves the strip where it is");
@@ -1657,39 +1694,39 @@ static class Program
         // slider's snap, never finer than the row shows; a value off that grid goes to the next grid point first
         {
             Func<float, float, bool> near = (a, b) => Math.Abs(a - b) < 1e-4f;
-            Check(near(SignLink.UI.FineStep.Of(5f, "0.#"), 1f) && near(SignLink.UI.FineStep.Of(0.25f, "0.##"), 0.05f) &&
-                  near(SignLink.UI.FineStep.Of(0.05f, "0.##"), 0.01f) && near(SignLink.UI.FineStep.Of(15f, "0"), 3f),
+            Check(near(PetyusPolisz.Kit.FineStep.Of(5f, "0.#"), 1f) && near(PetyusPolisz.Kit.FineStep.Of(0.25f, "0.##"), 0.05f) &&
+                  near(PetyusPolisz.Kit.FineStep.Of(0.05f, "0.##"), 0.01f) && near(PetyusPolisz.Kit.FineStep.Of(15f, "0"), 3f),
                   "fine step: a fifth of the slider's step (tilt 1°, right 5 cm, width 1 cm, a template's turn 3°)");
-            Check(near(SignLink.UI.FineStep.Of(4f, "0"), 1f) && near(SignLink.UI.FineStep.Of(1f, "0"), 1f) &&
-                  near(SignLink.UI.FineStep.Of(0.1f, "0.0"), 0.1f),
+            Check(near(PetyusPolisz.Kit.FineStep.Of(4f, "0"), 1f) && near(PetyusPolisz.Kit.FineStep.Of(1f, "0"), 1f) &&
+                  near(PetyusPolisz.Kit.FineStep.Of(0.1f, "0.0"), 0.1f),
                   "fine step: no finer than the row shows (a pixel, a column, a tenth of a second)");
-            Check(near(SignLink.UI.FineStep.Nudge(10f, -3f, 5f, "0.#", -90f, 90f), 11f) &&
-                  near(SignLink.UI.FineStep.Nudge(10f, 3f, 5f, "0.#", -90f, 90f), 9f),
+            Check(near(PetyusPolisz.Kit.FineStep.Nudge(10f, -3f, 5f, "0.#", -90f, 90f), 11f) &&
+                  near(PetyusPolisz.Kit.FineStep.Nudge(10f, 3f, 5f, "0.#", -90f, 90f), 9f),
                   "fine step: the wheel up turns it up, down turns it down, one step a notch");
-            Check(near(SignLink.UI.FineStep.Nudge(90f, -3f, 5f, "0.#", -90f, 90f), 90f) &&
-                  near(SignLink.UI.FineStep.Nudge(-90f, 3f, 5f, "0.#", -90f, 90f), -90f),
+            Check(near(PetyusPolisz.Kit.FineStep.Nudge(90f, -3f, 5f, "0.#", -90f, 90f), 90f) &&
+                  near(PetyusPolisz.Kit.FineStep.Nudge(-90f, 3f, 5f, "0.#", -90f, 90f), -90f),
                   "fine step: not past the ends");
-            Check(near(SignLink.UI.FineStep.Nudge(1.23f, -1f, 0.25f, "0.##", -25f, 25f), 1.25f) &&
-                  near(SignLink.UI.FineStep.Nudge(1.23f, 1f, 0.25f, "0.##", -25f, 25f), 1.20f) &&
-                  near(SignLink.UI.FineStep.Nudge(1.25f, -1f, 0.25f, "0.##", -25f, 25f), 1.30f) &&
-                  near(SignLink.UI.FineStep.Nudge(-0.05f, -1f, 0.25f, "0.##", -25f, 25f), 0f),
+            Check(near(PetyusPolisz.Kit.FineStep.Nudge(1.23f, -1f, 0.25f, "0.##", -25f, 25f), 1.25f) &&
+                  near(PetyusPolisz.Kit.FineStep.Nudge(1.23f, 1f, 0.25f, "0.##", -25f, 25f), 1.20f) &&
+                  near(PetyusPolisz.Kit.FineStep.Nudge(1.25f, -1f, 0.25f, "0.##", -25f, 25f), 1.30f) &&
+                  near(PetyusPolisz.Kit.FineStep.Nudge(-0.05f, -1f, 0.25f, "0.##", -25f, 25f), 0f),
                   "fine step: a typed value goes to the next grid point, not past it");
-            Check(near(SignLink.UI.FineStep.Nudge(7f, 0f, 5f, "0.#", -90f, 90f), 7f), "fine step: no wheel, no change");
+            Check(near(PetyusPolisz.Kit.FineStep.Nudge(7f, 0f, 5f, "0.#", -90f, 90f), 7f), "fine step: no wheel, no change");
             // 0.20.98: a row whose value snaps (a picture's width to pixels TMP adds up exactly, a piece's size to exact
             // line heights) goes a notch to the next size it really takes (the author: Shift + wheel does not work
             // on the content size's width and height: a centimetre snapped back to the same width, so nothing moved)
             Func<float, float> pixels = w => (float)(Math.Round(w / 0.625) * 0.625);   // 200 px wide: 62.5 cm a pitch step
-            Check(near(SignLink.UI.FineStep.Notch(2.5f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 3.125f) &&
-                  near(SignLink.UI.FineStep.Notch(2.5f, 1f, 0.05f, "0.##", 0.25f, 30f, pixels), 1.875f),
+            Check(near(PetyusPolisz.Kit.FineStep.Notch(2.5f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 3.125f) &&
+                  near(PetyusPolisz.Kit.FineStep.Notch(2.5f, 1f, 0.05f, "0.##", 0.25f, 30f, pixels), 1.875f),
                   "notch: a snapping row goes to the next size it takes, up or down");
-            Check(near(SignLink.UI.FineStep.Notch(2.6f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 3.125f),
+            Check(near(PetyusPolisz.Kit.FineStep.Notch(2.6f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 3.125f),
                   "notch: from the size it shows (2.6 shows 2.5), not from the row's own value");
-            Check(near(SignLink.UI.FineStep.Notch(1.2f, -1f, 0.05f, "0.##", 0.25f, 30f, w => w), 1.21f),
+            Check(near(PetyusPolisz.Kit.FineStep.Notch(1.2f, -1f, 0.05f, "0.##", 0.25f, 30f, w => w), 1.21f),
                   "notch: a row that does not snap moves a fine step");
-            Check(near(SignLink.UI.FineStep.Notch(29.9f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 30f) &&
-                  near(SignLink.UI.FineStep.Notch(30f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 30f),
+            Check(near(PetyusPolisz.Kit.FineStep.Notch(29.9f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 30f) &&
+                  near(PetyusPolisz.Kit.FineStep.Notch(30f, -1f, 0.05f, "0.##", 0.25f, 30f, pixels), 30f),
                   "notch: no size past the end, the size it shows stays");
-            Check(near(SignLink.UI.FineStep.Notch(1f, -1f, 0.05f, "0.##", 0.25f, 30f, w => w < 1.5f ? 1f : w < 1.6f ? 0f : 2f), 2f),
+            Check(near(PetyusPolisz.Kit.FineStep.Notch(1f, -1f, 0.05f, "0.##", 0.25f, 30f, w => w < 1.5f ? 1f : w < 1.6f ? 0f : 2f), 2f),
                   "notch: a value that takes no size (0) is passed over");
             Console.WriteLine("fine step checked");
         }
@@ -1749,17 +1786,17 @@ static class Program
             float natural = 900f, rect = 600f, view = 596f, scrollY = 0f, last = 0f, content = 0f;
             for (int i = 0; i < 200; i++)
             {
-                float least = SignLink.UI.WindowSizing.BodyLeast(scrollY, rect, last, false);
+                float least = PetyusPolisz.Kit.WindowSizing.BodyLeast(scrollY, rect, last, false);
                 content = Math.Max(natural, least);
                 scrollY = Math.Min(scrollY + 30f, Math.Max(0f, content - view));
                 last = content;
             }
             Check(Math.Abs(content - natural) < 0.01f, $"body: scrolling down makes no room of its own ({content} for {natural})");
             natural = 700f;                                                 // shorter, scrolled to its end
-            content = Math.Max(natural, SignLink.UI.WindowSizing.BodyLeast(scrollY, rect, last, false));
+            content = Math.Max(natural, PetyusPolisz.Kit.WindowSizing.BodyLeast(scrollY, rect, last, false));
             Check(Math.Abs(content - 900f) < 0.01f, "body: shorter content scrolled to its end keeps its height (no pull back)");
-            Check(Math.Abs(SignLink.UI.WindowSizing.BodyLeast(0f, rect, 900f, false)) < 0.01f &&
-                  Math.Abs(SignLink.UI.WindowSizing.BodyLeast(0f, rect, 900f, true) - 900f) < 0.01f,
+            Check(Math.Abs(PetyusPolisz.Kit.WindowSizing.BodyLeast(0f, rect, 900f, false)) < 0.01f &&
+                  Math.Abs(PetyusPolisz.Kit.WindowSizing.BodyLeast(0f, rect, 900f, true) - 900f) < 0.01f,
                   "body: scrolled to the top the room goes; while steady (held, typed) it stays");
             Console.WriteLine("body scroll checked");
         }
@@ -1814,6 +1851,120 @@ static class Program
             Check(PictureOptions.FineDetail(0.3f, 120, 500, out float p3) >= 8 && PictureOptions.ValidPitch(p3), "fine size: a tiny one");
             Console.WriteLine("fine size checked");
         }
+
+        // 2026-10-16 (a player's test, Art): Width and Height jumped back and forth while dragged. The rule for a typed
+        // size (the next exact size the change's way when it snaps back to the row) ran on every mouse move, so the row
+        // went a size ahead of the mouse and the next move, now behind it, sent it back (FineStep.Settle)
+        {
+            Func<float, float> snap = p => (float)(Math.Round(p / 10.0) * 10);   // exact sizes every 10 %
+            float row = 100f;
+            var seen = new List<float>();
+            for (float mouse = 100.5f; mouse <= 130f; mouse += 0.5f)       // a slow drag to the right, a move a frame
+            {
+                row = PetyusPolisz.Kit.FineStep.Settle(row, mouse, snap, true, 5f, 25f, 400f);
+                seen.Add(row);
+            }
+            bool steady = true;
+            for (int i = 1; i < seen.Count; i++) if (seen[i] < seen[i - 1]) steady = false;
+            Check(steady && seen[seen.Count - 1] == 130f, "settle: a drag to the right never goes back and ends at the mouse");
+            Check(PetyusPolisz.Kit.FineStep.Settle(100f, 103f, snap, true, 5f, 25f, 400f) == 100f &&
+                  PetyusPolisz.Kit.FineStep.Settle(100f, 106f, snap, true, 5f, 25f, 400f) == 110f,
+                  "settle: a drag takes the exact size nearest the mouse");
+            float old = 100f;                                               // the typed rule on the same drag: the jump
+            bool back = false;
+            for (float mouse = 100.5f; mouse <= 130f; mouse += 0.5f)
+            {
+                float next = PetyusPolisz.Kit.FineStep.Settle(old, mouse, snap, false, 5f, 25f, 400f);
+                if (next < old) back = true;
+                old = next;
+            }
+            Check(back, "settle: the typed rule on every mouse move went back and forth (the bug a drag no longer takes)");
+            Check(PetyusPolisz.Kit.FineStep.Settle(100f, 103f, snap, false, 5f, 25f, 400f) == 110f &&
+                  PetyusPolisz.Kit.FineStep.Settle(100f, 97f, snap, false, 5f, 25f, 400f) == 90f,
+                  "settle: a typed size that snaps back to the row goes to the next size its way");
+            Check(PetyusPolisz.Kit.FineStep.Settle(100f, 100f, snap, true, 5f, 25f, 400f) == 100f &&
+                  PetyusPolisz.Kit.FineStep.Settle(100f, 103f, null, true, 5f, 25f, 400f) == 103f,
+                  "settle: no change, or no exact sizes, as asked");
+            Console.WriteLine("settle checked");
+        }
+
+        // 2026-10-16 (the author: a QR code generator on 2 Content): QrCode against python-qrcode, an independent encoder,
+        // module for module at a fixed mask (qr_vectors.json from signart/qr_vectors.py), and a chosen mask reads the same
+        {
+            int same = 0, cases = 0;
+            string firstBad = null;
+            foreach (JsonElement c in JsonDocument.Parse(File.ReadAllText("qr_vectors.json")).RootElement.EnumerateArray())
+            {
+                cases++;
+                string text = c.GetProperty("text").GetString();
+                var ecc = (SignLink.Pictures.QrCode.Ecc)"LMQH".IndexOf(c.GetProperty("ecc").GetString());
+                int mask = c.GetProperty("mask").GetInt32();
+                var q = SignLink.Pictures.QrCode.Encode(text, ecc, mask);
+                bool ok = q.Version == c.GetProperty("version").GetInt32() && q.Mask == mask;
+                int y = 0;
+                foreach (JsonElement row in c.GetProperty("rows").EnumerateArray())
+                {
+                    string r = row.GetString();
+                    for (int x = 0; ok && x < r.Length; x++) if ((r[x] == '1') != q.Modules[y, x]) ok = false;
+                    y++;
+                }
+                if (ok && y == q.Size) same++;
+                else if (firstBad == null) firstBad = $"{text.Substring(0, Math.Min(20, text.Length))} {ecc} mask {mask}: version {q.Version} (python-qrcode {c.GetProperty("version").GetInt32()})";
+            }
+            Check(cases > 50 && same == cases, $"qr: {same} of {cases} codes as python-qrcode makes them (each read back by zbar){(firstBad != null ? ", first different: " + firstBad : "")}");
+            var auto = SignLink.Pictures.QrCode.Encode("https://github.com/chestercs/valheim-signlink-mod", SignLink.Pictures.QrCode.Ecc.M);
+            Check(auto.Mask >= 0 && auto.Mask < 8 && auto.Version == 4, $"qr: a mask chosen, the smallest version (49 bytes at M: 4) (mask {auto.Mask}, version {auto.Version})");
+            string tooLong = null;
+            try { SignLink.Pictures.QrCode.Encode(new string('x', 3000), SignLink.Pictures.QrCode.Ecc.H); }
+            catch (ArgumentException e) { tooLong = e.Message; }
+            Check(tooLong != null && tooLong.Contains("too long"), $"qr: over version 40 it says so ({tooLong})");
+            Console.WriteLine("qr checked");
+        }
+            // the template's drawing: a module's centre lies in a dark rectangle exactly when the module is dark, inside the
+            // light square; and a code is far fewer lines than modules
+            {
+                var q = SignLink.Pictures.QrCode.Encode("https://github.com/chestercs/valheim-signlink-mod", SignLink.Pictures.QrCode.Ecc.M);
+                var lines = Snippets.Qr(q.Modules, 1.0, 0x000000, 0xFFFFFF);
+                int qn = q.Size, wrong = 0, dark = 0;
+                double qm = 1.0 * Snippets.WuPerM / (qn + 8);
+                // a block lying (turned a quarter) shows its stretch upright
+                Func<Snippets.Line, bool> lying = l => Math.Abs(Math.Abs(l.Rotate) - 90) < 1e-9;
+                Func<Snippets.Line, double> width = l => lying(l) ? Snippets.InkHeight(l.Glyph, l.Size) : Snippets.InkWidth(l.Glyph, l.Size, l.Scale);
+                Func<Snippets.Line, double> height = l => lying(l) ? Snippets.InkWidth(l.Glyph, l.Size, l.Scale) : Snippets.InkHeight(l.Glyph, l.Size);
+                for (int y = 0; y < qn; y++)
+                    for (int x = 0; x < qn; x++)
+                    {
+                        double cx = (x + 0.5 - qn / 2.0) * qm, cy = (qn / 2.0 - y - 0.5) * qm;
+                        bool covered = false;
+                        for (int i = 1; i < lines.Count && !covered; i++)
+                            covered = Math.Abs(cx - lines[i].X) < width(lines[i]) / 2 && Math.Abs(cy - lines[i].Y) < height(lines[i]) / 2;
+                        if (covered != q.Modules[y, x]) wrong++;
+                        if (q.Modules[y, x]) dark++;
+                    }
+                Check(wrong == 0, $"qr drawing: every module as the code says ({wrong} wrong of {qn * qn})");
+                Check(Math.Abs(width(lines[0]) - Snippets.WuPerM) < 0.01 && Math.Abs(height(lines[0]) - Snippets.WuPerM) < 0.01 && lines[0].Rgb == 0xFFFFFF,
+                      "qr drawing: the light square is the size asked, under the rest");
+                Check(lines.Count - 1 < dark / 2, $"qr drawing: {lines.Count - 1} rectangles for {dark} dark modules");
+                File.WriteAllText("qr_sample.txt", Snippets.Compose(lines));       // signart renders and reads it (qr_render.py)
+                Console.WriteLine($"qr drawing checked: {lines.Count} lines, {Snippets.Compose(lines).Length} characters");
+                // 2026-10-17 (the owner: a QR every size): sizes, versions and levels for qrtest to read, each as written
+                // (the tags' rounding included); qr_sweep/cases.tsv names each file and what a reader must find in it
+                Directory.CreateDirectory("qr_sweep");
+                var sweep = new System.Text.StringBuilder();
+                string[] texts = { "SignLink", "https://github.com/chestercs/valheim-signlink-mod",
+                                   "https://www.nexusmods.com/valheim/mods/4453 " + string.Join(" ", Enumerable.Repeat("Valheim sign art for every player", 4)) };
+                foreach (double side in new[] { 0.15, 0.3, 0.5, 1.0, 2.0, 4.0 })
+                    for (int t = 0; t < texts.Length; t++)
+                        foreach (var ecc in new[] { SignLink.Pictures.QrCode.Ecc.L, SignLink.Pictures.QrCode.Ecc.H })
+                        {
+                            var sq = SignLink.Pictures.QrCode.Encode(texts[t], ecc);
+                            string name = $"s{side:0.00}_t{t}_{ecc}_v{sq.Version}.txt";
+                            File.WriteAllText(Path.Combine("qr_sweep", name), Snippets.Compose(Snippets.Qr(sq.Modules, side, 0x000000, 0xFFFFFF)));
+                            sweep.Append(name).Append('\t').Append(texts[t]).Append('\n');
+                        }
+                File.WriteAllText(Path.Combine("qr_sweep", "cases.tsv"), sweep.ToString());
+                Console.WriteLine($"qr sweep written: {sweep.ToString().Count(c => c == '\n')} codes");
+            }
 
         // 0.20.128: the Resolution is the player's (the author: when I change the size the KB grow and I cannot save
         // over it ... when I edit and lower the size, its density gets very bad; chose: the Resolution is yours): a size
@@ -1926,7 +2077,7 @@ static class Program
             var wo = new PictureOptions { WidthM = 2f, Fine = true, DetailAuto = false };
             Func<float, float> snapRes = v => wo.Achievable((int)Math.Round(v), 1200, 900);
             int at = wo.Achievable(100, 1200, 900);
-            int up = (int)SignLink.UI.FineStep.Notch(at, -1f, 4f, "0", 8f, 1000f, snapRes), down = (int)SignLink.UI.FineStep.Notch(at, 1f, 4f, "0", 8f, 1000f, snapRes);
+            int up = (int)PetyusPolisz.Kit.FineStep.Notch(at, -1f, 4f, "0", 8f, 1000f, snapRes), down = (int)PetyusPolisz.Kit.FineStep.Notch(at, 1f, 4f, "0", 8f, 1000f, snapRes);
             bool between = true;
             for (int d = down + 1; d < up; d++)
             {
@@ -2200,8 +2351,24 @@ static class Program
             Check(sq != null && sq.Font == GlyphData.Jp && Math.Abs(sq.Y1 - 0.78) < 1e-9, "snippets: the block glyph and its metrics");
             Check(Math.Abs(Snippets.K - 0.872) < 1e-9, "snippets: K from the anchors (size 1, NotoSansJP)");
             List<Snippets.Line> block = Snippets.Block(1.0, 0.5, 0xFF0000, 255);
-            Check(block.Count == 1 && Math.Abs(block[0].Size * (2 * 0.8 + 4 * 0.0203) - 20) < 1e-6, "snippets: a 0.5 m block is 20 wu tall: S from the drawn height");
-            Check(Math.Abs(block[0].Scale - 2.0) < 1e-9, "snippets: a 1 x 0.5 m block is scale 2");
+            Check(block.Count == 1 && Math.Abs(Snippets.InkHeight(sq, block[0].Size) - 20) < 1e-6, "snippets: a 0.5 m block is 20 wu tall: S from the drawn height");
+            Check(Math.Abs(Snippets.InkWidth(sq, block[0].Size, block[0].Scale) - 40) < 1e-6 && block[0].Scale > 2.0,
+                  "snippets: a 1 x 0.5 m block is 40 wu wide (the stretch a little over 2: part of the width does not stretch)");
+            // measured in game 2026-10-17 (TMP units, half a wu): size 4 at scale 1, 2.5 and 0.3: 3.25, 7.61, 1.22 wide,
+            // 3.17 tall; size 1.5 at scale 6 and 0.15: 6.63 and 0.29 wide
+            double[,] seen = { { 4, 1, 3.25 }, { 4, 2.5, 7.61 }, { 4, 0.3, 1.22 }, { 1.5, 6, 6.63 }, { 1.5, 0.15, 0.29 } };
+            int off = 0;
+            for (int i = 0; i < seen.GetLength(0); i++)
+                if (Math.Abs(Snippets.InkWidth(sq, seen[i, 0], seen[i, 1]) / 2 - seen[i, 2]) > 0.02 * seen[i, 2] + 0.01) off++;
+            Check(off == 0 && Math.Abs(Snippets.InkHeight(sq, 4) / 2 - 3.17) < 0.05, $"snippets: the block as the game draws it ({off} widths off)");
+            // the frame reads a block's ink back from its TMP quad (1.0.2): the QR on the author's wall, size 43.99 at scale
+            // 0.97, a quad of 38.5 x 37.48 units, is 34.89 units wide and tall
+            Snippets.BlockInkOfQuad(38.5, 37.48, out double qw, out double qh);
+            Check(Math.Abs(qw - 34.89) < 0.05 && Math.Abs(qh - 34.88) < 0.05, $"snippets: a block's ink from its quad ({qw:0.00} x {qh:0.00} units)");
+            Snippets.Line bar = Snippets.Block(0.05, 1.0, 0xFF0000, 255)[0];
+            Check(Math.Abs(bar.Rotate - 90) < 1e-9 && Math.Abs(Snippets.InkHeight(sq, bar.Size) - 2) < 1e-6 &&
+                  Math.Abs(Snippets.InkWidth(sq, bar.Size, bar.Scale) - 40) < 1e-6,
+                  "snippets: a 5 cm wide, 1 m tall block lies turned a quarter, its stretch upright (upright it could not be that narrow)");
             string text = Snippets.Compose(block);
             Check(text.StartsWith("<line-height=0>" + Snippets.Anchor + "\n") && text.EndsWith("\n" + Snippets.Anchor), "snippets: header and anchors");
             Check(text.Contains("<#f00>"), "snippets: the colour tag, short when exact");
@@ -2216,7 +2383,7 @@ static class Program
                     Snippets.Tags(l, out double sp, out double sv);
                     Snippets.Model(l.Glyph, sp, sv, l.Size, l.Scale, out double gx, out double gy);
                     if (Math.Abs(gx - x * 40) > 0.05 || Math.Abs(gy - y * 40) > 0.05) bad++;
-                    double drawn = 2 * l.Size * (l.Glyph.Y1 - l.Glyph.Y0) + 4 * l.Glyph.Font.Bold * l.Size;
+                    double drawn = Snippets.InkHeight(l.Glyph, l.Size);
                     if (Math.Abs(drawn - h * 40) > 1e-6) bad++;
                 }
             Check(bad == 0, $"snippets: {bad} symbol placements or sizes off");
@@ -2591,7 +2758,7 @@ static class Program
             // picks the lines over the view (two spare past each edge) and the room of the others; a space that lands off
             // is corrected; another list, count, width or scale measures again
             {
-                var lr = new SignLink.UI.ListRows();
+                var lr = new PetyusPolisz.Kit.ListRows();
                 object list = new object();
                 lr.Plan(100, 0f, 200f, list, 500f, 1f);
                 Check(lr.First == 0 && lr.Last == 99 && lr.Above == 0f && lr.Below == 0f, "list rows: everything until measured");

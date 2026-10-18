@@ -39,8 +39,10 @@ package and uploads nothing.
 - The 0.x changelog is [`changelog-0.x.md`](changelog-0.x.md); `mod/CHANGELOG.md` is for players from 1.0.0 on.
 - Left out of the repository, kept on the author's computer (`.gitignore`): `signart/rigs/` (real base coordinates),
   `.private/` (the window's design notes), `CLAUDE.md` and `signart/ingame_tests.json` (the in-game log).
-- Fixes after 1.0.0 go to the branch `dev` on the author's Gogs server (CHANGELOG "Unreleased"); `main` takes them
-  with the next release.
+- Fixes after 1.0.0 go to the branch `dev` on the author's Gogs server; `main` takes them with the next release. The
+  first change after a release raises the version on `dev` at once (the author, 2026-10-17: the window must not show
+  the released number on a changed build): Plugin.cs, SignLink.csproj, manifest.json, docs/openapi.yaml and the
+  CHANGELOG's top entry ("x.y.z (not released yet)", dated at the release), as package.py checks them.
 
 ## Live since 1.0.1 (2026-10-16)
 
@@ -58,7 +60,10 @@ package and uploads nothing.
 
 ### A new version
 
-1. Work on `dev`; bump the version in the five places (`./sign.sh package` checks them), CHANGELOG entry.
+1. Work on `dev`; the version is bumped there already (the first change after a release). Date the CHANGELOG's top
+   entry: "x.y.z (not released yet)" becomes "x.y.z (date)" (package.py reads only the number). README.md names the
+   version by hand too (its Version line and the Nexus zip's name), and so do the example answers in docs/api.md and
+   docs/openapi.yaml.
 2. `./sign.sh mod`, `./sign.sh cstest`, `./sign.sh package`: `SignLink-<v>.zip` and `SignLink-<v>-nexus.zip`.
 3. Gogs: `main` fast-forwards to `dev`, tag. GitHub: one commit on top of `main` with the release tree, tag, release
    with both zips.
@@ -85,9 +90,30 @@ package and uploads nothing.
 
 ### Still open
 
-- `docs/media/window-steps.gif` still shows an older window.
-- 1.0.2 (on `dev`): the Nexus link on the Thunderstore page (package README), and the deep review's code items:
-  ZDOID caches cleared on a world change, a no-build check on content writes, the API accept thread's wait.
+- `docs/media/window-steps.gif` still shows an older window, and `window-1-sign.jpg`, `window-2-content.jpg`,
+  `window-3-place.jpg` show 0.20.193 (the old strip order, the old bottom buttons): retake all four before 1.0.2,
+  with the author (the scene they were taken in is gone).
+- `docs/media/qr-code.jpg` (2026-10-17, the author: out with 1.0.2 on every page; at sunset, framed by the author): the QR template on a stone wall in a
+  woodiron frame, its content the GitHub link (zbar reads it from the picture at 1600 and 800 px). Put it into the
+  README "What you can make" table, the package README picture table, the Nexus description and gallery. The scene
+  stands in claude_world at (110, 37.6, -86.6), facing south.
+
+### Feature ideas (after the stability phase; the author decides when)
+
+- **Mod-only pictures** (the author, 2026-10-16): the sign holds only a reference to the picture (its name or id),
+  plus how the uploader placed it (size, place, pose, Resolution, light, GIF playback). A vanilla player sees nothing of
+  it, and a SignLink player sees the picture or the moving GIF, drawn by the mod.
+  - The open question is how the picture reaches the other SignLink players. Today a GIF moves only where its file
+    is. It needs the player-to-player transfer that the frozen GIF topic leaned to (`docs/mod-standards.md`, "Moving
+    GIFs for players without the file"): RPC chunks from a player who has the file, cached on disk, perhaps checked
+    against a hash stored with the reference. Without a transfer, a player who lacks the file sees nothing.
+  - Why (the author, 2026-10-16): a friend loves high-quality GIFs and does not mind that others cannot see them, as
+    long as he sees them in multiplayer.
+  - The gains: no sign-text cost (the multiplayer limits and the arrival hitch would not apply to these signs), and a
+    real texture at full quality, GIFs moving for everyone with the mod.
+  - To settle first: what a vanilla player sees (an empty sign, or a short line naming SignLink); what happens when
+    nobody online has the file; size caps and the server's share of the traffic; whether the reference may go stale
+    (a renamed or changed file).
 
 ## Before the upload
 
@@ -98,7 +124,7 @@ package and uploads nothing.
 2. Multiplayer: a dedicated server (the author's test server), a second client without SignLink sees the picture; a
    second SignLink client sees a saved animation.
 3. `./sign.sh mod`, `./sign.sh cstest`, `./sign.sh modtest`, `./sign.sh test`, `./sign.sh hashes check out/hashes.json`,
-   `./sign.sh pagetest`, `./sign.sh package`: all green.
+   `./sign.sh pagetest`, `./sign.sh qrtest`, `./sign.sh package`: all green.
 4. **A pure mod** (the author's decision, 2026-10-13: no loader in the published mod): the zip holds
    `plugins/SignLink.dll` and the package files only (no ScriptEngine, no `scripts/`, nothing of the dev tool), and its
    CHANGELOG and README name no loader. Test the release once as players get it: `./sign.sh plugin` (the DLL in

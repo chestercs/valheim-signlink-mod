@@ -3,6 +3,7 @@ using SignLink.Pictures;
 using SignLink.Signs;
 using SignLink.UI.Sources;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
@@ -70,9 +71,9 @@ namespace SignLink.UI
             if (Widgets.Foldout("place.content", "Content", usable: contentRows))
             {
                 GUI.enabled = can && holds;
-                Widgets.SubHeader("Positioning", first: true);
+                Widgets.SubHeader("Positioning", true, Widgets.WheelKey);
                 panel.DrawContent(movable);
-                Widgets.SubHeader("Size");
+                Widgets.SubHeader("Size", false, Widgets.WheelKey);
                 if (picked) src.DrawSize(s, Window);                        // a piece's or a text's scale, a picture's metres
                 else panel.DrawSize(movable);                               // what the sign holds
                 GUI.enabled = true;
@@ -88,10 +89,10 @@ namespace SignLink.UI
             if (Widgets.Foldout("place.signs", "Sign"))
             {
                 GUI.enabled = can;
-                Widgets.SubHeader("Rotations", first: true);
+                Widgets.SubHeader("Rotations", true, Widgets.WheelKey);
                 panel.DrawRotations(Window, () => move.DrawTurn(s, can));   // poses, Tilt, Turn, Rotate
                 GUI.enabled = true;
-                Widgets.SubHeader("Positioning fine-tune");                 // 0.20.85, the author
+                Widgets.SubHeader("Positioning fine-tune", false, "← → ↑ ↓", "Shift+↑ ↓");   // 0.20.85, the author
                 move.Draw(s, can);
             }
             move.DrawChanges(s, can);
@@ -101,23 +102,11 @@ namespace SignLink.UI
                 slot = s.Chosen;
                 seen = panel.Fit;
             }
-            string live = Plugin.Preview.Showing ? "The sign shows the result now, for you only; Apply puts it on for everyone. "   // 0.20.129
-                : s.Verb == Verb.Refit || s.Verb == Verb.Apply ? "The button below applies the changes; everyone nearby loads the sign again. "
-                : "";
-            string hint;
-            if (!has) hint = "Select a sign first.";
-            else if (picked)
-                hint = live + "Its light is on 2 Content; here its size, its place and the sign's pose." +
-                       (src.Movable(s) ? "" : " This item keeps the place it was made with; Rotate turns it with the sign.");
-            else if (s.Held.Empty)
-                hint = live + "The sign is empty. Its pose can still change (the button below); 2 Content puts content on it.";
-            else
-                hint = live + (!s.Held.Movable
-                    ? "This content cannot be resized or moved (the game sizes it, or tags SignLink does not know); the sign can still tilt and turn."
-                    : s.CentreKnown ? (Math.Abs(s.C0x) < 0.01 && Math.Abs(s.C0y) < 0.01 ? "Size and place count from the sign's middle."
-                                       : "Size and place count from where the piece was made; put it on again to centre it.")
-                    : "SignLink did not put this piece on, so Rotate turns it around the sign's middle.");
-            Widgets.Hint(hint);
+            // only what stops a row, in a word or two (1.0.2, the author: no long texts in the window)
+            string hint = !has ? "No sign"
+                : picked ? (src.Movable(s) ? null : "Fixed place")
+                : !s.Held.Empty && !s.Held.Movable ? "Fixed size and place" : null;
+            if (hint != null) Widgets.Hint(hint);
         }
 
         /// <summary>The content's changes, as the sign's (MovePanel.DrawChanges): nothing goes on by itself (0.20.179, the
@@ -157,10 +146,9 @@ namespace SignLink.UI
                 {
                     GUILayout.Label("Changes", Theme.Label, Widgets.W(Widgets.LabelW));
                     GUILayout.Label(!s.HasTarget || !holds ? ""
-                                    : pending ? string.Join(", ", what.ToArray()) + " changed · not applied yet: only you see it" +
-                                                (posed ? "; with the sign's new pose: the button below" : "")
-                                    : v == Verb.Place || v == Verb.Put ? "a new item: the button below puts it on"
-                                    : "none: as the sign holds it",
+                                    : pending ? string.Join(", ", what.ToArray()) + " changed · only you see it" + (posed ? " · apply Sign first" : "")
+                                    : v == Verb.Place || v == Verb.Put ? "new item"
+                                    : "none",
                                     pending ? Theme.Notice : Theme.Label, Widgets.W(Widgets.RestW));
                 }
                 using (Widgets.Horizontal())
@@ -179,7 +167,7 @@ namespace SignLink.UI
                     GUI.enabled = was && can && holds && movable && off;
                     reset = Widgets.Button("Reset to default", Theme.ButtonLess, Widgets.W(180), Widgets.H(26));
                     GUI.enabled = was;
-                    GUILayout.Label("the content in the sign's middle", Theme.SideNote, Widgets.H(26));
+                    GUILayout.Label("to the middle", Theme.SideNote, Widgets.H(26));
                 }
                 if (pending && problem != null && !busy) Widgets.Hint(problem);
             }

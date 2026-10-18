@@ -20,7 +20,7 @@ namespace SignLink
     {
         public const string Guid = "PetyusPolisz.SignLink";              // the Thunderstore team's name (bakterhaz.signlink until 0.20.43)
         public const string Name = "SignLink";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.2";
 
         internal static ManualLogSource Log;
         internal static TextAnimator Text;
@@ -45,6 +45,8 @@ namespace SignLink
             Screens = new ScreenPlayer();
             Restore = new ScreenRestore();
             Stored = new StoredAnims();
+            Pictures.StockPictures.Place(Pictures.PictureImporter.Folder);   // the paintings and the horse GIF on every computer with
+                                                                             // the mod, window opened or not (review)
             Preview = new UI.ContentPreview();
             refresh = new FastRefresh(Text);
             gameObject.AddComponent<UI.SignLinkWindow>();
@@ -53,6 +55,8 @@ namespace SignLink
             PluginConfig.ApiEnabled.SettingChanged += (_, __) => ApplyApi();
             PluginConfig.ApiNetwork.SettingChanged += (_, __) => { StopApi(); ApplyApi(); };
             PluginConfig.ApiPort.SettingChanged += (_, __) => { StopApi(); ApplyApi(); };
+            PluginConfig.GifMemory.SettingChanged += (_, __) => Restore.RoomFreed();   // raised: the GIFs waiting for room start
+                                                                                       // (lowered: ScreenPlayer.Trim at its step)
             PluginConfig.ApiPassword.SettingChanged += (_, __) =>
             {
                 string why = PluginConfig.PasswordProblem();                 // a bad password typed into the config: the API stops

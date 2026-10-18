@@ -47,8 +47,7 @@ namespace SignLink.UI
         /// chose the name: 0.20.151, review, it showed for hidden signs in the window and the lists).</summary>
         public static string ShownName(Sign s) =>
             !s ? "" : !s.m_isViewable ? HiddenWords : SignRecipe.Clean(SignMarks.Name(s));
-        const string HiddenMissing = "Its content is hidden by the game's content settings (a blocked or muted author, or user content off); " +
-                                     "pick something to put on instead.";
+        const string HiddenMissing = "Hidden by the game's content settings";
         /// <summary>Why the actions on the sign are disabled (a ward you have no access to), or null.</summary>
         public string Reason;
         /// <summary>Why what the sign holds could not be loaded into the choice (made from another player's picture
@@ -222,7 +221,7 @@ namespace SignLink.UI
             MadeWith = !root ? "" : Version.Length > 0 ? $"SignLink {Version}" : SignLinks ? "SignLink (older version)" : "not SignLink";
             byte[] blob = root ? StoredAnims.Blob(root) : null;
             SaveBytes = Bytes + (long)SaveCost.PerSign * Stack.Count + (blob != null && blob.Length > 0 ? blob.Length + 8 : 0);
-            if (!root || !SignText.Shared())
+            if (!root)                                                      // single player too: its meter informs (1.0.2)
             {
                 AreaSigns = 0;
                 AreaOthers = 0;
@@ -334,9 +333,8 @@ namespace SignLink.UI
                     else
                     {
                         Missing = hideText ? HiddenMissing : Held.Recipe.Kind == SignRecipe.Kinds.Text
-                            ? "It holds a text too long to edit here (Copy, Paste and the API handle it); pick something to put on instead."
-                            : $"Made from {SignRecipe.Clean(Held.Recipe.Kind == SignRecipe.Kinds.Picture ? Held.Recipe.File : Held.Recipe.Path)}, " +
-                              "which is not on this computer; pick something to put on instead.";
+                            ? "Text too long to edit"
+                            : $"{SignRecipe.Clean(Held.Recipe.Kind == SignRecipe.Kinds.Picture ? Held.Recipe.File : Held.Recipe.Path)}: not on this computer";
                         Blank(raw, Missing);                                // not here: nothing picked for it (0.20.89)
                     }
                 }

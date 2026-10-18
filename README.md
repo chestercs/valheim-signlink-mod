@@ -42,7 +42,7 @@ put it on. The result is ordinary sign text, saved in the world like any other s
 - **The server needs nothing.** No server plugin, no config sync, nothing to install for your friends.
 - **Remove the mod and it stays.** The pictures remain as normal signs.
 
-> **Version 1.0.1.** Get it on **[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/)**
+> **Version 1.0.2.** Get it on **[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/)**
 > (r2modman, Thunderstore Mod Manager), **[Nexus Mods](https://www.nexusmods.com/valheim/mods/4453)** (Vortex or by
 > hand) or from [Releases](https://github.com/chestercs/valheim-signlink-mod/releases). See [Install](#install).
 
@@ -50,11 +50,11 @@ put it on. The result is ordinary sign text, saved in the world like any other s
 
 | | |
 |---|---|
-| 🖼️ **Pictures** | Drop a PNG, JPG or GIF into a folder and pick it in game; six famous paintings come with the mod to start with. Choose how many pixels wide it is and how many metres it covers. A phone photo comes in the right way up. |
+| 🖼️ **Pictures** | Drop a PNG, JPG or GIF into a folder and pick it in game; six famous paintings and a galloping horse (a moving GIF) come with the mod to start with. Choose how many pixels wide it is and how many metres it covers. A phone photo comes in the right way up. |
 | 🧱 **Big pictures** | One sign shows up to 50 000 pixels. A bigger picture spreads over copies of the sign stacked a fraction of a millimetre apart, so it still looks like one flat, seamless picture (up to about a million pixels in single player). |
 | 🫥 **Transparency** | The see-through parts of a PNG stay empty and cost nothing. Half-transparent parts stay half transparent. The sign's own board shows through them, so keep the part over the board solid. |
 | 🐉 **Ready-made art** | **204 pieces in the Art tab, 150 of them animated:** glyph art drawn with runes and symbols (Eikthyr, The Elder, Yggdrasil, a dragon ship, Mjolnir and more) and pixel art (the cat and its friends, a boar family, necks, hens and chicks, forest animals, bears, wolves and moose, seals, fish and sea serpents, trolls, a campfire, a longship on the waves), and kitchen icons for chest labels. See them all in [the art showcase](docs/art-library.md). |
-| 🔤 **Text with templates** | Coloured text, plus one-click pieces: a coloured block to paint a wall or a floor, a label, a symbol from a palette (runes, arrows, frames, emoji), a two-colour pattern. |
+| 🔤 **Text with templates** | Coloured text, plus one-click pieces: a coloured block to paint a wall or a floor, a label, a symbol from a palette (runes, arrows, frames, emoji), a two-colour pattern, a QR code that phones read. |
 | 💡 **Glowing or lit** | A picture glows in its own colours day and night, or takes the scene's light like normal sign text. |
 | 📐 **Any pose** | Stand a sign up, lay it face up for a floor mural, or face down for a ceiling. Tilt it, turn it, and move and resize what it holds along its face. |
 | 🎞️ **Moving pictures** | Saved animations play for every SignLink player on a shared clock. A GIF plays over its picture for everyone who has the GIF file. Players without the mod see the first frame. |
@@ -82,6 +82,9 @@ put it on. The result is ordinary sign text, saved in the world like any other s
   <tr>
     <td colspan="2"><img src="docs/media/glow-vs-lit.jpg" alt="The same picture glowing and lit by the scene, by day and by night"><br><sub><b>Glowing or lit by the scene,</b> by day and by night.</sub></td>
   </tr>
+  <tr>
+    <td colspan="2"><img src="docs/media/qr-code.jpg" alt="A QR code of the GitHub link, framed on a stone wall between two torches"><br><sub><b>QR code.</b> The QR template: a link phones read, framed on a stone wall at sunset.</sub></td>
+  </tr>
 </table>
 
 ## How it works in game
@@ -90,7 +93,7 @@ Build a sign where the picture should go, then press **PageUp** (or type `/signl
 you through three steps:
 
 1. **Sign:** click a sign, use *Pick in view*, or choose one from *Signs nearby*.
-2. **Content:** write a text, pick a built-in piece, or pick a picture. A live preview shows it on the sign, for you
+2. **Content:** pick a built-in piece, pick a picture, or write a text. A live preview shows it on the sign, for you
    only, together with what it costs.
 3. **Place:** two groups, *Content* (its place and size) and *Sign* (how the sign stands, tilts and turns, and fine
    steps to move it). A highlight in the world shows where it will go: green where it will show, red where a wall or
@@ -197,12 +200,18 @@ SignLink stays inside what the game itself can do. It is honest about it (the me
   computer, after the download (at most about 150 KB/s on a server).
 - **GIFs move only where the file is.** The frames are not saved in the world, so a GIF moves on the computers that
   have it in their `images` folder; everyone else sees its first frame.
+- **How big a GIF can be.** A GIF reads with up to 5 000 frames and 1 500 million pixels in all (about 720 frames of
+  1920 x 1080). To move, its frames are shrunk to at most twice the sign's pixels (and 1024 a side; SignLink 1.0.2); every moving GIF
+  shares the GIF memory (256 MB; 512 or 1024 in Settings › Playback on a PC with the RAM), the same GIF on many signs
+  counting once. A GIF whose frames at that size pass about four fifths of it (200 MB of 256) plays fewer of them (every second, third ...,
+  at the same speed); one too big to move goes on as a still picture. The Moving row on 2 Content says which before
+  you put it on. A GIF beside you takes the room of GIFs idle far away or paused, and one that waits for room starts
+  the moment room frees.
 - **The vanilla sign editor cuts long text.** A player without SignLink who presses E on a picture sign and then
   Enter cuts it to 50 characters. Escape leaves it alone. Such a player's game also slows down while the crosshair
   rests on a picture sign's board up close (the game reads the whole picture for its hover hint: about 150 ms a
   frame for a 222 KB picture). With SignLink, E opens SignLink instead, and looking at a
-  picture sign shows one short line instead of its whole text (*Settings › Short line when you look at a picture
-  sign*). Tip: hide the
+  picture sign shows one short line instead of its whole text. Tip: hide the
   sign in a wall or the ground with only its picture out (3 Place slides the picture along the sign): there is no
   sign to aim at, and players without SignLink do not see its post or its raw text.
 - **A sign is still a building piece.** It needs support like any other: a sign left floating breaks. A ceiling
@@ -224,10 +233,12 @@ BepInExPack Valheim comes with it as a dependency.
 **With Vortex:** *Mod Manager Download* on [the Nexus Mods page](https://www.nexusmods.com/valheim/mods/4453).
 
 **By hand:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/), then
-unpack `SignLink-1.0.1-nexus.zip` (from Nexus Mods or [Releases](https://github.com/chestercs/valheim-signlink-mod/releases))
+unpack `SignLink-1.0.2-nexus.zip` (from Nexus Mods or [Releases](https://github.com/chestercs/valheim-signlink-mod/releases))
 into the Valheim folder: the mod goes to `BepInEx/plugins/SignLink/`.
 
-Put your pictures into `BepInEx/config/SignLink/images`. The *Open folder* button in the window opens it.
+Put your pictures into `BepInEx/config/SignLink/images`. The *Open folder* button in the window opens it. Folders inside
+it work too: copy a whole folder in, and the Picture list shows it (→ opens a folder, ← goes back up). A sign remembers
+its picture's folder, so friends want the file in the same folder of their own images folder.
 
 All settings are in the window's *Settings* tab (the file is `BepInEx/config/PetyusPolisz.SignLink.cfg`). The full
 player guide, every setting and its default, is in [`mod/package/README.md`](mod/package/README.md).
@@ -316,8 +327,8 @@ SignLink is made by **ChesTeRcs** (team PetyusPolisz) for a friends' Valheim ser
 library (the glyph and pixel art pieces) is CC BY 4.0 ([LICENSE-ART](LICENSE-ART)): playing with the pieces, and
 screenshots or videos of them, need no credit; sharing the pieces themselves, in another mod or an art pack, does.
 
-The paintings that come with SignLink (and appear in the screenshots) are in the public domain, from Wikimedia
-Commons:
+The paintings and the moving GIF that come with SignLink (the paintings appear in the screenshots) are in the public
+domain, from Wikimedia Commons:
 [The Starry Night](https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg)
 (Vincent van Gogh, 1889),
 [The Great Wave off Kanagawa](https://commons.wikimedia.org/wiki/File:Tsunami_by_hokusai_19th_century.jpg)
@@ -327,8 +338,10 @@ Commons:
 [Valkyrien](https://commons.wikimedia.org/wiki/File:Peter_Nicolai_Arbo_-_Valkyrjen_-_Nasjonalmuseet_-_NG.M.00259.jpg)
 (Peter Nicolai Arbo, 1869),
 [The Wild Hunt of Odin](https://commons.wikimedia.org/wiki/File:Peter_Nicolai_Arbo_-_The_wild_Hunt_of_Odin_-_NG.M.00258_-_National_Museum_of_Art,_Architecture_and_Design.jpg)
-(Peter Nicolai Arbo, 1872) and
-[Impression, Sunrise](https://commons.wikimedia.org/wiki/File:Monet_-_Impression,_Sunrise.jpg) (Claude Monet, 1872).
+(Peter Nicolai Arbo, 1872),
+[Impression, Sunrise](https://commons.wikimedia.org/wiki/File:Monet_-_Impression,_Sunrise.jpg) (Claude Monet, 1872) and the
+[galloping horse](https://commons.wikimedia.org/wiki/File:Muybridge_race_horse_animated.gif) (Eadweard Muybridge, 1887;
+the animation by Waugsberg, 2006, Public Domain Mark).
 
 If you like SignLink, you can [buy me a coffee](https://buymeacoffee.com/chestercs).
 

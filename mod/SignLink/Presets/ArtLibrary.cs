@@ -8,7 +8,7 @@ namespace SignLink.Presets
 {
     /// <summary>The art that comes with SignLink, embedded in the DLL (mod/SignLink/Art, made by signart/presets.py from
     /// the concept rounds and the art library's lib modules): glyph art (Unicode pieces, each with a rendered picture) and
-    /// pixel art (pixel pictures and animations), in groups (Art/groups.tsv: the classics first, then the library's themes).
+    /// pixel art (pixel pictures and animations), in groups (Art/groups.tsv: ranked best first, 2026-10-17).
     /// Nothing to copy: every player has it.</summary>
     internal static class ArtLibrary
     {
@@ -25,7 +25,7 @@ namespace SignLink.Presets
             var list = new List<Preset>();
             Assembly asm = typeof(ArtLibrary).Assembly;
             var names = new HashSet<string>(asm.GetManifestResourceNames());
-            var order = new List<string> { Classics };
+            var order = new List<string>();                                  // groups.tsv ranks them, Classics among them
             var groupOf = Groups(order);
             foreach (string res in names)
             {

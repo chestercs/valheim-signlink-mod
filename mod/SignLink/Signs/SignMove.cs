@@ -36,6 +36,10 @@ namespace SignLink.Signs
         static float nextFollow, nextScan, verifyAt;
         static List<KeyValuePair<Sign, Pose>> verify;
         static readonly HashSet<Sign> moving = new HashSet<Sign>();
+        /// <summary>The moving signs' wear, which the game does not weigh until the steps are applied or undone (Paused).</summary>
+        static readonly HashSet<WearNTear> paused = new HashSet<WearNTear>();
+        /// <summary>Why the game would not hold the stack up where the steps not applied leave it (Weigh), or null.</summary>
+        static string unheld;
         static Sign[] known = new Sign[0];
         static readonly Dictionary<Sign, uint> seen = new Dictionary<Sign, uint>();
         static int seenGone;
@@ -79,7 +83,7 @@ namespace SignLink.Signs
             SignBuilder.Guard();
             SignFinder.RequireLoaded(root);
             Quaternion q = Quaternion.AngleAxis(degrees, Vector3.up);
-            if (!Holds(root, stack, Vector3.zero, q, out string why)) throw new InvalidOperationException(why);   // turned too (0.20.106)
+            if (!Paces && !Holds(root, stack, Vector3.zero, q, out string why)) throw new InvalidOperationException(why);   // turned too (0.20.106)
             RequireSpot(stack, root.transform.position, q * root.transform.rotation);
             Vector3 pivot = root.transform.position;
             foreach (Sign s in stack)
@@ -87,11 +91,80 @@ namespace SignLink.Signs
                 if (!s) continue;
                 s.transform.position = pivot + q * (s.transform.position - pivot);
                 s.transform.rotation = q * s.transform.rotation;
-                moving.Add(s);
+                Moving(s);
             }
             Begin(stack);
             pendingTurn += degrees;
+            Weigh(root, stack);
         }
+
+        /// <summary>The steps go where the game would not hold the sign up (1.0.2, the author: the rotation sliders stopped
+        /// where the sign would have no support; let them, and refuse only the apply, in red): the game does not weigh a
+        /// moving sign's support (Patches.StepWearPatch, Paused), so it does not break it before the steps are applied,
+        /// and Write refuses while it would. Without the patch (a game update) every step is weighed and refused, as
+        /// before.</summary>
+        static bool Paces => Plugin.Patched(typeof(Patches.StepWearPatch)) && !Patches.StepWearPatch.Off;
+
+        static void Moving(Sign s)
+        {
+            moving.Add(s);
+            WearNTear w = s.GetComponent<WearNTear>();
+            if (w) paused.Add(w);
+        }
+
+        static void Stopped()
+        {
+            moving.Clear();
+            paused.Clear();
+            unheld = null;
+        }
+
+        /// <summary>Is this piece one of the signs whose steps are not applied yet (the game leaves its wear and support
+        /// until they are: StepWearPatch)?</summary>
+        public static bool Paused(WearNTear w) => paused.Count > 0 && paused.Contains(w);
+
+        /// <summary>Why the game would not hold this stack up where its steps not applied leave it ("nothing would hold
+        /// it up there ..."), or null: Apply is refused while there is a reason (Write).</summary>
+        public static string Unheld(Sign root) => pending != null && root && pending.Contains(root) ? unheld : null;
+
+        /// <summary>Do steps not applied leave some stack where the game would not hold it up (cheap: no stack looked at)?</summary>
+        public static bool AnyUnheld => pending != null && unheld != null;
+
+        /// <summary>Weighs where the steps leave the stack against where it stands for everyone (its ZDO), as a step is
+        /// weighed (Holds, SupportMath.Refuse: no weaker than there, or held well enough), so the steps add up: one step
+        /// off the wall and one back is held again.</summary>
+        static void Weigh(Sign root, List<Sign> stack)
+        {
+            unheld = null;
+            if (!Paces) return;                                             // without the patch every step is weighed (Holds)
+            WearNTear wear = root.GetComponent<WearNTear>();
+            ZDO zdo = SignFinder.Zdo(root);
+            if (!wear || !wear.m_noSupportWear || zdo == null) return;
+            try
+            {
+                var own = new HashSet<Collider>();
+                foreach (Sign s in stack)
+                    if (s) own.UnionWith(s.GetComponentsInChildren<Collider>(true));
+                Transform t = root.transform;
+                float least = wear.GetMinSupport();
+                float there = SupportAt(root, wear, own, zdo.GetPosition() - t.position, zdo.GetRotation() * Quaternion.Inverse(t.rotation), false);
+                float here = SupportAt(root, wear, own, Vector3.zero, Quaternion.identity, false);
+                if (SupportMath.Refuse(there, here, least)) unheld = Weak(here, least);
+            }
+            catch (Exception e)
+            {
+                unheld = "it could not be weighed: " + e.Message;            // refused rather than let through unweighed (review)
+            }
+        }
+
+        static string Weak(float after, float least) =>
+            after <= 0f ? "nothing holds it there"
+                        : $"too weak there ({after:0} of {least:0})";
+
+        /// <summary>Is this reason (Holds, Unheld) the sign's support, and not a ward or a spot taken? The frame turns red for
+        /// that alone (ContentTab.PoseProblem).</summary>
+        public static bool WeakReason(string why) =>
+            why != null && (why.StartsWith("nothing holds it", StringComparison.Ordinal) || why.StartsWith("too weak there", StringComparison.Ordinal));
 
         /// <summary>The stack whose moves and turns are gathered until the player applies or undoes them.</summary>
         static void Begin(List<Sign> stack)
@@ -121,7 +194,7 @@ namespace SignLink.Signs
             // was built always goes
             if (total.magnitude > MaxM + 0.0001f && total.magnitude > moved.magnitude + 0.0001f)
                 throw new InvalidOperationException($"at most {MaxM:0} m from where it was built");
-            if (!Holds(root, stack, delta, Quaternion.identity, out string why)) throw new InvalidOperationException(why);
+            if (!Paces && !Holds(root, stack, delta, Quaternion.identity, out string why)) throw new InvalidOperationException(why);
             if (!PrivateArea.CheckAccess(root.transform.position + delta, 0f, false))
                 throw new InvalidOperationException("a ward you have no access to protects that spot");
             RequireSpot(stack, root.transform.position + delta, root.transform.rotation);
@@ -129,10 +202,11 @@ namespace SignLink.Signs
             {
                 if (!s) continue;
                 s.transform.position += delta;
-                moving.Add(s);
+                Moving(s);
             }
             Begin(stack);
             pendingDelta += delta;
+            Weigh(root, stack);
         }
 
         /// <summary>Throws when the stack's first sign may not stand at pos turned rot: the game builds nothing there (a
@@ -169,8 +243,7 @@ namespace SignLink.Signs
             float now = SupportAt(root, wear, own, Vector3.zero, Quaternion.identity, false), after = SupportAt(root, wear, own, delta, q, false);
             if (SupportMath.Refuse(now, after, least))
             {
-                why = after <= 0f ? "nothing would hold it up there: the game breaks a sign it finds no support for (the wall or floor it is on ends)"
-                                  : $"too weakly held there ({after:0} of the {least:0} it needs, as the game counts it): the game would break it";
+                why = Weak(after, least);
                 return false;
             }
             if (wear.m_bounds != null && !remade)                           // made again (a new pose): boxes made anew there
@@ -254,6 +327,18 @@ namespace SignLink.Signs
             if (verify != null && now >= verifyAt) Verify();             // moves wait for Apply (Write) or Undo (Revert)
             if (now < nextFollow) return;
             nextFollow = now + FollowEvery;
+            // the steps not applied weighed again: a piece built under the sign, or taken away, changes what holds it
+            // (1.0.2, review: Apply stayed refused until another step)
+            if (pending != null && pending.Count > 0 && pending[0] && SignFinder.Zdo(pending[0]) != null)
+            {
+                // its own guard: three failures in a row switch this whole step off (Plugin.Safe), Follow with it
+                try { Weigh(pending[0], pending); }
+                catch (Exception e) { Plugin.Log.LogDebug($"weighing the steps not applied: {e.Message}"); }
+            }
+            else if (pending != null && (pending.Count == 0 || !pending[0]))
+            {                                                               // its first sign unloaded, removed or the world
+                Revert();                                                   // left: the steps go, unsent (as Drop); copies still
+            }                                                               // here go back to their ZDO, reboxed (1.0.2, review)
             Follow(now);
         }
 
@@ -283,17 +368,20 @@ namespace SignLink.Signs
         }
 
         /// <summary>Writes the moves and turns made so far to the ZDOs (owned first, as vanilla does before any change).
-        /// Anything that changes a stack calls it first, so it starts from where the signs are.</summary>
+        /// Anything that changes a stack calls it first, so it starts from where the signs are. Refused, changing nothing,
+        /// while the game would not hold the stack up there (Unheld): applied, the game would break it.</summary>
         public static void Write()
         {
             if (pending == null) return;
+            if (Paces && pending.Count > 0 && pending[0]) Weigh(pending[0], pending);   // as it stands now, not up to half a second ago (review)
+            if (unheld != null) throw new InvalidOperationException("no support: " + unheld);
             List<Sign> stack = pending;
             Vector3 d = pendingDelta;
             float turn = pendingTurn;
             pending = null;
             pendingDelta = Vector3.zero;
             pendingTurn = 0f;
-            moving.Clear();
+            Stopped();
             verify = new List<KeyValuePair<Sign, Pose>>(stack.Count);
             verifyAt = Time.unscaledTime + VerifyAfter;
             foreach (Sign s in stack)
@@ -326,7 +414,7 @@ namespace SignLink.Signs
             pending = null;
             pendingDelta = Vector3.zero;
             pendingTurn = 0f;
-            moving.Clear();
+            Stopped();
             foreach (Sign s in stack)
             {
                 ZDO zdo = s ? SignFinder.Zdo(s) : null;
@@ -359,17 +447,16 @@ namespace SignLink.Signs
             if (pending.Contains(any) || pending.Contains(SignFinder.Root(any))) Write();
         }
 
-        /// <summary>The signs are being removed: if they hold the moves not applied, those go with them, unsent.</summary>
+        /// <summary>The signs are being removed: if they hold the moves not applied, those go with them, unsent, and the
+        /// stack's other signs (a delete of only some, or one a ward kept) go back where they stand for everyone (1.0.2,
+        /// review: left displaced and no longer paused, the game could break one where nothing held it).</summary>
         public static void Drop(ICollection<Sign> signs)
         {
             if (pending == null || signs == null) return;
             foreach (Sign s in signs)
                 if (pending.Contains(s))
                 {
-                    pending = null;
-                    pendingDelta = Vector3.zero;
-                    pendingTurn = 0f;
-                    moving.Clear();
+                    Revert();
                     return;
                 }
         }

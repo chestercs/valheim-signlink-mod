@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SignLink.UI
+namespace PetyusPolisz.Kit
 {
     /// <summary>IMGUI styles for the SignLink window, in the game's dark wood and amber. Unity's default skin draws
     /// windows half transparent, which is hard to read over a bright world; these are as solid as the player's Opacity
@@ -10,9 +10,9 @@ namespace SignLink.UI
     /// screen size instead of being drawn small and magnified; paddings and margins scale with them.</summary>
     internal static class Theme
     {
-        public static GUIStyle Window, Section, Header, Label, Small, Warn, Good, Notice, Button, Next, Tab, Field, Item, ItemRich, BoxText,
+        public static GUIStyle Window, Section, Header, Label, Small, Warn, Good, Notice, Button, Next, Tab, Field, Area, Item, ItemRich, BoxText,
                                TitleName, TitleVersion, TitleArea, TitleAreaOver, Chip, SmallLabel, Fold, FoldOn, ViewEmpty, ViewText, SideNote, SubHeader,
-                               ListEmpty, CheckText, ButtonDown, ButtonGap, KeyCap, SmallButton, ButtonLess, NextLess, ButtonGo, Toggle, Slider, Thumb;
+                               ListEmpty, CheckText, ButtonDown, ButtonGap, KeyCap, KeyHint, SmallButton, ButtonLess, NextLess, ButtonGo, SmallGo, Toggle, Slider, Thumb;
         static Texture2D bg, panel, button, hover, active, accent, field, fieldOn, thumb, thumbHover, thumbActive, toggleOff, toggleOn,
                          next, nextHover, nextActive;
         static int built = -1, builtScale = -1, builtOpacity = -1;
@@ -182,6 +182,10 @@ namespace SignLink.UI
             KeyCap = new GUIStyle(GUI.skin.box) { fontSize = F(15), fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, wordWrap = false,
                                                   padding = new RectOffset(R(9), R(9), R(3), R(4)), margin = new RectOffset(R(2), R(2), R(4), R(4)) };
             KeyCap.normal.textColor = Amber;
+            // a hotkey beside what it works on (Widgets.Keys, 1.0.2): smaller and dim, out of the way
+            KeyHint = new GUIStyle(KeyCap) { fontSize = F(12), fontStyle = FontStyle.Normal, padding = new RectOffset(R(5), R(5), R(1), R(2)),
+                                            margin = new RectOffset(R(1), R(1), R(3), R(3)) };
+            KeyHint.normal.textColor = new Color(0.70f, 0.67f, 0.60f);
             Warn = new GUIStyle(Label);
             Warn.normal.textColor = new Color(1f, 0.45f, 0.35f);
             Good = new GUIStyle(Label);
@@ -219,6 +223,10 @@ namespace SignLink.UI
             // feels pressable): what to press to get something going again
             ButtonGo = new GUIStyle(Button);
             Set(ButtonGo, next, nextHover, nextActive, Next.normal.textColor);
+            // a button as small as a chip in the way-on yellow (1.0.2, the author: the text editor's Insert yellow and well
+            // seen whenever it can be pressed; Widgets.SmallGoButton)
+            SmallGo = new GUIStyle(SmallButton) { fontStyle = FontStyle.Bold };
+            Set(SmallGo, next, nextHover, nextActive, Next.normal.textColor);
             Tab = new GUIStyle(Button) { fontStyle = FontStyle.Bold };
             Set(Tab, button, hover, active, Text);
             Tab.onNormal.background = accent;
@@ -244,6 +252,9 @@ namespace SignLink.UI
             Field.normal.background = Field.hover.background = field;     // a dark box with a frame: visible before you click
             Field.focused.background = fieldOn;
             Field.normal.textColor = Field.hover.textColor = Field.focused.textColor = Text;
+            // the text editor's box: a field whose lines wrap at the box (1.0.2, the owner: a long line ran out of the box,
+            // its end never seen; a text field's style does not wrap)
+            Area = new GUIStyle(Field) { wordWrap = true };
 
             // a check box drawn at the text's size (the skin's is 14 px whatever the screen): a box of R(18) at the left
             // of a texture whose transparent rest stretches under the label (9-sliced, the box itself never stretched)

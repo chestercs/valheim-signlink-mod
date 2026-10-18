@@ -121,7 +121,7 @@ namespace SignLink.Api
                         if (n >= PerPeer) { c.Close(); continue; }
                         open[peer] = n + 1;
                     }
-                if (!gate.Wait(local ? 30000 : 0))
+                if (!(local ? Turn() : gate.Wait(0)))
                 {
                     Done(peer, local);
                     c.Close();
@@ -146,6 +146,19 @@ namespace SignLink.Api
                     }
                 });
             }
+        }
+
+        /// <summary>A turn for this computer's request, waited for up to half a minute in quarter seconds, so Stop (the
+        /// API switched off, the game closing) is not held up by a full gate (1.0.2, review: the thread slept the whole
+        /// half minute in one wait).</summary>
+        bool Turn()
+        {
+            for (int waited = 0; waited < 30000; waited += 250)
+            {
+                if (!running) return false;
+                if (gate.Wait(250)) return true;
+            }
+            return false;
         }
 
         void Done(IPAddress peer, bool local)

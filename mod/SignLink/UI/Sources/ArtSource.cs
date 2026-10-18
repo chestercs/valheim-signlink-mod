@@ -5,6 +5,7 @@ using SignLink.Pictures;
 using SignLink.Presets;
 using SignLink.Signs;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI.Sources
 {
@@ -17,7 +18,6 @@ namespace SignLink.UI.Sources
     {
         public override string Title => "Art";
         public override SignRecipe.Kinds Kind => SignRecipe.Kinds.Art;
-        public override string AsMadeHint => "As made: pixel art glows in its own colours; glyph art is lit by the scene, with a few glowing parts.";
 
         static List<Preset> Items => ArtLibrary.Items;
 
@@ -139,7 +139,7 @@ namespace SignLink.UI.Sources
                 double wait = SaveCost.WaitSeconds(q.Load, q.Save);         // download and build, for a player who arrives
                 bool heavy = SaveCost.Heavy(q.Load, q.Save, q.Largest);
                 if (heavy || SaveCost.Level(wait) > 0)
-                    layers += $"; {(heavy ? "very large: " : "")}every player who arrives here on a server waits about {wait:0.#} s for it";
+                    layers += $"; {(heavy ? "very large, " : "")}{wait:0.#} s to arrive";
                 if (p.Size(out double sw, out double sh)) q.NaturalM = new Vector2((float)(sw / 40), (float)(sh / 40));
                 if (TextReadback.ReadFrames(input, out q.W, out q.H, out List<int[]> grids, out double pitch, asSeen: true))
                 {
@@ -150,7 +150,7 @@ namespace SignLink.UI.Sources
                 else
                 {
                     q.Picture = p.ReadPicture?.Invoke();
-                    q.Info = q.Picture != null ? $"{p.Name}: glyph art{layers}" : $"{p.Name}: no quick view (glyph art shows only on a sign){layers}";
+                    q.Info = q.Picture != null ? $"{p.Name}: glyph art{layers}" : $"{p.Name}: no quick view{layers}";
                 }
             }
             catch (Exception e)
@@ -238,7 +238,6 @@ namespace SignLink.UI.Sources
         public override void Draw(Session s, SignLinkWindow w, float now)
         {
             bool can = Source.Ready(s);                                     // the light and the size are set for a sign
-            Widgets.Hint("Pieces that come with SignLink: glyph art of letters and symbols, and pixel art (most of it can move: switch Moving on). Click a group to open it.");
             List<Preset> items = Items;
             bool layout = Event.current.type == EventType.Layout;
             Preset now0 = Current;
@@ -252,7 +251,8 @@ namespace SignLink.UI.Sources
             {
                 bool own = now0 != null && s.Editing && s.Held.Recipe.Kind == Kind && Preset.Find(items, s.Held.Recipe.Path) == Selected;
                 GUILayout.Label(now0 == null ? "Nothing picked yet" : $"{now0.Name}   ({now0.KindLabel}, {now0.SizeLabel})" +
-                                (own ? "   · on the selected sign" : ""), Theme.Label, Widgets.W(Widgets.ContentWidth - 30 - 180));
+                                (own ? "   · on the sign" : ""), Theme.Label, Widgets.W(Widgets.ContentWidth - 30 - 250));
+                Widgets.Keys("↑ ↓", "← →");                                 // ContentTab steps the list, folds the group (1.0.2: keys shown)
                 GUI.enabled = now0 != null || !browsing;                    // nothing picked yet: the list is all there is (0.20.69)
                 bool open = Widgets.Toggle(browsing, browsing ? "Hide list" : "Browse pieces", Theme.Tab, Widgets.W(170));   // lit while it shows
                 GUI.enabled = true;
@@ -317,17 +317,14 @@ namespace SignLink.UI.Sources
                 GUI.enabled = can;
                 bool moving = Widgets.Check(!s.Chosen.Still, "Moving");
                 if (moving == s.Chosen.Still) w.Later(() => s.Chosen.Still = !moving);
-                Widgets.Hint(s.Chosen.Still ? "Off: it goes on as a still picture, its first frame."
-                                            : "On: SignLink players see it move; players without SignLink see its first frame.");
                 GUI.enabled = true;
             }
             // the quick view folds like 3 Place's groups (0.20.171, the author: the quick view should be a group
             // everywhere too, one that opens and closes), open at first and kept as left
             if (Widgets.Foldout("art.view", "Quick view")) thumb.Draw(Widgets.ContentWidth - 30, 200);
             if (!can) Widgets.Hint(Source.NotReady(s));
-            else if (Current != null) Widgets.Hint("Its size, its place and the sign's pose: 3 Place.");
             GUI.enabled = can;                                              // the last group (0.20.69)
-            LightRow.Draw(s, w, LightRow.PieceLights, LightRow.PieceNames, AsMadeHint);
+            LightRow.Draw(s, w, LightRow.PieceLights, LightRow.PieceNames);
             GUI.enabled = true;
             Arriving(s);
         }
@@ -340,16 +337,15 @@ namespace SignLink.UI.Sources
             Preset p = Current;
             Quick q = p != null && shown != null && shown.Path == p.Path && shown.Texts != null ? shown : null;
             if (q == null) return;
-            long bytes = Still(s, p) ? q.SaveStill : q.Save;
+            long bytes = FirstFrameOnly(s, p) ? q.SaveStill : q.Save;
             double down = SaveCost.DownloadSeconds(bytes), wait = q.Load + down;
             int level = SaveCost.Level(wait);
             string limit = Limit(s);
-            Widgets.Field("Arriving", $"about {wait:0.#} s on a server: {down:0.#} s download, {q.Load:0.#} s build",
+            Widgets.Field("Arriving", $"{wait:0.#} s ({down:0.#} s download, {q.Load:0.#} s build)",
                           level == 2 ? Theme.Warn : level == 1 ? Theme.Notice : Theme.Good);
-            if (limit != null) Widgets.Field("Multiplayer", "the button on 3 Place stays grey: " + limit, Theme.Warn);
+            if (limit != null) Widgets.Field("Multiplayer", limit, Theme.Warn);
             else if (SignText.Shared()) Widgets.Field("Multiplayer", "fits the limits", Theme.Good);
-            else Widgets.Field("Multiplayer", $"no limit in single player (on a server: {SaveCost.Label(SaveCost.SignLimit)} a sign, " +
-                                              $"{SaveCost.Label(SaveCost.AreaLimit)} within {SaveCost.AreaRadiusM} m)", Theme.Small);
+            else Widgets.Field("Multiplayer", "no limit here", Theme.Small);
             Widgets.Field("World save", SaveCost.Label(bytes));
         }
 
@@ -479,10 +475,23 @@ namespace SignLink.UI.Sources
         /// <summary>An animated piece goes on as its first frame (Moving off).</summary>
         static bool Still(Session s, Preset p) => p.Kind == Preset.Kinds.Anim && s.Chosen.Still;
 
+        /// <summary>The sign holds this piece's frames switched off on Playing: put on again (a new size, light or place) it
+        /// keeps them, still for everyone, so Moving there starts it again (1.0.2, review: a resize dropped them).</summary>
+        static bool KeepsFrames(Sign root, Preset p)
+        {
+            ZDO held = root ? SignFinder.Zdo(root) : null;
+            return p != null && p.Kind == Preset.Kinds.Anim && StoredAnims.HasFrames(held) && StoredAnims.Still(held) &&
+                   SignRecipe.Parse(SignMarks.Source(root)).Path == p.Path;
+        }
+
+        /// <summary>It goes on as its first frame only: Moving off, and no frames of it kept (KeepsFrames). What it costs
+        /// follows (1.0.2, review: kept frames were counted as one).</summary>
+        static bool FirstFrameOnly(Session s, Preset p) => Still(s, p) && !(s.HasTarget && KeepsFrames(s.First, p));
+
         public override bool Heavy(Session s, out double loadSeconds, out long saveBytes, out long largest)
         {
             loadSeconds = shown?.Load ?? 0;
-            saveBytes = shown != null ? (Current != null && Still(s, Current) ? shown.SaveStill : shown.Save) : -1;
+            saveBytes = shown != null ? (Current != null && FirstFrameOnly(s, Current) ? shown.SaveStill : shown.Save) : -1;
             largest = shown?.Largest ?? 0;
             return shown != null && SaveCost.Heavy(loadSeconds, saveBytes, largest);
         }
@@ -511,14 +520,13 @@ namespace SignLink.UI.Sources
         public override string FitHint(Session s)
         {
             if (Current == null) return null;
-            if (shown == null) return shownError ?? "Reading the piece ...";
-            if (shown.Why != null) return $"This piece keeps the size and place it was made with ({shown.Why}); Rotate turns it with the sign.";
+            if (shown == null) return shownError ?? "Reading ...";
+            if (shown.Why != null) return "Fixed size";
             double k = Scale(s);
             // one line either way: a hint that grew a sentence while Width moved made the rows below jump (0.20.161)
             if (Math.Abs(k - s.Chosen.Fit.Scale) > 0.0005)
-                return shown.NaturalM.x > 0 ? $"Its pixels allow only some sizes: it goes on {k * shown.NaturalM.x:0.##} m wide."
-                                            : $"Its pixels allow only some sizes: it goes on at {k * 100:0.#} %.";
-            return "The size counts from the piece as made.";
+                return shown.NaturalM.x > 0 ? $"Goes on {k * shown.NaturalM.x:0.##} m wide" : $"Goes on at {k * 100:0.#} %";
+            return " ";                                                     // the line stays: the rows below do not jump
         }
 
         string previewKey, previewWant;
@@ -579,21 +587,24 @@ namespace SignLink.UI.Sources
             w.Act(() =>
             {
                 Preset.Content c = q != null ? new Preset.Content { Texts = q.Texts, Fps = q.Fps } : p.Load();
-                IList<string> texts = SignGlow.Apply(still ? new[] { c.Texts[0] } : c.Texts, light);   // a still: the first frame
+                bool keep = still && c.Texts.Length > 1 && KeepsFrames(SignFinder.Root(target), p);   // off on Playing: frames stay
+                IList<string> texts = SignGlow.Apply(still && !keep ? new[] { c.Texts[0] } : c.Texts, light);   // a still: the first frame
                 bool known = p.Centre(out double cx, out double cy);
-                bool anim = p.Kind == Preset.Kinds.Anim && !still;
+                bool anim = p.Kind == Preset.Kinds.Anim && (!still || keep);
                 List<Sign> signs = SignFit.Put(target, texts, cx, cy, known, fit, p.Name, anim ? Math.Max(0.1f, c.Fps) : 0f,
                                                centred: true);                // 0-0-0 is the sign's middle (0.20.38)
                 SignMarks.SetSource(signs[0], SignRecipe.ForPiece(kind, light, p.Path, still).ToString());   // this source edits it from now on
+                if (keep) Plugin.Stored.SetMoving(signs[0], false);
                 Fit put = SignFit.Read(signs[0], out _, out _, out _);
                 s.Chosen.Fit = put;                                         // as put (a snapped size): nothing left to apply (0.20.148)
                 w.Select(signs[0]);
                 string how = put.Describe(light);
-                if (anim) return $"'{p.Name}' is saved on the sign{how}: every SignLink player sees it move, players without SignLink its first frame.";
-                if (still) return $"'{p.Name}' is on the sign{how} as a still picture, its first frame ({SaveCost.Label(SaveCost.Bytes(texts))} in the world save).";
+                if (keep) return $"'{p.Name}' is on the sign{how}, not moving.";
+                if (anim) return $"'{p.Name}' is on the sign{how}, moving.";
+                if (still) return $"'{p.Name}' is on the sign{how}, still.";
                 string save = SaveCost.Label(SaveCost.Bytes(texts));
-                return signs.Count > 1 ? $"'{p.Name}' is on the sign{how}, over {signs.Count} stacked signs ({save} in the world save)."
-                                       : $"'{p.Name}' is on the sign{how} ({save} in the world save).";
+                return signs.Count > 1 ? $"'{p.Name}' is on the sign{how} ({signs.Count} signs, {save})."
+                                       : $"'{p.Name}' is on the sign{how} ({save}).";
             });
         }
     }

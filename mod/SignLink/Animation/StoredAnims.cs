@@ -22,6 +22,11 @@ namespace SignLink.Animation
     internal sealed class StoredAnims
     {
         public static readonly int Key = "signlink_anim".GetStableHashCode();
+        /// <summary>Moving switched off on the Playing tab, for everyone (2026-10-16, the author: not a Delete but the
+        /// Moving switch, and it stays in the list to switch back on): the frames stay on the sign and no SignLink game
+        /// plays them, the sign showing its first frame, until Moving goes on again. New frames (Store) or new content
+        /// (ClearBlob) clear it.</summary>
+        public static readonly int StillKey = "signlink_anim_still".GetStableHashCode();
         public const int MaxBytes = AnimBlob.MaxBytes;
         const double MaxFrameMs = 100, MaxMsPerSecond = 100, StopMs = 150, SlowMsPerSecond = 150, GlyphMs = Pictures.SaveCost.GlyphSeconds * 1000;
         /// <summary>All stored animations together (0.20.151, review: each was judged alone, so ten light ones near each
@@ -112,6 +117,7 @@ namespace SignLink.Animation
             Sign root = SignBuilder.SetContent(s, new[] { frames[0] }, name)[0];   // an animation lives on one sign
             ZDO rootZdo = SignFinder.Zdo(root);
             rootZdo.Set(Key, blob);
+            if (rootZdo.GetInt(StillKey) != 0) rootZdo.Set(StillKey, 0);    // new frames move, for everyone
             paused.Remove(rootZdo.m_uid);                                   // new frames play (0.20.189, review)
             nextScan = 0;
             return "{\"ok\":true,\"frames\":" + frames.Count + ",\"kb\":" + blob.Length / 1024 + "}";
@@ -126,16 +132,83 @@ namespace SignLink.Animation
             SignText.RequireEdit(s);
             s.m_nview.ClaimOwnership();
             zdo.Set(Key, new byte[0]);
+            if (zdo.GetInt(StillKey) != 0) zdo.Set(StillKey, 0);
             SignMarks.SetSource(s, "");                                      // not the piece it was any more
             Forget(s);
             return true;
         }
 
+        /// <summary>Does this sign carry frames (moving or not)?</summary>
+        public static bool HasFrames(ZDO zdo)
+        {
+            byte[] blob = zdo?.GetByteArray(Key);
+            return blob != null && blob.Length > 0;
+        }
+
+        /// <summary>Is Moving off on this sign's frames, for everyone? The key holds the mark of the frames switched off
+        /// (Mark), not a plain flag (1.0.2, review: a 1.0.1 player, who knows no such key, putting new frames on a sign once
+        /// switched off left the flag on, and every 1.0.2 player saw the new animation frozen): other frames move.</summary>
+        public static bool Still(ZDO zdo)
+        {
+            int mark = zdo != null ? zdo.GetInt(StillKey) : 0;
+            if (mark == 0) return false;
+            byte[] blob = zdo.GetByteArray(Key);
+            return blob != null && blob.Length > 0 && Mark(blob) == mark;
+        }
+
+        /// <summary>A frames blob's mark: FNV-1a over its length and its first and last 4 KB (cheap on every scan, and
+        /// any other frames differ there), never 0 (no mark) or 1 (the plain flag of a test build).</summary>
+        static int Mark(byte[] blob)
+        {
+            uint h = 2166136261;
+            void Add(byte b) { h ^= b; h *= 16777619; }
+            for (int i = 0; i < 4; i++) Add((byte)(blob.Length >> (8 * i)));
+            int head = System.Math.Min(4096, blob.Length);
+            for (int i = 0; i < head; i++) Add(blob[i]);
+            for (int i = System.Math.Max(head, blob.Length - 4096); i < blob.Length; i++) Add(blob[i]);
+            int m = (int)h;
+            return m == 0 || m == 1 ? 2 : m;
+        }
+
+        /// <summary>The Playing tab's Moving switch, for everyone: off keeps the frames on the sign and shows its first frame
+        /// (as players without SignLink see it); on plays them again. A piece from the art library says so in its recipe
+        /// too, so 2 Content's Moving switch shows the same. Like any sign edit it needs ward access.</summary>
+        public string SetMoving(Sign s, bool on)
+        {
+            ZDO zdo = s ? SignFinder.Zdo(s) : null;
+            if (zdo == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!HasFrames(zdo)) return "that sign has no saved animation any more.";
+            SignText.RequireEdit(s);
+            s.m_nview.ClaimOwnership();
+            zdo.Set(StillKey, on ? 0 : Mark(zdo.GetByteArray(Key)));     // these frames, not any later ones (Still)
+            SignRecipe r = SignRecipe.Parse(SignMarks.Source(s));
+            if (r.Kind == SignRecipe.Kinds.Art && r.Still == on)
+            {
+                r.Still = !on;
+                SignMarks.SetSource(s, r.ToString());
+            }
+            if (on)
+            {
+                rejected.Remove(zdo.m_uid);                                 // judged again
+                nextScan = 0;
+                return "it moves again, for every SignLink player.";
+            }
+            Forget(s);                                                      // its first frame shows
+            return "it moves no more, for anyone: its sign shows the first frame; Moving starts it again.";
+        }
+
         public void Step(float now)
         {
-            if (!ZNet.instance)                                             // the world left: its frames go (0.20.130, review)
-            {
-                if (playing.Count > 0) playing.Clear();
+            if (!ZNet.instance)                                             // the world left: its frames go (0.20.130, review),
+            {                                                               // and what was kept by ZDO (1.0.2, review: another
+                if (playing.Count > 0) playing.Clear();                     // world reuses the ids)
+                if (rejected.Count + hashes.Count + paused.Count + evicted.Count > 0)
+                {
+                    rejected.Clear();
+                    hashes.Clear();
+                    paused.Clear();
+                    evicted.Clear();
+                }
                 return;
             }
             if (!PluginConfig.PlayAnimations.Value)
@@ -223,7 +296,7 @@ namespace SignLink.Animation
             foreach (Sign s in SignFinder.Loaded())
             {
                 ZDO zdo = SignFinder.Zdo(s);
-                if (zdo == null) continue;
+                if (zdo == null || Still(zdo)) continue;                    // Moving off (Playing): not seen, so it stops below
                 playing.TryGetValue(s, out Playing a);
                 if (a != null && a.Revision == zdo.DataRevision)
                 {
@@ -380,6 +453,7 @@ namespace SignLink.Animation
             ZDO zdo = SignFinder.Zdo(s);
             byte[] blob = zdo?.GetByteArray(Key);
             if (blob != null && blob.Length > 0) zdo.Set(Key, new byte[0]);
+            if (zdo != null && zdo.GetInt(StillKey) != 0) zdo.Set(StillKey, 0);
             Plugin.Stored?.playing.Remove(s);                 // its old frames must not paint over the new text
         }
 

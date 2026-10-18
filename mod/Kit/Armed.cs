@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SignLink.UI
+namespace PetyusPolisz.Kit
 {
     /// <summary>A button for an action that cannot be undone (Delete, Clear, Paste over a sign that holds something):
     /// the first click arms it for four seconds and relabels it "Sure? Click again"; the second click within that time
@@ -13,7 +13,7 @@ namespace SignLink.UI
 
         /// <summary>True on the second click. key: what this button does (and to what: the row's path), so another row
         /// or another action starts over.</summary>
-        public static bool Button(SignLinkWindow w, string key, string label, string sure, GUIStyle style, params GUILayoutOption[] opts)
+        public static bool Button(IDeferred w, string key, string label, string sure, GUIStyle style, params GUILayoutOption[] opts)
         {
             bool isArmed = armed == key && Time.unscaledTime - at < Seconds;
             if (!Widgets.Button(isArmed ? sure : label, style, opts)) return false;

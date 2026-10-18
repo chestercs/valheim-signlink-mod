@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using SignLink.Animation;
 using SignLink.Pictures;
@@ -156,7 +157,7 @@ namespace SignLink.Api
         }
 
         /// <summary>POST /image: decode on the main thread, encode here (the request's own thread), place on the main
-        /// thread.</summary>
+        /// thread. The answer's note says what a GIF did (plays over it; stays still: no room now, too big).</summary>
         static string Image(Dictionary<string, string> a, byte[] file)
         {
             string id = Req(a, "id");
@@ -188,9 +189,12 @@ namespace SignLink.Api
             else if (place == "centred" || place == "centered") o.Place = Placement.Centred;
             else if (place == "below") o.Place = Placement.Below;
             else if (place != "above") throw new ArgumentException("place is above, centred or below");
+            bool dry = Opt(a, "dry", "0") != "0";
+            Sign sign = null;                                               // touched on the main thread only
             MainThread.Run(() =>
             {
-                SignPose.Read(SignFinder.Find(id), out float tilt, out float turn);
+                sign = SignFinder.Find(id);
+                SignPose.Read(sign, out float tilt, out float turn);
                 o.TiltDeg = HasTilt(a) ? TiltArg(a) : tilt;
                 o.TurnDeg = a.ContainsKey("turn") ? Num(a, "turn", 0f) : turn;
                 return true;
@@ -200,23 +204,60 @@ namespace SignLink.Api
             if (Math.Abs(o.RightM) > 300 || Math.Abs(o.UpM) > 300 || Math.Abs(o.OutM) > 300 || (o.BottomM ?? 0) < -300 || (o.BottomM ?? 0) > 300 || o.WidthM < 0 || o.WidthM > 200)
                 throw new ArgumentException("x, up and above must be within 300 m of the sign; width 0..200 m");
             EncodedPicture pic;
-            if (GifDecoder.IsGif(file)) pic = PictureImporter.EncodeGif(file, o);
+            if (GifDecoder.IsGif(file))
+            {
+                // its frames shared with the signs that play the file already, and parked under the file's stamp when the
+                // sign unloads, as the window's put does (1.0.2, review: the API's screens were decoded and held apart)
+                string gifName = SafeName(Opt(a, "name", ""));
+                string path = gifName.Length > 0 ? PictureImporter.PathFor(gifName) : null;
+                // the file on disk, when the body is that file (its length; review: a body unlike the file would share or park
+                // frames under the file's key)
+                string stamp = path != null && File.Exists(path) && new FileInfo(path).Length == file.LongLength ? PictureImporter.Stamp(path) : null;
+                ScreenFrames shared = stamp != null && o.Animate
+                    ? MainThread.Run(() => Plugin.Screens.FramesFor(stamp, (gw, gh) => PictureImporter.ScreenWidth(gw, gh, o.PlanFor(gw, gh).W))) : null;
+                if (shared != null)
+                {
+                    PictureOptions still = o.Clone();                       // the still alone: the frames are there
+                    still.Animate = false;
+                    pic = PictureImporter.EncodeGif(file, still).With(shared);
+                }
+                else if (dry)
+                {
+                    // the still alone (1.0.2: every frame was decoded for the sizes, then dropped); the note says only
+                    // whether the frames could ever play, and nothing is parked for them
+                    PictureOptions still = o.Clone();
+                    still.Animate = false;
+                    pic = PictureImporter.EncodeGif(file, still);
+                    if (o.Animate) pic.Note = PictureImporter.ScreenNote(file, (w, h) => o.PlanFor(w, h).W) ?? "";
+                }
+                else
+                {
+                    // the room the GIFs playing here leave is asked before any frame is decoded, as the window's put asks
+                    // (1.0.2: decoded whole, then dropped at the start)
+                    pic = PictureImporter.EncodeGif(file, o, target: sign);
+                    if (pic.Screen != null) pic.Screen.Key = PictureImporter.ScreenKey(stamp, pic.Screen.W);
+                }
+            }
             else
             {
                 int w = 0, h = 0;
                 byte[] rgba = MainThread.Run(() => PictureImporter.Decode(file, out w, out h));
                 pic = PictureImporter.Encode(rgba, w, h, o);
             }
-            pic.Name = SafeName(Opt(a, "name", ""));                        // a recipe on the sign: the window edits it
+            string wanted = Opt(a, "name", "");
+            pic.Name = SafeName(wanted);                                    // a recipe on the sign: the window edits it
+            if (wanted.Length > 0 && pic.Name.Length == 0)                  // said, not refused (review): the picture goes on nameless
+                pic.Note += "; the name was dropped: not a file name under the images folder (folders with '/' are fine, a step out of it is not)";
             var sb = new StringBuilder("{\"ok\":true,\"w\":" + pic.W + ",\"h\":" + pic.H + ",\"pitch\":" + Json.F(pic.Pitch) + ",\"signs\":" + pic.Bands.Count +
                                        ",\"kb\":[");
             for (int i = 0; i < pic.Bands.Count; i++) sb.Append(i > 0 ? "," : "").Append(pic.Bands[i].Bytes / 1024);
             sb.Append("],\"saveKb\":").Append(pic.SaveBytes / 1024).Append(",\"encodeMs\":").Append(Json.F(pic.Ms));
-            if (Opt(a, "dry", "0") != "0") return sb.Append('}').ToString();
+            Func<string> note = () => pic.Note.Length > 0 ? ",\"note\":" + Json.Str(pic.Note.TrimStart(';', ' ')) : "";
+            if (dry) return sb.Append(note()).Append('}').ToString();
             return MainThread.Run(() =>
             {
                 List<Sign> placed = PictureImporter.Place(SignFinder.Find(id), pic, o);
-                return sb.Append(",\"ids\":").Append(Ids(placed)).Append('}').ToString();
+                return sb.Append(",\"ids\":").Append(Ids(placed)).Append(note()).Append('}').ToString();
             }, 60000);
         }
 
@@ -326,11 +367,12 @@ namespace SignLink.Api
             return "{\"ok\":true,\"ms\":" + Json.F(ms) + ",\"chars\":" + body.Length + "}";
         }
 
-        /// <summary>A file name the page sends (name=): its last part, or "" when Windows would not take it.</summary>
+        /// <summary>A picture's name the page or a request sends (name=), as a sign keeps it: under the images folder, with its
+        /// folders ("cat.gif", "funny/cat.gif"; 1.0.2); "" when it is no such name (PictureImporter.PathFor).</summary>
         static string SafeName(string name)
         {
-            try { return string.IsNullOrEmpty(name) ? "" : System.IO.Path.GetFileName(name); }
-            catch (ArgumentException) { return ""; }
+            string n = string.IsNullOrEmpty(name) ? "" : name.Replace('\\', '/');
+            return n.Length > 0 && PictureImporter.PathFor(n) != null ? n : "";
         }
 
         static Sign OptSign(Dictionary<string, string> a) => a.TryGetValue("id", out string id) && id.Length > 0 ? SignFinder.Find(id) : null;

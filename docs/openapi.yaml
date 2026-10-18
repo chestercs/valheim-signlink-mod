@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SignLink developer API
-  version: 1.0.1
+  version: 1.0.2
   summary: Write, animate and fill Valheim signs from your own tools.
   description: |
     An optional HTTP API built into the SignLink mod. It is **off by default**: switch it on in the SignLink window,
@@ -76,10 +76,10 @@ paths:
                 required: [ok, version]
                 properties:
                   ok: {const: true}
-                  version: {type: string, examples: ['1.0.1']}
+                  version: {type: string, examples: ['1.0.2']}
                   inWorld: {type: boolean, description: With the password only.}
                   player: {$ref: '#/components/schemas/Vec3', description: 'With the password, in a world only.'}
-              example: {ok: true, version: '1.0.1', inWorld: true, player: [80.12, 31.5, -95.03]}
+              example: {ok: true, version: '1.0.2', inWorld: true, player: [80.12, 31.5, -95.03]}
         '401': {$ref: '#/components/responses/Unauthorized'}
 
   /signs:
@@ -269,7 +269,7 @@ paths:
           schema: {type: integer, enum: [0, 1], default: 0}
         - name: name
           in: query
-          description: The file name, kept on the sign so the window can edit the picture later.
+          description: The file's name under the images folder, its folders with '/' (funny/cat.gif), kept on the sign so the window can edit the picture later and a GIF moves where the file is. A name that is not one (a step out of the folder, a device name) is dropped, and the answer's note says so.
           schema: {type: string}
       requestBody:
         required: true
@@ -296,6 +296,10 @@ paths:
                   saveKb: {type: integer, description: What the picture adds to the world save.}
                   encodeMs: {type: number}
                   ids: {type: array, items: {type: string}, description: The signs holding it. Not with `dry=1`.}
+                  note:
+                    type: string
+                    description: 'With a GIF: it plays over the picture, or why it stays still (the GIFs playing here
+                      leave no room for its frames now; too big for the GIF memory).'
               example: {ok: true, w: 160, h: 127, pitch: 1, signs: 1, kb: [262], saveKb: 262, encodeMs: 85.4, ids: ['1234567890:42']}
         '400': {$ref: '#/components/responses/BadRequest'}
         '401': {$ref: '#/components/responses/Unauthorized'}

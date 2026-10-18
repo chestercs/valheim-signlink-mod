@@ -15,6 +15,7 @@
     <Compile Include="../SignLink/Pictures/RawPixels.cs" />
     <Compile Include="../SignLink/Pictures/ImageHeader.cs" />
     <Compile Include="../SignLink/Pictures/GifDecoder.cs" />
+    <Compile Include="../SignLink/Pictures/PictureNames.cs" />
     <Compile Include="../SignLink/Pictures/TextReadback.cs" />
     <Compile Include="../SignLink/Pictures/SignGlow.cs" />
     <Compile Include="../SignLink/Pictures/SaveCost.cs" />
@@ -22,6 +23,7 @@
     <Compile Include="../SignLink/Pictures/TextTransform.cs" />
     <Compile Include="../SignLink/Pictures/GlyphData.cs" />
     <Compile Include="../SignLink/Pictures/Snippets.cs" />
+    <Compile Include="../SignLink/Pictures/QrCode.cs" />
     <Compile Include="../SignLink/Pictures/Fit.cs" />
     <Compile Include="../SignLink/Pictures/FitTexts.cs" />
     <Compile Include="../SignLink/Signs/FloorPlan.cs" />
@@ -37,16 +39,16 @@
     <Compile Include="../SignLink/UI/Jobs.cs" />
     <Compile Include="../SignLink/UI/Change.cs" />
     <Compile Include="../SignLink/UI/ThumbCache.cs" />
-    <Compile Include="../SignLink/UI/ListRows.cs" />
+    <Compile Include="../Kit/ListRows.cs" />
     <Compile Include="../SignLink/ConfigMoves.cs" />
-    <Compile Include="../SignLink/UI/WindowSizing.cs" />
-    <Compile Include="../SignLink/UI/TextHistory.cs" />
+    <Compile Include="../Kit/WindowSizing.cs" />
+    <Compile Include="../Kit/TextHistory.cs" />
     <Compile Include="../SignLink/Pictures/SignPicture.cs" />
     <Compile Include="../SignLink/Signs/SignClip.cs" />
     <Compile Include="../SignLink/UI/Hatch.cs" />
-    <Compile Include="../SignLink/UI/HotkeyText.cs" />
+    <Compile Include="../Kit/HotkeyText.cs" />
     <Compile Include="../SignLink/UI/SourceFollow.cs" />
-    <Compile Include="../SignLink/UI/FineStep.cs" />
+    <Compile Include="../Kit/FineStep.cs" />
     <Compile Include="../SignLink/Signs/SupportMath.cs" />
     <EmbeddedResource Include="../SignLink/Art/**/*" LogicalName="SignLink.Art.%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

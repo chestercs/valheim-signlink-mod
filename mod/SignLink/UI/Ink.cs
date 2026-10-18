@@ -12,6 +12,7 @@ namespace SignLink.UI
     internal static class Ink
     {
         static readonly FieldInfo PaddingField = typeof(TMP_Text).GetField("m_padding", BindingFlags.Instance | BindingFlags.NonPublic);
+        const char Block = '■';                                             // GlyphData.Block: every ■ comes from NotoSansJP-Thin
 
         /// <summary>False while the text has no laid-out glyph that shows (a sign just loaded: measured at a later look).</summary>
         public static bool Rect(TMP_Text t, out Vector2 min, out Vector2 max)
@@ -35,6 +36,12 @@ namespace SignLink.UI
                 // the padding in the glyph's own axes (a <rotate> turns the quad); a quad smaller than its padding: its middle
                 Vector3 ix = across.magnitude > 2 * inset ? across.normalized * inset : across / 2;
                 Vector3 iy = up.magnitude > 2 * inset ? up.normalized * inset : up / 2;
+                if (c.character == Block)                                   // the block's measured ink (1.0.2, the author: the
+                {                                                           // frame stood off a QR code on every side)
+                    Pictures.Snippets.BlockInkOfQuad(across.magnitude, up.magnitude, out double w, out double h);
+                    ix = across.normalized * Mathf.Clamp((across.magnitude - (float)w) / 2, 0, across.magnitude / 2);
+                    iy = up.normalized * Mathf.Clamp((up.magnitude - (float)h) / 2, 0, up.magnitude / 2);
+                }
                 Add(bl + ix + iy, ref min, ref max);
                 Add(br - ix + iy, ref min, ref max);
                 Add(tl + ix - iy, ref min, ref max);

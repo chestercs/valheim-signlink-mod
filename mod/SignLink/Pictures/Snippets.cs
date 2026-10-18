@@ -34,18 +34,60 @@ namespace SignLink.Pictures
             public double Adv, BoxLeft, BoxRight;
         }
 
-        /// <summary>The size that draws this glyph heightWu tall.</summary>
-        public static double SizeFor(GlyphData.Glyph g, double heightWu) => heightWu / (2 * (g.Y1 - g.Y0) + 4 * g.Font.Bold);
+        /// <summary>The block glyph (■) as the game draws it, measured in game (2026-10-17: sizes 1.5 and 4, &lt;scale&gt; 0.15
+        /// to 6, lit and glowing alike): its ink is S*(BlockA*sx + BlockC) em wide and S*BlockH em tall (an em is 2*S wu),
+        /// centred where the formulas put it. Part of its width does not stretch with &lt;scale&gt; (TMP's padding for the
+        /// bold style), so blocks sized by the glyph's outline (0.8 em, all of it stretching) came out short when wide and
+        /// wide when narrow: a QR code's bars missed each other and no phone read it. Other glyphs keep the outline
+        /// model (not measured).</summary>
+        const double BlockA = 0.726, BlockC = 0.089, BlockH = 0.793;
+        /// <summary>The block glyph's TMP quad (the same measurement): S*(QuadA*sx + QuadC) em wide, S*QuadH em tall, its
+        /// padding included. The ink is smaller than the quad less TMP's padding: the frame on a block measured by the quad
+        /// stood 3 cm off a 1.7 m QR code's sides.</summary>
+        const double QuadA = 0.8, QuadC = 0.099, QuadH = 0.852;
 
-        /// <summary>How wide a glyph of this size is drawn (wu).</summary>
-        public static double DrawnWidth(GlyphData.Glyph g, double size) => size * (2 * (g.X1 - g.X0) + 4 * g.Font.Bold);
+        /// <summary>The block glyph's ink from its TMP quad (any unit: the answer is in the quad's): the size and the stretch
+        /// read back from the quad, the measured ink of those.</summary>
+        public static void BlockInkOfQuad(double quadW, double quadH, out double w, out double h)
+        {
+            double s = quadH / QuadH;
+            double sx = s > 0 ? Math.Max(0, (quadW / s - QuadC) / QuadA) : 0;
+            w = s * (BlockA * sx + BlockC);
+            h = s * BlockH;
+        }
+        /// <summary>The narrowest stretch a block takes: a block narrower than BlockC/BlockH of its height cannot be drawn.</summary>
+        const double MinScale = 0.02;
+        /// <summary>A block narrower than this stretch is drawn lying (Block): a stretch this small is near BlockC's floor.</summary>
+        const double LieUnder = 0.25;
+
+        static bool Measured(GlyphData.Glyph g) => g.Ch == GlyphData.Block;
+
+        /// <summary>How tall a glyph of this size is drawn (wu).</summary>
+        public static double InkHeight(GlyphData.Glyph g, double size) =>
+            Measured(g) ? 2 * size * BlockH : size * (2 * (g.Y1 - g.Y0) + 4 * g.Font.Bold);
+
+        /// <summary>How wide a glyph of this size and stretch is drawn (wu).</summary>
+        public static double InkWidth(GlyphData.Glyph g, double size, double scale = 1) =>
+            Measured(g) ? 2 * size * (BlockA * Math.Abs(scale) + BlockC) : size * (2 * (g.X1 - g.X0) + 4 * g.Font.Bold) * Math.Abs(scale);
+
+        /// <summary>The size that draws this glyph heightWu tall.</summary>
+        public static double SizeFor(GlyphData.Glyph g, double heightWu) => heightWu / InkHeight(g, 1);
+
+        /// <summary>The stretch that draws a glyph of this size widthWu wide.</summary>
+        public static double ScaleFor(GlyphData.Glyph g, double size, double widthWu) =>
+            Measured(g) ? Math.Max(MinScale, (widthWu / (2 * size) - BlockC) / BlockA) : widthWu / InkWidth(g, size);
 
         /// <summary>A coloured block w x h metres, its centre x, y metres from the sign's centre.</summary>
         public static List<Line> Block(double wM, double hM, int rgb, int alpha, double xM = 0, double yM = 0)
         {
             GlyphData.Glyph g = GlyphData.Find(GlyphData.Block);
-            double size = SizeFor(g, hM * WuPerM);
-            return new List<Line> { Single(g, size, wM * WuPerM / DrawnWidth(g, size), 0, rgb, alpha, xM, yM) };
+            double size = SizeFor(g, hM * WuPerM), scale = ScaleFor(g, size, wM * WuPerM);
+            if (scale < LieUnder)                                           // too narrow to stand: lying, turned a quarter, the
+            {                                                               // stretch along its height (1.0.2, review: a 5 cm wide
+                size = SizeFor(g, wM * WuPerM);                             // 1 m bar came out 13 cm wide)
+                return new List<Line> { Single(g, size, ScaleFor(g, size, hM * WuPerM), 90, rgb, alpha, xM, yM) };
+            }
+            return new List<Line> { Single(g, size, scale, 0, rgb, alpha, xM, yM) };
         }
 
         /// <summary>One glyph of the palette, drawn hM tall, mirrored and turned as asked (degrees, anticlockwise as TMP
@@ -89,7 +131,7 @@ namespace SignLink.Pictures
             var lines = new List<Line>();
             GlyphData.Glyph g = GlyphData.Find(ch);
             if (g == null || cols < 1 || rows < 1 || cellM <= 0) return lines;
-            double cell = cellM * WuPerM, size = SizeFor(g, cell), scale = cell / DrawnWidth(g, size);
+            double cell = cellM * WuPerM, size = SizeFor(g, cell), scale = ScaleFor(g, size, cell);
             for (int r = 0; r < rows; r++)
                 for (int c = 0; c < cols; c++)
                 {
@@ -98,6 +140,41 @@ namespace SignLink.Pictures
                     lines.Add(Single(g, size, scale, 0, b ? rgbB : rgbA, b ? alphaB : alphaA, x / WuPerM, y / WuPerM));
                 }
             return lines;
+        }
+
+        /// <summary>A QR code (QrCode.Modules), sideM metres wide with its quiet zone of `quiet` modules, centred at x, y: a
+        /// light square, then the dark modules over it as rectangles (each grown down and right as far as it stays dark,
+        /// so a code is a few hundred lines, not one a module), every rectangle a hair larger than its modules so no seam
+        /// shows between two of them. One sign text draws in order, so the dark ones lie over the light one.</summary>
+        public static List<Line> Qr(bool[,] modules, double sideM, int darkRgb, int lightRgb, int quiet = 4, double xM = 0, double yM = 0)
+        {
+            var lines = new List<Line>();
+            int n = modules.GetLength(0);
+            if (n < 1 || sideM <= 0) return lines;
+            double m = sideM / (n + 2 * quiet), half = n / 2.0, over = m * 0.04;
+            lines.AddRange(Block(sideM, sideM, lightRgb, 255, xM, yM));
+            var used = new bool[n, n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    if (!modules[y, x] || used[y, x]) continue;
+                    int w = 1, h = 1;
+                    while (x + w < n && modules[y, x + w] && !used[y, x + w]) w++;
+                    // at most five times as tall as wide: a block narrower than about a ninth of its height cannot be
+                    // drawn (BlockC), so a long column goes in parts
+                    while (y + h < n && h < 5 * w && DarkRun(modules, used, y + h, x, w)) h++;
+                    for (int dy = 0; dy < h; dy++)
+                        for (int dx = 0; dx < w; dx++) used[y + dy, x + dx] = true;
+                    lines.AddRange(Block(w * m + over, h * m + over, darkRgb, 255, xM + (x + w / 2.0 - half) * m, yM + (half - y - h / 2.0) * m));
+                }
+            return lines;
+        }
+
+        static bool DarkRun(bool[,] modules, bool[,] used, int y, int x, int w)
+        {
+            for (int i = x; i < x + w; i++)
+                if (!modules[y, i] || used[y, i]) return false;
+            return true;
         }
 
         static Line Single(GlyphData.Glyph g, double size, double scale, double rotate, int rgb, int alpha, double xM, double yM) =>

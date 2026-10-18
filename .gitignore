@@ -29,3 +29,5 @@ signart/rigs/
 # the author's own: Claude Code's project rules and the in-game verification log (kept on their computer)
 CLAUDE.md
 signart/ingame_tests.json
+mod/SignLink.Tests/qr_sample.*
+mod/SignLink.Tests/qr_sweep/

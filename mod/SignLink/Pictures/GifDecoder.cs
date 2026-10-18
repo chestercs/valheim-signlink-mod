@@ -31,22 +31,45 @@ namespace SignLink.Pictures
         /// <summary>A GIF's size and how many frames Decode keeps (every k-th past MaxBytes), from its blocks without
         /// decoding any: what a screen of it would hold is known before the frames are made (0.20.132). False when it is not
         /// a GIF Decode takes (the size, too many frames or frame pixels); a file cut short may decode fewer.</summary>
-        public static bool Measure(byte[] d, out int w, out int h, out int frames, long maxBytes = MaxBytes, int maxFrames = int.MaxValue)
+        public static bool Measure(byte[] d, out int w, out int h, out int frames, long maxBytes = MaxBytes, int maxFrames = int.MaxValue,
+                                   Func<int, int, long> frameBytes = null)
         {
-            w = h = frames = 0;
+            frames = 0;
+            if (!Inspect(d, out w, out h, out int count)) return false;
+            frames = Math.Min(maxFrames, Kept(count, frameBytes != null ? frameBytes(w, h) : (long)w * h * 3, maxBytes));
+            return true;
+        }
+
+        /// <summary>A GIF's size and how many frames it holds, from its blocks (none decoded); false when Decode would not
+        /// take it (not a GIF, the size, too many frames or frame pixels).</summary>
+        public static bool Inspect(byte[] d, out int w, out int h, out int count)
+        {
+            w = h = count = 0;
             if (!IsGif(d) || d.Length < 13) return false;
             w = d[6] | (d[7] << 8);
             h = d[8] | (d[9] << 8);
             if (w <= 0 || h <= 0 || (long)w * h > 16_000_000) return false;
-            int count = CountFrames(d, out long framePixels);
-            if (count == 0 || count > MaxFrames || framePixels > MaxFramePixels) return false;
-            int stride = Stride(count, w, h, maxBytes);
-            frames = Math.Min(maxFrames, (count + stride - 1) / stride);
+            count = CountFrames(d, out long framePixels);
+            if (count == 0 || count > MaxFrames || framePixels > MaxFramePixels)
+            {
+                count = 0;
+                return false;
+            }
             return true;
         }
 
-        /// <summary>Every stride-th frame is kept: the frames of count full-size frames over maxBytes.</summary>
-        static int Stride(int count, int w, int h, long maxBytes) => (int)Math.Max(1, (count * (long)w * h * 3 + maxBytes - 1) / maxBytes);
+        /// <summary>Every stride-th frame is kept: count frames of frameBytes each over maxBytes (1.0.2: the bytes of a frame as
+        /// kept, a screen's shrunk one, not the full-size frame's, review).</summary>
+        public static int Stride(int count, long frameBytes, long maxBytes) =>
+            (int)Math.Max(1, (count * Math.Max(1, frameBytes) + maxBytes - 1) / Math.Max(1, maxBytes));
+
+        /// <summary>How many of count frames Decode keeps at that stride.</summary>
+        public static int Kept(int count, long frameBytes, long maxBytes)
+        {
+            if (count <= 0) return 0;
+            int stride = Stride(count, frameBytes, maxBytes);
+            return (count + stride - 1) / stride;
+        }
 
         /// <summary>Decodes the frames. If they would take more than maxBytes, only every k-th frame is kept (its delay
         /// grows k times), so the animation keeps its speed. maxFrames stops early (1: the first frame, for a preview).
@@ -54,19 +77,22 @@ namespace SignLink.Pictures
         /// OperationCanceledException. frame: what to keep of each kept frame (Frames gets what it returns), handed the
         /// canvas as composed (RGB24, rows top-down, width x height), which is drawn over for the next frame: it returns a
         /// copy or what it makes of it (the screen's shrunk frame, 0.20.132, review: a copy of every full-size frame was
-        /// held besides the screen's); null keeps a copy.</summary>
+        /// held besides the screen's); null keeps a copy. frameBytes: what a kept frame takes (the screen's size), for the
+        /// stride; null: the full-size frame's.</summary>
         public static GifImage Decode(byte[] d, long maxBytes = MaxBytes, int maxFrames = int.MaxValue, Func<bool> cancelled = null,
-                                      Func<byte[], int, int, byte[]> frame = null)
+                                      Func<byte[], int, int, byte[]> frame = null, Func<int, int, long> frameBytes = null)
         {
             if (!IsGif(d)) throw new ArgumentException("not a GIF");
             if (d.Length < 13) throw new ArgumentException("the GIF is cut short");
             int w = d[6] | (d[7] << 8), h = d[8] | (d[9] << 8);
-            if (w <= 0 || h <= 0 || (long)w * h > 16_000_000) throw new ArgumentException($"GIF size {w} x {h} not supported");
+            if (w <= 0 || h <= 0 || (long)w * h > 16_000_000) throw new ArgumentException($"the GIF is {w} x {h} pixels: at most 16 million pixels a frame (4000 x 4000)");
             int count = CountFrames(d, out long framePixels);
             if (count == 0) throw new ArgumentException("the GIF has no frames");
             if (count > MaxFrames || framePixels > MaxFramePixels)
-                throw new ArgumentException($"GIF too complex: {count} frames, {framePixels / 1000000} M frame pixels (at most {MaxFrames} and {MaxFramePixels / 1000000} M)");
-            int stride = Stride(count, w, h, maxBytes);
+                throw new ArgumentException($"the GIF is too long or too large to read: {count} frames, {framePixels / 1000000} million pixels in all " +
+                                            $"(at most {MaxFrames} frames and {MaxFramePixels / 1000000} million pixels: about {MaxFramePixels / (1920L * 1080)} frames of 1920 x 1080). " +
+                                            "Make it shorter or smaller");
+            int stride = Stride(count, frameBytes != null ? frameBytes(w, h) : (long)w * h * 3, maxBytes);
             var lzw = new LzwBuffers();                                         // one set for every frame
 
             var gif = new GifImage { Width = w, Height = h, SourceFrames = count };

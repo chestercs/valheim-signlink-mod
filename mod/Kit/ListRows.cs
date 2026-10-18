@@ -1,6 +1,6 @@
 using System;
 
-namespace SignLink.UI
+namespace PetyusPolisz.Kit
 {
     /// <summary>A long list in a scroll view drawn only where it shows (0.20.132, review: the Picture and Art lists laid out
     /// every line on every event, and every line marked its thumbnail used, so the thumbnail cache never shrank while a

@@ -16,7 +16,7 @@ namespace SignLink.Patches
     ///   and would break the picture on Enter: only for content SignLink made (its marks) or a picture-like text; another
     ///   mod's long text keeps the game's editor, which that mod may have widened (Opens).
     /// Signs whose text is hidden (user-generated content off, a muted author) keep the game's behaviour.
-    /// "3 - Sign options / PreventEditor" switches it off.</summary>
+    /// Always on since 1.0.2: its switch (PreventEditor) only let the stutter and the cutting editor back in.</summary>
     internal static class PictureSign
     {
         sealed class Entry
@@ -36,7 +36,7 @@ namespace SignLink.Patches
         /// or a sign it only posed: they read as they are)?</summary>
         public static bool Hovers(Sign s)
         {
-            if (!PluginConfig.PreventEditor.Value || !s || !s.m_isViewable || s.m_textWidget == null) return false;
+            if (!s || !s.m_isViewable || s.m_textWidget == null) return false;
             int limit = s.m_characterLimit;                          // the saved text, or what shows (an animation frame)
             if (SignText.SavedText(s).Length > limit || (s.m_textWidget.text?.Length ?? 0) > limit) return true;
             ZDO z = SignFinder.Zdo(s);                                 // no mark: a plain sign, no stack to look for

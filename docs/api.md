@@ -32,7 +32,7 @@ Answers    JSON: {"ok": true, ...}  or  {"ok": false, "error": "..."} with a 4xx
 ```sh
 export PW='the password'
 curl -s -H "X-SignLink-Password: $PW" http://127.0.0.1:8417/ping
-# {"ok":true,"version":"1.0.1","inWorld":true,"player":[80.12,31.5,-95.03]}
+# {"ok":true,"version":"1.0.2","inWorld":true,"player":[80.12,31.5,-95.03]}
 ```
 
 3. Look at a sign, then write to it:
@@ -63,7 +63,7 @@ The version; with the password also whether a world is loaded and where the play
 header it answers the version only, so a tool can check that the API is on.
 
 ```json
-{"ok": true, "version": "1.0.1", "inWorld": true, "player": [80.12, 31.5, -95.03]}
+{"ok": true, "version": "1.0.2", "inWorld": true, "player": [80.12, 31.5, -95.03]}
 ```
 
 <a id="get-"></a>
@@ -155,8 +155,8 @@ SignLink players. The body is the image file.
 | `alpha` | 0 \| 1 | 1 | keep PNG transparency |
 | `cover` | 0 \| 2 | 2 | 2 draws the pixels seamless |
 | `animate` | 0 \| 1 | 1 | play a moving GIF over it |
-| `dry` | 0 \| 1 | 0 | only encode and report the sizes |
-| `name` | string | | the file name, kept so the window can edit the picture later |
+| `dry` | 0 \| 1 | 0 | only encode and report the sizes (anything but 0 is a dry run) |
+| `name` | string | | the file's name under the images folder, its folders with `/` (`funny/cat.gif`), kept so the window can edit the picture later and a GIF moves where the file is; a name that is not one (a step out of the folder, a device name) is dropped, and the `note` says so |
 
 Older parameters still work: `pixels` (a pixel budget, 100..2 000 000) and `above` (the bottom edge in metres).
 
@@ -170,7 +170,10 @@ curl -s -H "X-SignLink-Password: $PW" --data-binary @starry-night.jpg \
  "ids": ["1234567890:42"]}
 ```
 
-`kb` lists each sign's size, `ids` the signs that hold the picture (not with `dry=1`).
+`kb` lists each sign's size, `ids` the signs that hold the picture (not with `dry=1`). A GIF's answer has a `note`: it
+plays over the picture, or why it stays still: the GIFs playing on this computer leave no room for its frames now (it
+plays when room frees, when its file is in the images folder under `name`), or it is too big for the GIF memory at
+any time. Its frames are decoded only when they can play; a dry run decodes the still alone.
 
 > [!TIP]
 > Pixel sizes come in steps, so the picture can come out a little wider than asked. Try with `dry=1` first and read
@@ -365,14 +368,14 @@ Every error is `{"ok": false, "error": "..."}`; the message says what to change.
 | 404 | an unknown route |
 | 411 | a body without a Content-Length (chunked bodies are refused) |
 | 413 | a body over the route's cap, or a body on a route that takes none |
-| 429 | five wrong passwords in a minute from this address: wait a minute |
+| 429 | five wrong passwords in a minute from this address (another computer's; this one is never locked out): wait a minute |
 
 ## Limits
 
 | | |
 |---|---|
 | Body size | `/sign`, `/anim`, `/signs/clone` 16 MB; `/image` 64 MB; `/screen` 256 MB |
-| Timing | the first byte within 2 s, the head within 10 s, the body within 30 s (or 2 MB a second when larger) |
+| Timing | the first byte within 2 s, the head within 10 s (3 s from another computer), the body within 30 s (or 2 MB a second when larger) |
 | One sign | 400 KB (the network carries at most 512 KiB a sign) |
 | Shared world | 300 KB a sign, 600 KB for all SignLink signs within 100 m, synced animations 16 KB/s |
 | Animations | 20 000 frames, 60 fps |

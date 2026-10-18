@@ -61,8 +61,7 @@ namespace SignLink.Pictures
 
         /// <summary>The cost line's sentence (no closing full stop).</summary>
         public static string WaitLine(double buildSeconds, long bytes) =>
-            $"Every player who arrives here on a server waits about {WaitSeconds(buildSeconds, bytes):0.#} s for it: " +
-            $"{DownloadSeconds(bytes):0.#} s to download (150 KB/s at best), {buildSeconds:0.#} s to build";
+            $"Arriving players wait {WaitSeconds(buildSeconds, bytes):0.#} s ({DownloadSeconds(bytes):0.#} s download, {buildSeconds:0.#} s build)";
 
         /// <summary>The most SignLink stores on one sign stack in a shared world (texts, signs and a saved animation, as
         /// Bytes counts them): about 2 s for every player who arrives. The author, 2026-10-11, after three large pictures froze

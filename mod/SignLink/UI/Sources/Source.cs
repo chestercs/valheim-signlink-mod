@@ -150,8 +150,6 @@ namespace SignLink.UI.Sources
         /// <summary>A line under the source's Size rows (a piece's scale snapping, why it cannot change), or null.</summary>
         public virtual string FitHint(Session s) => null;
 
-        /// <summary>What the "As made" light means for this source's items.</summary>
-        public virtual string AsMadeHint => "As made: as it is.";
 
         /// <summary>The rule of 2 Content (0.20.18): without a sign you can look, not set. The light, the sizes, a
         /// picture's pixel options and the text box are for the selected sign, so they are greyed until there is one,
@@ -160,7 +158,6 @@ namespace SignLink.UI.Sources
 
         /// <summary>The line under greyed rows: why they are grey.</summary>
         public static string NotReady(Session s) =>
-            !s.HasTarget ? "Select a sign first (Pick in view, or one from Signs nearby): these are set for it."
-                         : s.Reason ?? "This sign cannot be changed.";
+            !s.HasTarget ? "No sign" : s.Reason ?? "Locked";
     }
 }

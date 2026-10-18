@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SignLink.UI
+namespace PetyusPolisz.Kit
 {
     /// <summary>The Text editor's Undo and Redo (0.20.62, the author: the text editor has no undo, no Ctrl+Z / Ctrl+Y
     /// and no buttons for them): the text is seen once a frame; a burst of typing (changes under Group seconds apart)

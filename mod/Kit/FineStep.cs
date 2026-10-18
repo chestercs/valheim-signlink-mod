@@ -1,6 +1,6 @@
 using System;
 
-namespace SignLink.UI
+namespace PetyusPolisz.Kit
 {
     /// <summary>Shift + mouse wheel over a slider's row (Widgets.Number, 0.20.93, the author: while the mouse hovers a
     /// slider in the window, Shift + wheel should turn it finely; the plain wheel stays as it was): a notch moves the
@@ -38,6 +38,22 @@ namespace SignLink.UI
                 if (got > 0 && (wheel < 0 ? got > now + 1e-5f : got < now - 1e-5f)) return got;
             }
             return now;
+        }
+
+        /// <summary>Where a size row that snaps lands after a change (Widgets.SizeRows; snap: the size a value really takes).
+        /// A slider drag or press (dragged) takes the size nearest the mouse, so the row follows the mouse both ways
+        /// (2026-10-16, a player's test: Width and Height of an art piece still jumped while dragged, because the rule
+        /// below ran on every mouse move: the row raced a size ahead of the mouse, and the next move, now behind it, sent
+        /// it back). Anything else (a typed size) takes the size it snaps to, or the next one the change's way when that
+        /// lands where the row is or against the change (0.20.149: a typed size did not move).</summary>
+        public static float Settle(float was, float got, Func<float, float> snap, bool dragged, float step, float lo, float hi)
+        {
+            if (snap == null || Math.Abs(got - was) < 1e-4f) return got;
+            float here = snap(was), to = snap(got);
+            if (!(here > 0) || !(to > 0)) return got;                       // no exact sizes (several line heights): as asked
+            int dir = Math.Sign(got - was);
+            if (!dragged && Math.Sign(to - here) != dir) to = Notch(here, -dir, step, "0.#", lo, hi, snap);
+            return Math.Max(lo, Math.Min(hi, to));
         }
 
         /// <summary>The value a notch moves it to (wheel: the event's delta, below zero the wheel up), within [lo, hi].</summary>

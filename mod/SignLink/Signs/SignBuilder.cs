@@ -27,6 +27,8 @@ namespace SignLink.Signs
             ZDO srcZdo = SignFinder.Zdo(src) ?? throw new InvalidOperationException("the sign has no ZDO");
             GameObject prefab = ZNetScene.instance.GetPrefab(srcZdo.GetPrefab())
                                 ?? throw new InvalidOperationException("prefab not found");
+            if (Location.IsInsideNoBuildLocation(src.transform.position))   // as the hammer (1.0.2, review)
+                throw new InvalidOperationException("the game allows no building there");
             if (!checkedFirst)                                              // SetContent checked before writing anything
             {
                 SignText.RequireEdit(src);
@@ -103,6 +105,19 @@ namespace SignLink.Signs
             foreach (string t in texts) SignText.RequireSendable(t);       // all of them, before anything is written
             SignText.RequireRoom(root, Pictures.SaveCost.Bytes(texts), "this content");   // the multiplayer limits
             RequireDepth(root, texts.Count);
+            // more signs or fewer is building or removing, which the game allows nowhere near a trader or a boss (as the
+            // hammer: 1.0.2, review); the same number of signs only takes new texts, as vanilla's own editing does
+            if (texts.Count < stack.Count && Location.IsInsideNoBuildLocation(root.transform.position))
+            {
+                // fewer texts there keep the signs, the spare ones emptied (review: 1 Sign's Clear of a stack worked in 1.0.1, and
+                // emptying is vanilla's own editing; a copy fewer is removing)
+                var kept = new List<string>(texts);
+                while (kept.Count < stack.Count) kept.Add("");
+                texts = kept;
+            }
+            if (texts.Count != stack.Count && Location.IsInsideNoBuildLocation(root.transform.position))
+                throw new InvalidOperationException($"the game allows no building or removing there, so the sign keeps its {stack.Count} " +
+                                                    $"sign(s) and this content needs {texts.Count}");
             List<Sign> copies = stack.FindAll(o => o != root);
             int need = texts.Count - 1;
             SignMove.WriteFor(root);                                        // allowed: moves not applied yet are kept, and copies

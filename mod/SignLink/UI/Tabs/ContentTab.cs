@@ -4,10 +4,11 @@ using SignLink.Pictures;
 using SignLink.Signs;
 using SignLink.UI.Sources;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
-    /// <summary>2 Content: what goes on the sign. A toolbar of sources (Text, Art, Picture), the picked source's
+    /// <summary>2 Content: what goes on the sign. A toolbar of sources (Art, Picture, Text), the picked source's
     /// body (its list, settings and light), and a footer that leads on to 3 Place, where the content is placed: nothing
     /// goes on the sign from here, so the place, the pose and the frame in the world are seen before it does.</summary>
     internal sealed class ContentTab : Tab
@@ -20,10 +21,11 @@ namespace SignLink.UI
 
         public ContentTab(SignLinkWindow w) : base(w)
         {
-            // Text first, the one the strip opens on (author, 2026-10-12: Text as the default first item), then glyph art,
-            // pictures (a feature the multiplayer limits keep small). Saved went in 0.20.63: a frozen copy of a sign could
-            // not change its resolution for the multiplayer limits; a picture's file and Copy / Paste do what it did
-            sources = new Source[] { new TextSource(), new ArtSource(), new PictureSource() };
+            // Art first, the one the strip opens on, then pictures, and the text editor last (2026-10-16, the author after a
+            // player's test: the text editor last and Art first, in the strip as in use; Text led from 2026-10-12). Saved
+            // went in 0.20.63: a frozen copy of a sign could not change its resolution for the multiplayer limits; a
+            // picture's file and Copy / Paste do what it did
+            sources = new Source[] { new ArtSource(), new PictureSource(), new TextSource() };
             w.Session.LoadInto = (r, into) =>
             {
                 for (int i = 0; i < sources.Length; i++)
@@ -144,24 +146,18 @@ namespace SignLink.UI
             bool puts = v == Verb.Place || v == Verb.Put || v == Verb.Update;   // a pose or a refit needs no pick
             string problem = !has ? null : puts ? src.Problem(s) ?? src.Limit(s) ?? s.Reason : s.Reason;
             GUI.enabled = has && problem == null;
-            // it glows only when there is something to put on or change (0.20.56, the author: an empty text box over a
-            // picture sign led on as brightly as a typed text); without, the way to move or turn the sign stays plain
-            bool lead = !has || v != Verb.None;
+            // in the way-on yellow whenever it can be pressed, as the bottom button of every tab (1.0.2, the author: editing
+            // a sign, Next was grey; before, 0.20.56, it glowed only when something would go on or change)
             string label = !has ? "Select a sign first" : problem != null && src.Calculating(s) ? "Calculating ..."   // grey while it counts (0.20.134)
-                : lead ? "3 Place ▸   set where it sits, then put it on" : "3 Place ▸   move or turn the sign";
-            if (lead ? Widgets.NextButton(label) : Widgets.Button(label, Theme.Button, Widgets.Wide(36)))
+                : "Next ▸";                                                 // the clearest word (1.0.2, the author)
+            if (Widgets.NextButton(label))
                 Window.Later(() => Window.ShowTab("3 Place"));
             GUI.enabled = true;
             // the area limit under the button, where a line on what 3 Place does was (0.20.72, the author: delete this
             // "On 3 place: its size its place" blah text ... and put the area KB indicator there)
             AreaMeter.Draw(s, Change.AreaBytes(v, src.Bytes(s)), underButton: true);   // multiplayer: the area limit, with the pick in place
-            if (!has) Widgets.Hint("Select a sign first: Pick in view, or one from Signs nearby.");
-            else if (problem != null) Widgets.Hint(problem);
-            else if (v == Verb.None) Widgets.Hint("Nothing new to put on: the sign keeps what it holds. Pick or type something above to change it; 3 Place can still move or turn it.");
-            else if (Plugin.Preview.Showing)                                 // ContentPreview (0.20.129)
-                Widgets.Hint("The sign shows the result now, for you only; 3 Place puts it on for everyone.");
-            else if (Change.HidesHeld(s.Held, s.Chosen))                   // HeldVeil (0.20.95)
-                Widgets.Hint("The sign hides what it holds meanwhile (only you see it); the frame shows where the new one goes.");
+            if (has && problem != null) Widgets.Hint(problem);              // only what stops it (1.0.2, the author: no long texts)
+            else if (has && Plugin.Preview.Showing) Widgets.Hint("Preview: only you");   // ContentPreview (0.20.129)
         }
 
         /// <summary>What putting something on also does to the selected sign: " and lay it face up", " and stand it up",
@@ -186,13 +182,14 @@ namespace SignLink.UI
             Verb v = s.Verb;
             string problem = src.Problem(s) ?? src.Limit(s) ?? s.Reason;
             string key = s.Chosen.Recipe.ToString() + "|" + s.Chosen.Fit.Describe(s.Chosen.Light);
+            string pose = PoseProblem(s);                                 // in red: the sliders took it, the button may not
             if (!s.HasTarget) Grey("Select a sign first", null);
             else if (v == Verb.None)                                        // the label stays short; why, under it
                 Grey("As it is", s.Chosen.Recipe.Kind == SignRecipe.Kinds.None
-                    ? "Nothing new to put on: the sign keeps what it holds (2 Content changes it; the sign moves and turns above)." : problem);
+                    ? null : problem);
             else if (v == Verb.Apply || v == Verb.Refit)
             {
-                GUI.enabled = s.Reason == null && !w.Busy && !SourcesBusy;
+                GUI.enabled = s.Reason == null && pose == null && !w.Busy && !SourcesBusy;
                 string label = VerbLabel(s, v);
                 if (Widgets.NextButton(w.Busy ? "Working ..." : label))
                 {
@@ -201,6 +198,7 @@ namespace SignLink.UI
                 }
                 GUI.enabled = true;
                 if (s.Reason != null) Widgets.Hint(s.Reason);
+                else if (pose != null) GUILayout.Label(pose, Theme.Warn);
             }
             else if (!src.Busy && confirm.Armed(key))
             {
@@ -214,7 +212,7 @@ namespace SignLink.UI
             else
             {
                 bool busy = src.Busy || w.Busy || SourcesBusy;                // another tab's picture still being made too (0.20.148)
-                GUI.enabled = problem == null && !busy;
+                GUI.enabled = problem == null && pose == null && !busy;
                 // grey because it still reads or counts (a press waiting for its count too): "Calculating ..." (0.20.134)
                 bool calculating = (problem != null || busy) && src.Calculating(s);
                 Stuck(calculating, problem);
@@ -230,8 +228,61 @@ namespace SignLink.UI
                 }
                 GUI.enabled = true;
                 if (problem != null && !busy) Widgets.Hint(problem);
+                else if (pose != null) GUILayout.Label(pose, Theme.Warn);
             }
         }
+
+        static string poseKey, poseWhy;
+        static float poseAt;
+
+        /// <summary>Why the sign may not take the chosen pose (SignPose.Check: the game would not hold it up there, a ward,
+        /// a spot where nothing is built), or null: the Tilt and Rotate rows take any pose and show it, and only the button
+        /// is refused (1.0.2, the author: allow it, just do not let it apply, with the red text that it has no support).
+        /// Steps not applied that the game would not hold up refuse it too. Weighed again when the pose or the sign's place
+        /// changes, and a reason each second.</summary>
+        internal static string PoseProblem(Session s)
+        {
+            PoseUnheld = false;
+            if (!s.HasTarget) return null;
+            // steps not applied that the game would not hold up: nothing else may write the sign either (SignMove.Write)
+            string unheld = SignMove.AnyUnheld ? SignMove.Unheld(s.First) : null;
+            if (unheld != null)
+            {
+                PoseUnheld = true;
+                return "No support: " + unheld;
+            }
+            Fit c = s.Chosen.Fit;
+            if (Math.Abs(c.Tilt - s.SignTilt) <= 0.05 && Math.Abs(Mathf.DeltaAngle((float)c.Turn, s.SignTurn)) <= 0.05) return null;
+            Sign t = s.Target;
+            if (!t) return null;
+            string key = $"{SignFinder.Id(t)}|{c.Tilt}|{c.Turn}|{c.Edge}|{t.transform.position.ToString("F4")}|{t.transform.rotation.ToString("F5")}";
+            // a reason weighed again each second: some pass by themselves (the sign's copies still loading)
+            if (key == poseKey && (poseWhy == null || Time.unscaledTime - poseAt < 1f))
+            {
+                PoseUnheld = poseWeak;
+                return poseWhy;
+            }
+            poseKey = key;
+            poseAt = Time.unscaledTime;
+            try
+            {
+                SignPose.Check(t, (float)c.Tilt, (float)c.Turn, 0f, c.Edge);
+                poseWhy = null;
+                poseWeak = false;
+            }
+            catch (Exception e)
+            {
+                poseWhy = "The sign cannot take this pose: " + e.Message + ".";
+                poseWeak = SignMove.WeakReason(e.Message);
+            }
+            PoseUnheld = poseWeak;
+            return poseWhy;
+        }
+
+        /// <summary>Was the last PoseProblem the sign's support? The frame turns red for that alone (review: a ward, a spot
+        /// taken or copies still loading made it red too, and the colour says "nothing would hold it").</summary>
+        internal static bool PoseUnheld;
+        static bool poseWeak;
 
         static float calculatingSince = -1f;
         static bool calculatingSaid;

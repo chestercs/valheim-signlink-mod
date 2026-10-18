@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SignLink.UI
+namespace PetyusPolisz.Kit
 {
     /// <summary>A hotkey as people write it (0.20.82, the author: BepInEx wrote "PageUp + LeftShift"; write these the
     /// other way round, as is usual): the modifiers first, in Ctrl, Alt, Shift order, each once, by their short names,

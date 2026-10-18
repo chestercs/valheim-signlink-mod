@@ -21,7 +21,7 @@ namespace SignLink.UI
     /// canvases draw nearest last, so under the first sign's canvas the frame was drawn under the text of the copies in
     /// front of it and showed over one band only (0.20.0-0.20.1); a canvas of its own with a higher sorting order
     /// (0.20.2-0.20.3) did not show in game at all.</summary>
-    internal sealed class Ghost
+    internal sealed partial class Ghost
     {
         /// <summary>The selection's colours: the content in green where it shows, the board in a soft warm grey (0.20.88, the
         /// author: I do not like the yellow either, let us have better colours, a smoother colour for the sign's border
@@ -47,6 +47,11 @@ namespace SignLink.UI
         /// 0.20.94, the author: the content layer reddish instead of violet; 0.20.100: a deep crimson, shown as
         /// chosen).</summary>
         public static readonly Color Behind = new Color(0.80f, 0.12f, 0.14f, 0.85f);
+        /// <summary>The board's frame while nothing holds the sign where the steps or the pose to come put it (1.0.2, the
+        /// author: red instead of the white border when the sign has the "nothing holds it" problem, a red a little apart
+        /// from the picture's, well seen): a hot scarlet, lighter and warmer than the content's crimson, glowing as the
+        /// lime does but less (UnheldGlow; a warmer red, or this one at the lime's glow, read as orange). The same words stand in red on 2 Content and 3 Place (ContentTab.PoseProblem).</summary>
+        public static readonly Color Unheld = new Color(1.00f, 0.12f, 0.06f, 1f);
 
         /// <summary>A colour as the bars' vertex colours need it (0.20.100): in a linear colour space Unity takes vertex
         /// colours as they are, so a colour meant for the screen showed lighter and paler (the author: washed-out milky
@@ -138,97 +143,6 @@ namespace SignLink.UI
             public Mesh Seen, Neutral;
         }
 
-        /// <summary>The bars drawn as ordinary quads, not UI elements, with the game's own Hidden/Internal-Colored
-        /// shader (in every build: GL drawing uses it) set to test no depth and draw at render queue 3100, after every
-        /// canvas (they sit at 3000): the frame shows whole on any stack (the copies' canvases draw in an order of their
-        /// own, which hid a UI fill under one of them, 0.20.12) and through walls and floors, so a sign under a floor or
-        /// behind a wall still shows where it is. Sprites/Default is the fallback (whole on a stack, but hidden by
-        /// walls); with neither the RawImage bars stay (the fill over a single sign only). Colours are per-vertex: one
-        /// mesh per colour.</summary>
-        static Material frameMaterial, seenMaterial, behindMaterial, boardMaterial;
-        static bool frameLooked;
-
-        /// <summary>The same shader as FrameMaterial testing depth: drawn where nothing stands in front (LessEqual), or only
-        /// where something does (Greater): the content's frame in two colours (0.20.86).</summary>
-        static Material DepthMaterial(Shader shader, string name, UnityEngine.Rendering.CompareFunction test)
-        {
-            var m = new Material(shader) { name = name, renderQueue = 3100 };
-            m.SetInt("_ZTest", (int)test);
-            m.SetInt("_ZWrite", 0);
-            m.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-            m.SetFloat("_ZBias", -1f);                                      // a hair towards the camera: on a surface it shows (0.20.105)
-            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            return m;
-        }
-        static readonly Dictionary<Color, Mesh> quads = new Dictionary<Color, Mesh>();
-
-        /// <summary>The materials and meshes every frame shares go (the plugin unloads: a reload in a running game would
-        /// leave them behind, 0.20.135, the author: now let us do the OnDestroy solution mentioned).</summary>
-        public static void ReleaseShared()
-        {
-            foreach (Material m in new[] { frameMaterial, seenMaterial, behindMaterial, boardMaterial })
-                if (m) Object.Destroy(m);
-            frameMaterial = seenMaterial = behindMaterial = boardMaterial = null;
-            frameLooked = false;
-            foreach (Mesh q in quads.Values)
-                if (q) Object.Destroy(q);
-            quads.Clear();
-        }
-
-        static Material FrameMaterial()
-        {
-            if (frameLooked) return frameMaterial;
-            frameLooked = true;
-            Shader shader = Shader.Find("Hidden/Internal-Colored");
-            Camera cam = Camera.main;
-            Plugin.Log.LogInfo($"the highlight: colour space {QualitySettings.activeColorSpace} (its colours converted to show as chosen), " +
-                               $"camera HDR {(cam ? cam.allowHDR.ToString() : "unknown")} (the board glows with HDR)");
-            if (shader != null)
-            {
-                frameMaterial = new Material(shader) { name = "SignLinkFrame", renderQueue = 3100 };
-                frameMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-                frameMaterial.SetInt("_ZWrite", 0);
-                frameMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-                frameMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                frameMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                // the board's outline after the content's veil, which lies in front of the board (the text's plane) and
-                // drowned the outline under its green (0.20.127, the author: I can barely see the sign's border now)
-                boardMaterial = new Material(frameMaterial) { name = "SignLinkFrameBoard", renderQueue = 3150 };
-                seenMaterial = DepthMaterial(shader, "SignLinkFrameSeen", UnityEngine.Rendering.CompareFunction.LessEqual);
-                behindMaterial = DepthMaterial(shader, "SignLinkFrameBehind", UnityEngine.Rendering.CompareFunction.Greater);
-                return frameMaterial;
-            }
-            shader = Shader.Find("Sprites/Default");
-            if (shader != null)
-            {
-                Plugin.Log.LogWarning("the highlight: no Hidden/Internal-Colored shader in this build; Sprites/Default draws it, hidden by walls");
-                frameMaterial = new Material(shader) { name = "SignLinkFrame", renderQueue = 3100 };
-                return frameMaterial;
-            }
-            Plugin.Log.LogWarning("the highlight: no shader for its quads in this build, so it is drawn as UI bars (the fill over a single sign only)");
-            return null;
-        }
-
-        /// <summary>A unit quad in this colour (both windings: seen from either side), one per colour; glow over 1 makes
-        /// it that many times brighter than the colour on screen (BoardGlow).</summary>
-        static Mesh QuadMesh(Color color, float glow = 1f)
-        {
-            if (glow != 1f) color = new Color(color.r * glow, color.g * glow, color.b * glow, color.a);   // its own key: over 1
-            if (quads.TryGetValue(color, out Mesh m) && m) return m;
-            m = new Mesh { name = "SignLinkFrameQuad" };
-            m.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
-            m.uv = new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
-            Color shown = OnScreen(new Color(color.r / glow, color.g / glow, color.b / glow, color.a));
-            shown = new Color(shown.r * glow, shown.g * glow, shown.b * glow, shown.a);   // brighter in the linear space
-            m.colors = new[] { shown, shown, shown, shown };
-            m.triangles = new[] { 0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2 };
-            m.RecalculateNormals();
-            m.RecalculateBounds();
-            quads[color] = m;
-            return m;
-        }
-
         /// <summary>The selection's frame.</summary>
         public Ghost() : this(Fill, Line, Board) { }
 
@@ -242,7 +156,9 @@ namespace SignLink.UI
         }
 
         /// <summary>Layout events only: shows the frame for the session's choice on the selected sign, or hides it.</summary>
-        public void Update(Session s, Source src)
+        /// <summary>The frame for the selection as the window's state has it; `unheld`: the game would not hold the sign
+        /// where its steps or the pose to come put it (the board's bars in Unheld's colour).</summary>
+        public void Update(Session s, Source src, bool unheld = false)
         {
             if (!PluginConfig.Highlight.Value || !s.HasTarget || src == null)
             {
@@ -333,6 +249,7 @@ namespace SignLink.UI
             if (shownKey != null && root && ReferenceEquals(sign, target) && inputs.Same(shownInputs))
             {
                 if (!root.activeSelf) root.SetActive(true);                 // nothing changed: no key built (0.20.132)
+                Hold(unheld);
                 Side();
                 return;
             }
@@ -342,6 +259,7 @@ namespace SignLink.UI
             if (key == shownKey && root && ReferenceEquals(sign, target))
             {
                 if (!root.activeSelf) root.SetActive(true);
+                Hold(unheld);
                 Side();
                 return;
             }
@@ -389,6 +307,7 @@ namespace SignLink.UI
             Place(mark, centre + yAxis * (h / 2 + 0.03f) + ahead, yAxis, 0.12f, 0.02f, content);    // "top", as the viewer reads it
             PlaceBoard(target);
             root.SetActive(true);
+            Hold(unheld);
             Side();
             if (!reported)                                                  // once after each hide: where it went
             {
@@ -485,471 +404,5 @@ namespace SignLink.UI
         Sign boardFor;
         Vector3 boardAt;
         Quaternion boardTurn;
-
-        /// <summary>The board's outline alone, at the sign's own pose: the faint grey of every sign a click could select
-        /// (AllBoards, 0.20.172). Built again only when the sign moved.</summary>
-        public void ShowBoard(Sign target)
-        {
-            if (!target || !target.m_textWidget)
-            {
-                Hide();
-                return;
-            }
-            Transform t = target.transform;
-            if (root && ReferenceEquals(boardFor, target) && boardAt == t.position && boardTurn == t.rotation)
-            {
-                if (!root.activeSelf) root.SetActive(true);
-                return;
-            }
-            if (!Ensure(target, target))
-            {
-                Hide();
-                return;
-            }
-            boardFor = target;
-            boardAt = t.position;
-            boardTurn = t.rotation;
-            shownKey = null;                                                // not a frame ShowStack or Show built
-            var rt = (RectTransform)root.transform;
-            rt.SetPositionAndRotation(t.position, t.rotation);
-            Vector3 ls = rt.parent.lossyScale;
-            rt.localScale = new Vector3(Safe(ls.x), Safe(ls.y), Safe(ls.z));
-            PlaceFill(Vector3.zero, Vector3.up, 0f, 0f, false, true);
-            for (int i = 0; i < 4; i++) Place(edge[i], Vector3.zero, Vector3.up, 0f, 0f, false);
-            Place(mark, Vector3.zero, Vector3.up, 0f, 0f, false);
-            PlaceBoard(target);
-            root.SetActive(true);
-        }
-
-        /// <summary>The frame around a stack as it is: the union of its signs' texts (TMP's bounds, what is drawn) in
-        /// the first sign's plane, in front of the frontmost band, with the top mark, and the board's outline, at the
-        /// sign's own pose. Built like the selection's frame (0.20.21 dropped the board from this one and the author lost
-        /// track of which rectangle was which): the content green and red in both, the board neon lime when selected and
-        /// cool white under the cursor (Pick in view, a row of Signs nearby), so a click's target shows before the click.
-        /// An empty sign gets its board alone.</summary>
-        public void ShowStack(Sign target, Sign host, List<Sign> stack)
-        {
-            if (!target || !target.m_textWidget || !host || !host.m_textWidget)
-            {
-                Hide();
-                return;
-            }
-            // the first sign's data revision too (0.20.90, review): a stack put on again or refit by another player keeps its
-            // place, and Show all kept the frame of what it held before
-            Transform screen = Plugin.Screens.ScreenOver(stack);            // a moving GIF's screen (0.20.116)
-            ZDO tz = SignFinder.Zdo(target);
-            var inputs = new Inputs
-            {
-                Stack = true, Count = stack.Count, Position = target.transform.position, Rotation = target.transform.rotation,
-                HasRevision = tz != null, Revision = tz != null ? tz.DataRevision : 0u, Content = PluginConfig.HighlightContent.Value, Screen = screen != null,
-            };
-            inputs.Target = Uid(target, out inputs.HasTarget);
-            inputs.Host = Uid(host, out inputs.HasHost);
-            if (shownKey != null && root && ReferenceEquals(sign, target) && inputs.Same(shownInputs))
-            {
-                if (!root.activeSelf) root.SetActive(true);                 // nothing changed: no key built (0.20.132)
-                Side();
-                return;
-            }
-            string key = $"stack|{SignFinder.Id(target)}|{SignFinder.Id(host)}|{stack.Count}|{target.transform.position}|{target.transform.rotation}|" +
-                         $"{SignFinder.Zdo(target)?.DataRevision}|{PluginConfig.HighlightContent.Value}|{screen != null}";
-            shownInputs = inputs;                                           // what the key below is made of
-            if (key == shownKey && root && ReferenceEquals(sign, target))
-            {
-                if (!root.activeSelf) root.SetActive(true);
-                Side();
-                return;
-            }
-            if (!Ensure(target, host))
-            {
-                Hide();
-                return;
-            }
-            shownKey = key;
-            var rt = (RectTransform)root.transform;
-            rt.SetPositionAndRotation(target.transform.position, target.transform.rotation);
-            Vector3 ls = rt.parent.lossyScale;
-            rt.localScale = new Vector3(Safe(ls.x), Safe(ls.y), Safe(ls.z));
-
-            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue, front = float.MinValue;
-            bool texts = false, stale = false;
-            foreach (Sign s in stack)
-            {
-                TMP_Text t = s ? s.m_textWidget : null;
-                if (!t || string.IsNullOrEmpty(t.text)) continue;
-                texts = true;
-                if (TextBehind(s)) stale = true;
-                if (!Ink.Rect(t, out Vector2 lo, out Vector2 hi))             // where its glyphs draw (0.20.155: not TMP's textBounds)
-                {
-                    stale = true;
-                    continue;
-                }
-                Matrix4x4 m = target.transform.worldToLocalMatrix * t.transform.localToWorldMatrix;   // text-local -> sign-local (metres)
-                for (int i = 0; i < 4; i++)
-                {
-                    Vector3 c = m.MultiplyPoint3x4(new Vector3((i & 1) == 0 ? lo.x : hi.x, (i & 2) == 0 ? lo.y : hi.y, 0f));
-                    minX = Mathf.Min(minX, c.x);
-                    maxX = Mathf.Max(maxX, c.x);
-                    minY = Mathf.Min(minY, c.y);
-                    maxY = Mathf.Max(maxY, c.y);
-                    front = Mathf.Max(front, c.z);
-                }
-            }
-            // a moving GIF's screen counts as it shows (0.20.116, the author: I cleared the sign, then put the GIF in again
-            // ... Show all ... shows only the sign's border): it hides the text, which a GIF put on anew has never laid out,
-            // so there was nothing to measure; and it is a pixel larger on every side than the still
-            if (screen is RectTransform sr)
-            {
-                sr.GetWorldCorners(screenCorners);
-                Matrix4x4 w2s = target.transform.worldToLocalMatrix;
-                foreach (Vector3 corner in screenCorners)
-                {
-                    Vector3 c = w2s.MultiplyPoint3x4(corner);
-                    minX = Mathf.Min(minX, c.x);
-                    maxX = Mathf.Max(maxX, c.x);
-                    minY = Mathf.Min(minY, c.y);
-                    maxY = Mathf.Max(maxY, c.y);
-                    front = Mathf.Max(front, c.z);
-                }
-                texts = true;
-            }
-            // a built-in piece or a picture SignLink made: framed as the selection frames it, from what made it (a piece's size
-            // and middle as made, NAME.fit; a picture's grid of whole pixels), with the fit the sign keeps, so picking a sign
-            // from Show all or the hover does not move its frame (0.20.154, 0.20.155: the author saw a picture's frame jump)
-            if (screen == null && ModelRect(target, maxX - minX, maxY - minY, out Vector3 pc, out float pw, out float ph))
-            {
-                minX = pc.x - pw / 2;
-                maxX = pc.x + pw / 2;
-                minY = pc.y - ph / 2;
-                maxY = pc.y + ph / 2;
-                if (front == float.MinValue) front = pc.z;                 // no text measured: the first sign's text plane
-                texts = true;
-            }
-            bool has = maxX > minX && maxY > minY && PluginConfig.HighlightContent.Value;   // the content's frame: a setting of its own
-            // text the game has not laid out yet (a sign that just loaded): measured again at the next look, not kept as
-            // a frame without its content (0.20.90, review)
-            if (!has && texts && PluginConfig.HighlightContent.Value) shownKey = null;
-            if (stale) shownKey = null;                                     // a sign's text not laid out as its data says yet: measured again
-            Vector3 centre = has ? new Vector3((minX + maxX) / 2, (minY + maxY) / 2, front + OnText) : Vector3.zero;
-            float w = has ? maxX - minX : 0f, h = has ? maxY - minY : 0f;
-            plane = centre;
-            PlaceFill(centre, Vector3.up, w, h, has, stack.Count <= 1);
-            Place(edge[0], centre + Vector3.up * (h / 2), Vector3.up, w + Thick, Thick, has);
-            Place(edge[1], centre - Vector3.up * (h / 2), Vector3.up, w + Thick, Thick, has);
-            Place(edge[2], centre - Vector3.right * (w / 2), Vector3.up, Thick, h, has);
-            Place(edge[3], centre + Vector3.right * (w / 2), Vector3.up, Thick, h, has);
-            Place(mark, centre + Vector3.up * (h / 2 + 0.03f), Vector3.up, 0.12f, 0.02f, has);   // the same frame as the selection's
-            PlaceBoard(target);                                              // the board's outline too, as the selection's: one language
-            root.SetActive(true);
-            Side();
-        }
-
-        // the held stack's ink, measured once a stack and data revision (HeldInk)
-        Sign inkSign;
-        uint inkRevision;
-        int inkCount = -1;
-        Fit inkFit;
-        bool inkHas;
-        Vector2 inkM;
-        double inkX, inkY;
-
-        /// <summary>What the selected stack holds, measured where its glyphs draw (Ink.Rect over its signs, in the first sign's
-        /// text-local frame): its size as made (metres, the held fit's scale taken out) and its middle where it shows now
-        /// (wu, text-local), which Show moves as Refit moves the texts (Fit.Between). Once a data revision; false while
-        /// nothing is laid out yet.</summary>
-        bool HeldInk(Session s, Sign target, out Vector2 m, out double px, out double py)
-        {
-            m = Vector2.zero;
-            px = py = 0;
-            List<Sign> stack = s.Stack.Count > 0 ? s.Stack : new List<Sign> { target };
-            ZDO z = SignFinder.Zdo(target);
-            uint revision = z != null ? z.DataRevision : 0u;
-            if (!ReferenceEquals(inkSign, target) || inkRevision != revision || inkCount != stack.Count || !inkFit.Same(s.Held.Fit))
-            {                                                               // no key string a Layout: compared field by field
-                inkHas = false;
-                float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
-                bool complete = true;
-                Matrix4x4 toFirst = target.m_textWidget.transform.worldToLocalMatrix;
-                foreach (Sign sign in stack)
-                {
-                    TMP_Text t = sign ? sign.m_textWidget : null;
-                    if (!t) continue;
-                    if (TextBehind(sign)) complete = false;
-                    if (!Ink.Rect(t, out Vector2 lo, out Vector2 hi))
-                    {
-                        if (!string.IsNullOrEmpty(t.text)) complete = false;
-                        continue;
-                    }
-                    Matrix4x4 mm = toFirst * t.transform.localToWorldMatrix;
-                    for (int i = 0; i < 4; i++)
-                    {
-                        Vector3 c = mm.MultiplyPoint3x4(new Vector3((i & 1) == 0 ? lo.x : hi.x, (i & 2) == 0 ? lo.y : hi.y, 0f));
-                        x0 = Mathf.Min(x0, c.x);
-                        x1 = Mathf.Max(x1, c.x);
-                        y0 = Mathf.Min(y0, c.y);
-                        y1 = Mathf.Max(y1, c.y);
-                    }
-                }
-                if (!(x1 > x0 && y1 > y0)) return false;                      // not laid out yet: measured at a later look
-                inkSign = complete ? target : null;                             // all laid out as their data says: kept, else measured again
-                inkRevision = revision;
-                inkCount = stack.Count;
-                inkFit = s.Held.Fit;
-                Fit held = s.Held.Fit;
-                double k = held.Scale > 0 ? held.Scale : 1;
-                inkM = new Vector2((float)((x1 - x0) * 0.05 / k), (float)((y1 - y0) * 0.05 / k));   // 1 local unit = 2 wu = 0.05 m
-                inkX = x0 + x1;                                                 // the middle in wu: (x0 + x1) / 2 * 2
-                inkY = y0 + y1;
-                inkHas = true;
-            }
-            if (!inkHas) return false;
-            m = inkM;
-            px = inkX;
-            py = inkY;
-            return true;
-        }
-
-        /// <summary>The sign's text widget still shows an older data revision than its ZDO (another player's write reaches
-        /// the widget up to 2 s later, at the game's UpdateText): what it measures is not what the data says (0.20.157,
-        /// review: such a measure was kept until the next revision).</summary>
-        static bool TextBehind(Sign s)
-        {
-            ZDO z = s ? SignFinder.Zdo(s) : null;
-            return z != null && s.m_lastRevision != z.DataRevision;
-        }
-
-        /// <summary>A stack whose fit the sign keeps (SignFit.Read) and that holds a built-in piece with a known size (NAME.fit)
-        /// or a picture with its pixel (the recipe's Pitch): its content's middle in the sign's own frame (metres, sign-local)
-        /// and its width and height, as Show frames the selection (Fit.Centre; ArtSource.Size; a picture's plan, W x H whole
-        /// pixels: the ink measured, inkW x inkH metres, a fraction of a pixel over it where seamless pixels overlap, gives
-        /// the count); false for anything else (the ink then).</summary>
-        static bool ModelRect(Sign first, float inkW, float inkH, out Vector3 centre, out float w, out float h)
-        {
-            centre = Vector3.zero;
-            w = h = 0f;
-            SignRecipe r = SignRecipe.Parse(SignMarks.Source(first));
-            double wWu, hWu;
-            Fit fit = SignFit.Read(first, out double c0x, out double c0y, out bool known);
-            if (!known) return false;
-            if (r.Kind == SignRecipe.Kinds.Art)
-            {
-                List<Preset> items = ArtLibrary.Items;
-                int i = Preset.Find(items, r.Path);
-                if (i < 0 || !items[i].Size(out wWu, out hWu)) return false;
-            }
-            else if (r.Kind == SignRecipe.Kinds.Picture && r.Pitch > 0 && inkW > 0f && inkH > 0f)
-            {
-                double pitch = r.Pitch / fit.Scale;                          // made at its own size: wWu * Scale below is the plan's
-                double cell = r.Pitch * 0.025;                               // one pixel, metres
-                wWu = System.Math.Max(1, System.Math.Round(inkW / cell)) * pitch;
-                hWu = System.Math.Max(1, System.Math.Round(inkH / cell)) * pitch;
-            }
-            else return false;
-            fit.Centre(c0x, c0y, out double cx, out double cy);
-            Matrix4x4 toSign = first.transform.worldToLocalMatrix * first.m_textWidget.transform.localToWorldMatrix;
-            centre = toSign.MultiplyPoint3x4(new Vector3((float)(cx / 2), (float)(cy / 2), 0f));   // 1 local unit = 2 wu
-            w = (float)(wWu * fit.Scale * 0.025);
-            h = (float)(hWu * fit.Scale * 0.025);
-            return w > 0f && h > 0f;
-        }
-
-        /// <summary>The board: its collider's rectangle in the sign's plane, at the board's own depth.</summary>
-        void PlaceBoard(Sign target)
-        {
-            BoxCollider c = target.GetComponentInChildren<BoxCollider>();
-            if (!c)
-            {
-                foreach (Bar b in board) b.Go.SetActive(false);
-                return;
-            }
-            Vector3 bc = target.transform.InverseTransformPoint(c.transform.TransformPoint(c.center));
-            Vector3 bs = Vector3.Scale(c.size, c.transform.lossyScale);
-            Vector3 bAhead = Vector3.forward * (bs.z / 2 + Ahead);
-            float bw = Mathf.Abs(bs.x), bh = Mathf.Abs(bs.y);
-            Place(board[0], bc + Vector3.up * (bh / 2) + bAhead, Vector3.up, bw + BoardThick, BoardThick, true);
-            Place(board[1], bc - Vector3.up * (bh / 2) + bAhead, Vector3.up, bw + BoardThick, BoardThick, true);
-            Place(board[2], bc - Vector3.right * (bw / 2) + bAhead, Vector3.up, BoardThick, bh, true);
-            Place(board[3], bc + Vector3.right * (bw / 2) + bAhead, Vector3.up, BoardThick, bh, true);
-        }
-
-        static float Safe(float scale) => Mathf.Abs(scale) < 1e-6f ? 1f : 1f / scale;
-
-        /// <summary>The bars exist under the canvas of the stack's frontmost sign (host), last among its children: that
-        /// canvas draws last of the stack's, so the frame shows over every band. A new sign, a stack made again or one
-        /// that grew gets new bars. The frame's pose is set in the world, so the host only draws it.</summary>
-        bool Ensure(Sign target, Sign host)
-        {
-            Canvas canvas = host.m_textWidget.GetComponentInParent<Canvas>();
-            if (!canvas) return false;
-            if (root && ReferenceEquals(sign, target) && root.transform.parent == canvas.transform) return true;
-            Destroy();
-            sign = target;
-            root = new GameObject("SignLinkGhost", typeof(RectTransform));
-            root.layer = host.m_textWidget.gameObject.layer;
-            root.transform.SetParent(canvas.transform, false);
-            root.transform.SetAsLastSibling();                               // drawn over that sign's text
-            fill = Make("fill", new Color(fillColor.r, fillColor.g, fillColor.b, fillColor.a * 0.35f), content: true);   // the bar's veil, faint
-            for (int i = 0; i < 4; i++) edge[i] = Make("edge", lineColor, content: true);
-            mark = Make("mark", lineColor, content: true);
-            for (int i = 0; i < 4; i++) board[i] = Make("board", boardColor, glow: boardGlow);
-            back = false;                                                   // new bars wear the front look
-            return true;
-        }
-
-        /// <summary>The fill: on any stack as a quad, an even veil, green where it shows and red where something stands in
-        /// front of it, and grey stripes from behind (Hatch, its mesh made for this size: the stripes keep their width in
-        /// metres); as a RawImage bar, a faint veil over a single sign only. Nothing for a clear colour.</summary>
-        void PlaceFill(Vector3 centre, Vector3 yAxis, float w, float h, bool on, bool single)
-        {
-            bool want = on && fillColor.a > 0.001f && w > 0f && h > 0f;
-            if (want && fill.Quad)
-            {
-                fill.Seen = QuadMesh(new Color(fillColor.r, fillColor.g, fillColor.b, SeenAlpha));   // an even veil (0.20.112)
-                EnsureStripes(w, h);                                        // the stripes for this size: the grey look
-                fill.Neutral = stripesNeutral;
-                if (fill.Behind) fill.Behind.sharedMesh = QuadMesh(new Color(Behind.r, Behind.g, Behind.b, SeenAlpha));   // red too (0.20.113)
-                Look(fill);
-            }
-            Place(fill, centre, yAxis, w, h, want && (fill.Quad || single));
-        }
-
-        Mesh stripesNeutral;
-        float stripesW, stripesH;
-
-        /// <summary>The grey stripes for a w x h content in the quad's unit square, both windings, in the neutral colour
-        /// (NeutralOf, seen from behind); made again only when the size changes (the old mesh filled again).</summary>
-        void EnsureStripes(float w, float h)
-        {
-            if (stripesNeutral && Mathf.Abs(stripesW - w) < 1e-4f && Mathf.Abs(stripesH - h) < 1e-4f) return;
-            float pitch = Mathf.Clamp(Mathf.Max(w, h) / 24f, 0.05f, 0.4f);   // stripes a few centimetres apart, wider on big pictures
-            List<double[]> bands = Hatch.Stripes(w, h, pitch, pitch * 0.35f);
-            List<Vector3> verts = stripeVerts;
-            List<int> tris = stripeTris;
-            verts.Clear();
-            tris.Clear();
-            foreach (double[] p in bands)
-            {
-                int first = verts.Count, n = p.Length / 2;
-                for (int i = 0; i < n; i++) verts.Add(new Vector3((float)p[2 * i], (float)p[2 * i + 1], 0f));
-                for (int i = 1; i + 1 < n; i++)
-                {
-                    tris.Add(first); tris.Add(first + i); tris.Add(first + i + 1);   // seen from the front
-                    tris.Add(first); tris.Add(first + i + 1); tris.Add(first + i);   // and from behind
-                }
-            }
-            stripesNeutral = Painted(stripesNeutral, verts, tris, NeutralOf(fillColor));
-            stripesW = w;
-            stripesH = h;
-        }
-
-        static readonly List<Vector3> stripeVerts = new List<Vector3>();
-        static readonly List<int> stripeTris = new List<int>();
-        static readonly List<Color> stripeColors = new List<Color>();
-
-        /// <summary>The stripes into a mesh of this frame's, filled again when it has one (0.20.91, review: two meshes made
-        /// and destroyed every frame while a Size slider was dragged).</summary>
-        static Mesh Painted(Mesh m, List<Vector3> verts, List<int> tris, Color color)
-        {
-            if (m) m.Clear();
-            else m = new Mesh { name = "SignLinkFrameStripes" };
-            stripeColors.Clear();
-            Color shown = OnScreen(color);
-            for (int i = 0; i < verts.Count; i++) stripeColors.Add(shown);
-            m.SetVertices(verts);
-            m.SetColors(stripeColors);
-            m.SetTriangles(tris, 0);
-            m.RecalculateBounds();
-            return m;
-        }
-
-        /// <summary>A bar under the root (metres, like the root's children): a quad with FrameMaterial in this colour,
-        /// or a RawImage when the build has no shader for it.</summary>
-        Bar Make(string name, Color color, bool content = false, float glow = 0f)
-        {
-            var b = new Bar();
-            Material m = FrameMaterial();
-            if (m != null && glow > 0f)                                     // the board's: over the content's veil, glowing
-            {
-                b.Go = Renderer(name, QuadMesh(color, glow), boardMaterial ?? m, root.transform);
-                b.T = b.Go.transform;
-                return b;
-            }
-            if (m != null)
-            {
-                // the content's bars: green where nothing stands in front of them, and the same quad again in Behind's
-                // colour where something does (0.20.86); the board's bars show through everything in one colour
-                bool twice = content && seenMaterial != null && behindMaterial != null;
-                b.Go = Renderer(name, QuadMesh(color), twice ? seenMaterial : m, root.transform);
-                b.T = b.Go.transform;
-                if (twice)
-                {
-                    b.Behind = Renderer(name + " behind", QuadMesh(BehindOf(color)), behindMaterial, b.T).GetComponent<MeshFilter>();
-                    b.Seen = QuadMesh(color);
-                    b.Neutral = QuadMesh(NeutralOf(color));
-                }
-                return b;
-            }
-            b.Go = new GameObject(name, typeof(RectTransform));
-            b.Go.layer = root.layer;
-            var rt = (RectTransform)b.Go.transform;
-            b.T = rt;
-            rt.SetParent(root.transform, false);
-            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-            b.Img = b.Go.AddComponent<RawImage>();
-            b.Img.color = color;                                            // no texture: UI/Default draws it white, tinted
-            b.Img.raycastTarget = false;
-            return b;
-        }
-
-        /// <summary>A quad's object under parent (its transform the parent's: a bar's second colour follows it).</summary>
-        GameObject Renderer(string name, Mesh mesh, Material material, Transform parent)
-        {
-            var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
-            go.layer = root.layer;
-            go.transform.SetParent(parent, false);
-            go.GetComponent<MeshFilter>().sharedMesh = mesh;
-            var r = go.GetComponent<MeshRenderer>();
-            r.sharedMaterial = material;
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            r.receiveShadows = false;
-            r.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            r.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-            return go;
-        }
-
-        /// <summary>A bar centred at a sign-local point, its up along yAxis, w x h metres (the root's +z is the sign's
-        /// forward, so the bar lies in the sign's plane).</summary>
-        static void Place(Bar b, Vector3 centre, Vector3 yAxis, float w, float h, bool on)
-        {
-            b.Go.SetActive(on);
-            if (!on) return;
-            b.T.localPosition = centre;
-            b.T.localRotation = Quaternion.LookRotation(Vector3.forward, yAxis);
-            if (b.Quad) b.T.localScale = new Vector3(w, h, 1f);
-            else ((RectTransform)b.T).sizeDelta = new Vector2(w, h);
-        }
-
-        public void Hide()
-        {
-            if (root) root.SetActive(false);
-            shownKey = null;
-            reported = false;
-        }
-
-        /// <summary>Whether this frame shows now on the stack whose first sign this is.</summary>
-        public bool Frames(Sign first) => first && root && root.activeSelf && ReferenceEquals(sign, first);
-
-        public void Destroy()
-        {
-            if (root) Object.Destroy(root);
-            if (stripesNeutral) Object.Destroy(stripesNeutral);
-            stripesNeutral = null;
-            reported = false;
-            noted = null;                                                   // a new window says it all again
-            unsizedSince = -1f;
-            root = null;
-            sign = null;
-            shownKey = null;
-        }
     }
 }

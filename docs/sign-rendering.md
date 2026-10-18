@@ -76,6 +76,16 @@ Consequences the old model missed:
 rotated ellipse/bar. Verified in game. The SDF corner rounding is stretched with it (slightly
 chamfered corners at large sx).
 
+**How wide a stretched block is drawn** (measured in game 2026-10-17, the block `■` from NotoSansJP-Thin SDF, sizes 1.5
+and 4, sx 0.15 to 6, lit and glowing alike): its ink is `S*(0.726*sx + 0.089)` em wide and `0.793*S` em tall, centred
+where the formula above puts it (an em is 2*S wu). Part of the width does not stretch: TMP pads a bold glyph's quad
+sideways by a fixed amount (`style_padding`, not multiplied by `<scale>`), and the sign's heavy dilation fills the
+quad. The engine stretches the whole outline (0.8 em plus bold, times sx), so for this glyph it draws a wide block too
+wide and a narrow one too narrow (sx 6.77: 3 % short in the game; sx 0.17: 60 % wide). At sx = 1 both agree within
+3 % (the size-70 grid above). The mod's text templates use the measured numbers (`Snippets.BlockA/BlockC/BlockH`): a
+QR code drawn with the outline model was not read by a phone, drawn with these it is (zbar reads a game screenshot).
+Other glyphs under `<scale>` were not measured (unverified).
+
 ## 3. Tags worth knowing
 
 | Tag | Cost | Status |

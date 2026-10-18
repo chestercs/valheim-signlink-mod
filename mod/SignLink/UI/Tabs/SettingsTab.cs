@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
@@ -12,7 +13,9 @@ namespace SignLink.UI
     /// and the developer API (off by default; switches at once).</summary>
     internal sealed class SettingsTab : Tab
     {
-        static readonly string[] OnOff = { "On", "Off" };
+        static readonly string[] GifMemoryNames = { "256 MB", "512 MB", "1024 MB" };
+        static readonly int[] GifMemoryMB = { 256, 512, 1024 };
+
         bool showPassword;
         // the Re-read row (Sign options): the field's value and whether it waits to be written (see Playing's Pause beyond)
         float refresh = float.NaN;
@@ -52,7 +55,6 @@ namespace SignLink.UI
         public static bool CapturingKey { get; private set; }
 
         /// <summary>About's "E on a sign" row, as the switch was at Layout (Widgets.Check flips it mid-frame).</summary>
-        bool aboutE = true;
 
         public static void StopCapture() => CapturingKey = false;
 
@@ -144,7 +146,7 @@ namespace SignLink.UI
 
         public override void Body()
         {
-            Widgets.Header("Window");
+            Widgets.Header("Window", Widgets.WheelKey);
             using (Widgets.Vertical(Theme.Section))
             {
                 // the window's size: by its edges and corners (0.20.50); the rows that set it in percent went (0.20.53, the
@@ -175,8 +177,6 @@ namespace SignLink.UI
                     if (!narrow) DefaultSize();
                 }
                 if (narrow) DefaultSize();                                  // under the row, from its start
-                Widgets.Hint("Take the window by an edge or a corner to size it, by its title to move it; it stays on the screen. " +
-                             "Default size fits any screen shape.");
                 float[] scales = SignLinkWindow.Scales;
                 int si = Nearest(scales, PluginConfig.MenuScale.Value);
                 int pick;
@@ -186,11 +186,7 @@ namespace SignLink.UI
                     pick = Widgets.Toolbar(si, ScaleNames(scales), Theme.Tab, Widgets.W(Widgets.ContentWidth - 30));
                 }
                 else
-                    using (Widgets.Horizontal())
-                    {
-                        GUILayout.Label("Text size", Theme.Label, Widgets.W(Widgets.LabelW));
-                        pick = Widgets.Toolbar(si, ScaleNames(scales), Theme.Tab, Widgets.W(Widgets.RestW));
-                    }
+                    pick = Widgets.Choice("Text size", si, ScaleNames(scales), 0f, Theme.Tab);
                 if (pick != si) Window.Later(() => PluginConfig.MenuScale.Value = scales[pick]);
                 float shownOpacity = PreviewOpacity ?? PluginConfig.MenuOpacity.Value;
                 float opacity = Widgets.Number("set.opacity", "Opacity", Mathf.Round(shownOpacity * 100f), 50f, 100f, 5f, "%", "0") / 100f;
@@ -230,45 +226,24 @@ namespace SignLink.UI
                 if (CapturingKey) Capture();
                 // only while a key is chosen: the other ways to open the window are in About (0.20.97, the author: "opens and
                 // closes the window" is a useless row too; "smaller texts fits more" ... delete this row)
-                if (CapturingKey) Widgets.Hint("Press the key now (with Ctrl, Shift or Alt if you like); Esc keeps the old one.");
+                if (CapturingKey) Widgets.Hint("Press a key · Esc keeps the old");
             }
 
             // Sign options before Pictures (0.20.74, the author: swap the Pictures and Sign options groups in Settings)
-            Widgets.Header("Sign options");
+            Widgets.Header("Sign options", Widgets.WheelKey);
             using (Widgets.Vertical(Theme.Section))
             {
                 // its own row with On / Off (0.20.36): a long toggle was switched off by a stray click, and the selected
                 // sign lost its frame without a word
-                using (Widgets.Horizontal())
-                {
-                    GUILayout.Label("Highlight signs", Theme.Label, Widgets.W(Widgets.LabelW));
-                    int lit = Widgets.Toolbar(PluginConfig.Highlight.Value ? 0 : 1, OnOff, Theme.Tab, Widgets.W(Mathf.Min(200f, Widgets.RestW - 20f)));
-                    if (lit != (PluginConfig.Highlight.Value ? 0 : 1)) Window.Later(() => PluginConfig.Highlight.Value = lit == 0);
-                }
-                Widgets.Hint("While the window is open: the selected sign's board in lime, the sign under the cursor in white.");
+                bool lit = Widgets.OnOff("Highlight signs", PluginConfig.Highlight.Value, Theme.Tab);
+                if (lit != PluginConfig.Highlight.Value) Window.Later(() => PluginConfig.Highlight.Value = lit);
                 // the content's frame apart (0.20.76, the author: a Highlight sign contents button too, like
                 // Highlight signs, on by default): it needs Highlight signs, so it is grey without
                 bool lighting = GUI.enabled;
-                using (Widgets.Horizontal())
-                {
-                    GUILayout.Label("Highlight sign contents", Theme.Label, Widgets.W(Widgets.LabelW));
-                    GUI.enabled = lighting && PluginConfig.Highlight.Value;
-                    int framed = Widgets.Toolbar(PluginConfig.HighlightContent.Value ? 0 : 1, OnOff, Theme.Tab, Widgets.W(Mathf.Min(200f, Widgets.RestW - 20f)));
-                    GUI.enabled = lighting;
-                    if (framed != (PluginConfig.HighlightContent.Value ? 0 : 1)) Window.Later(() => PluginConfig.HighlightContent.Value = framed == 0);
-                }
-                Widgets.Hint("Where the content goes: green over what will show (the picture shows through it), red where a wall or a floor hides it, grey stripes seen from behind.");
-                // what it is about, in the player's words (0.20.181, the author: the "prevent the game editor" button and
-                // its text ... cannot be understood; what it really is about: when someone hovers a sign we show our mod's
-                // things, not the picture's content as raw text, which causes a small hitch; the config key stays)
-                PluginConfig.PreventEditor.Value = Widgets.Check(PluginConfig.PreventEditor.Value,
-                    "Short line when you look at a picture sign");
-                Widgets.Hint("On: looking at a sign with a picture or glyph art shows one short line, what it is, and E opens it in SignLink. " +
-                             "Off: the game shows the sign's whole text by the crosshair, thousands of characters for a picture, and the " +
-                             "game can stutter. The game's own sign editor never opens on these signs: it would cut the picture.");
-                Widgets.Hint("Tip: players without SignLink always get that whole text when they look at the sign, and they see the sign " +
-                             "itself. Hide the sign in a wall or the ground with only its picture out (3 Place slides the picture along the " +
-                             "sign; green shows where it can be seen): then there is no sign to look at.");
+                GUI.enabled = lighting && PluginConfig.Highlight.Value;
+                bool framed = Widgets.OnOff("Highlight sign contents", PluginConfig.HighlightContent.Value, Theme.Tab);
+                GUI.enabled = lighting;
+                if (framed != PluginConfig.HighlightContent.Value) Window.Later(() => PluginConfig.HighlightContent.Value = framed);
                 // the re-read pace: the config is written once a new value is set and nothing is held or focused
                 bool held = GUIUtility.hotControl != 0 || GUIUtility.keyboardControl != 0;
                 if (Event.current.type == EventType.Layout && !held && Widgets.StillFor(0.5f))
@@ -285,24 +260,21 @@ namespace SignLink.UI
                     refresh = every;
                     refreshDirty = true;
                 }
-                Widgets.Hint(refresh >= 1.95f
-                    ? "2 s is the game's own pace: nothing extra runs. Lower it only for animations a tool writes into signs over the network."
-                    : "Changed signs are re-read sooner than the game's 2 s: animations a tool writes over the network play smoothly, at a cost per changed sign.");
+                Widgets.Hint(refresh >= 1.95f ? "2 s is the default" : "Faster, costs more");
             }
 
             Widgets.Header("Pictures");
             using (Widgets.Vertical(Theme.Section))
             {
                 PluginConfig.PngTransparency.Value = Widgets.Check(PluginConfig.PngTransparency.Value,
-                    "PNG transparency: see-through parts stay empty, half-transparent ones half transparent");
+                    "PNG transparency");
                 PluginConfig.PictureFineWidth.Value = Widgets.Check(PluginConfig.PictureFineWidth.Value,
-                    "Fine Width steps: a picture's Width and Height move finely, your Resolution kept (a few pixels more or less)");
+                    "Fine Width steps: exact sizes, your Resolution kept");
                 // what is worth knowing, in one line (0.20.76, the author: take out this awful "for every picture placed
                 // from now on" text, or rewrite it into something truly useful and meaningful)
-                Widgets.Hint("A picture already on a sign keeps how it was made: select it and press Update on 3 Place to make it again this way.");
             }
 
-            Widgets.Header("Playback");                                     // from the Playing tab (0.20.54)
+            Widgets.Header("Playback", Widgets.WheelKey);                                     // from the Playing tab (0.20.54)
             using (Widgets.Vertical(Theme.Section))
             {
                 // pausing them all is on the Playing tab, a button for GIFs and one for glyph animations (0.20.163, the author);
@@ -322,13 +294,17 @@ namespace SignLink.UI
                     distance = got;
                     distanceDirty = true;
                 }
-                Widgets.Hint("Glyph animations and GIFs farther than this pause; they move again when you come closer. Pause all: the Playing tab.");
+                // the frames the moving GIFs may hold here (1.0.2, the author: 512 and 1024 too)
+                int mem = Array.IndexOf(GifMemoryMB, PluginConfig.GifMemory.Value);
+                int pickMem = Widgets.Choice("GIF memory", mem < 0 ? 0 : mem, GifMemoryNames, 330f);
+                if (pickMem != Math.Max(0, mem)) Window.Later(() => PluginConfig.GifMemory.Value = GifMemoryMB[pickMem]);
+                Widgets.Hint("RAM for moving GIFs; 1024 wants 16 GB");
             }
 
             Widgets.Header("Developer API");
             using (Widgets.Vertical(Theme.Section))
             {
-                Widgets.Hint("For programs that write, animate or create signs; players do not need it.");
+                Widgets.Hint("A local HTTP API for tools that write signs; players do not need it");
                 bool on = Widgets.Check(PluginConfig.ApiEnabled.Value, "Turn the API on");
                 if (on != PluginConfig.ApiEnabled.Value) Window.Later(() => PluginConfig.ApiEnabled.Value = on);
                 GUILayout.Label(!PluginConfig.ApiEnabled.Value ? "Disabled."
@@ -337,10 +313,10 @@ namespace SignLink.UI
                     : Plugin.ApiProblem ?? "Starting ...",
                     PluginConfig.ApiEnabled.Value && !Plugin.ApiRunning ? Theme.Warn : Theme.Label);
                 GUI.enabled = PluginConfig.ApiEnabled.Value;
-                bool net = Widgets.Check(PluginConfig.ApiNetwork.Value, "Also accept other computers on this network (HTTP is not encrypted: home networks only)");
+                bool net = Widgets.Check(PluginConfig.ApiNetwork.Value, "Also this network (unencrypted)");
                 if (net != PluginConfig.ApiNetwork.Value) Window.Later(() => PluginConfig.ApiNetwork.Value = net);
                 bool hasPassword = !string.IsNullOrEmpty(PluginConfig.ApiPassword.Value);
-                string password = "Password: " + (!hasPassword ? "(made when the API is first switched on)"
+                string password = "Password: " + (!hasPassword ? "(not made yet)"
                                                    : showPassword ? PluginConfig.ApiPassword.Value : new string('*', 12));
                 if (Widgets.Narrow) GUILayout.Label(password, Theme.Label);  // a narrow window: the buttons under it (0.20.74)
                 using (Widgets.Horizontal())
@@ -365,7 +341,6 @@ namespace SignLink.UI
                         });
                 }
                 GUI.enabled = true;
-                Widgets.Hint("Tools send it in the X-SignLink-Password header; five wrong ones lock another computer out for a minute.");
             }
 
             // a small table, one thing a row (0.20.97, the author: the /signlink info belongs elsewhere ... it can go to About,
@@ -388,25 +363,23 @@ namespace SignLink.UI
                     });
                 GUILayout.FlexibleSpace();
             }
-            Widgets.Hint("Every setting on this tab back to how SignLink comes, the hotkey too (Page Up); the API's password stays.");
+            Widgets.Hint("Password stays");
 
             Widgets.Header("About");
             using (Widgets.Vertical(Theme.Section))
             {
                 GUILayout.Label($"{Plugin.Name} {Plugin.Version}", Theme.Label);
-                Widgets.Hint("Pictures, art and long texts on signs that every player sees.");
                 Widgets.Space(4);
                 Widgets.Field("Steps", "1 Sign  ›  2 Content  ›  3 Place");
                 Widgets.Space(4);
                 bool keyless = PluginConfig.MenuKey.Value.MainKey == KeyCode.None;
-                Widgets.Field("Open it", keyless ? "no hotkey (Window › Hotkey)" : PluginConfig.MenuKeyText() + "   (Window › Hotkey)");
+                Widgets.Field("Open it", keyless ? "no hotkey" : PluginConfig.MenuKeyText());
                 Widgets.Field("", "/signlink in the chat");
-                if (Event.current.type == EventType.Layout) aboutE = PluginConfig.PreventEditor.Value;   // its switch flips mid-frame
-                if (aboutE) Widgets.Field("", "E on a sign holding a picture or glyph art");
-                Widgets.Field("", "Open in SignLink, on the game's sign editor");
+                Widgets.Field("", "E on a picture sign");
+                Widgets.Field("", "Open in SignLink (sign editor)");
                 Widgets.Space(4);
-                Widgets.Field("Fine-tune", "Shift + mouse wheel over a slider");
-                Widgets.Field("", "the arrow keys move the sign (3 Place)");
+                Widgets.Field("Fine-tune", "Shift+wheel on a slider");
+                Widgets.Field("", "arrow keys (3 Place)");
                 Widgets.Space(4);
                 using (Widgets.Horizontal())                                // the folder opened, as the Picture list does
                 {                                                           // (0.20.119, the author: make it a button ... Open folder)

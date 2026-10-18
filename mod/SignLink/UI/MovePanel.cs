@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
@@ -30,6 +31,7 @@ namespace SignLink.UI
         Sign movedOf;
         float movedAt = -1f;
         bool pendingNow;                                                    // steps not applied yet (Layout: the buttons' state)
+        string unheldNow;                                                   // why the game would not hold it there (SignMove.Unheld)
 
         /// <summary>Where and how the sign stood before Reset to default, so Undo brings it back while the window stays
         /// open and the sign is the one the reset made (0.20.96, the author: for Reset to default in 3 Place, until I close
@@ -79,8 +81,17 @@ namespace SignLink.UI
             }
             Sign rootNow = !has ? null : s.First;
             pendingNow = has && SignMove.HasPending(rootNow);
+            unheldNow = pendingNow ? SignMove.Unheld(rootNow) : null;
+            // a tilt or a rotation waiting, read once a frame: the rows change the choice within an event, and a red line
+            // that came or went between the Layout and the Repaint threw (1.0.2, review)
+            posePending = has && !Change.SamePose(s.Held.Fit, s.Chosen.Fit);
+            poseWhy = posePending ? ContentTab.PoseProblem(s) : null;
+            poseText = posePending ? SignPose.Describe((float)s.Chosen.Fit.Tilt, (float)s.Chosen.Fit.Turn) : "";
             if (beforeReset != null && !ReferenceEquals(beforeReset.Root, rootNow)) beforeReset = null;   // another sign, or made again since
         }
+
+        bool posePending;
+        string poseWhy, poseText = "";
 
         int preparedFrame = -1;
         float chosenTurn = float.NaN;                                       // the Turn row's own end of the circle
@@ -117,13 +128,8 @@ namespace SignLink.UI
 
             using (Widgets.Vertical(Theme.Section))
             {
-                using (Widgets.Horizontal())
-                {
-                    GUILayout.Label("Move by", Theme.Label, Widgets.W(Widgets.LabelW));
-                    int pick = Widgets.Toolbar(moveStep, MoveStepNames, Theme.Chip, Widgets.W(Mathf.Min(440f, Widgets.RestW)));   // small (0.20.78)
-                    GUILayout.FlexibleSpace();
-                    if (pick != moveStep) window.Later(() => moveStep = pick);
-                }
+                int pick = Widgets.Choice("Move by", moveStep, MoveStepNames, 440f);   // small (0.20.78)
+                if (pick != moveStep) window.Later(() => moveStep = pick);
                 Widgets.Space(4);
                 // the steps laid out as the arrow keys lie (0.20.78, the author: place them a bit smarter and
                 // nicer, even just swap them for arrows): ▲ over ◄ ▼ ►, and beside them Shift's pair, away over towards
@@ -149,10 +155,7 @@ namespace SignLink.UI
                     if (Widgets.Button("Towards you", KeyStyle(4), Widgets.W(side), Widgets.H(kh))) dir = 4;
                     GUILayout.FlexibleSpace();
                 }
-                // the keyboard moves it too (0.20.56, the author: rather than the limits, say that); a limit says itself
-                // when a step meets it
-                Widgets.Hint("The arrow keys move it too, by the step above: ← → sideways, ↑ ↓ up and down, Shift with ↑ ↓ away " +
-                             "and towards you.");
+                // the keyboard moves it too (0.20.56): its keys at the part's title (PlaceTab, 1.0.2)
             }
             GUI.enabled = was;
             if (dir >= 0)
@@ -175,23 +178,30 @@ namespace SignLink.UI
             Sign target = has ? s.Target : null;
             bool was = GUI.enabled;
             bool reset, apply, undo;
+            // a tilt or a rotation waiting is the sign's too (1.0.2, the author: the group's buttons should govern the whole
+            // Sign block, not only the fine-tune: I could not apply a tilt here)
+            // (posePending, poseWhy, poseText: Prepare, once a frame)
+            bool waiting = pendingNow || (has && posePending);
+            string stepsText = moved || posed || pendingNow ? movedText : "";   // movedText holds the pose it stands in
             Widgets.Space(4);                                               // no rule: Changes belongs to the groups above (0.20.146)
             using (Widgets.Vertical(Theme.Section))
             {
                 using (Widgets.Horizontal())
                 {
                     GUILayout.Label("Changes", Theme.Label, Widgets.W(Widgets.LabelW));
-                    GUILayout.Label(!has ? "" : !moved && !posed && !pendingNow ? "none: it stands where and as it was built"
-                                    : movedText + (pendingNow ? " · not applied yet: only you see it" : ""),
-                                    pendingNow ? Theme.Notice : Theme.Label, Widgets.W(Widgets.RestW));
+                    GUILayout.Label(!has ? "" : !moved && !posed && !waiting ? "none"
+                                    : stepsText + (has && posePending ? (stepsText.Length > 0 ? " → " : "") + poseText : "") +
+                                      (waiting ? " · only you see it" : ""),
+                                    waiting ? Theme.Notice : Theme.Label, Widgets.W(Widgets.RestW));
                 }
                 float half = (Widgets.ContentWidth - 30) / 2f - 4f;
                 using (Widgets.Horizontal())
                 {
-                    GUI.enabled = has && pendingNow;                        // steps and turns wait for one of these
+                    // steps, turns and a pose wait for one of these; refused where the game would not hold the sign up
+                    GUI.enabled = has && waiting && unheldNow == null && poseWhy == null;
                     float wide = (Widgets.ContentWidth - 30) * 0.62f, rest = Widgets.ContentWidth - 30 - wide - 8f;
                     apply = Widgets.NextButton("Apply sign coord changes", 26f, wide, less: true);   // 0.20.77, the author: the apply button to read "Apply sign coord changes"
-                    GUI.enabled = has && (pendingNow || beforeReset != null);   // steps not applied, else the reset
+                    GUI.enabled = has && (waiting || beforeReset != null);   // steps and a pose not applied, else the reset
                     undo = Widgets.Button("Undo steps", Theme.ButtonLess, Widgets.W(rest), Widgets.H(26));
                 }
                 using (Widgets.Horizontal())
@@ -199,13 +209,43 @@ namespace SignLink.UI
                     GUI.enabled = has && (moved || posed || pendingNow);    // moved, turned, tilted or rotated
                     reset = Widgets.Button("Reset to default", Theme.ButtonLess, Widgets.W(180), Widgets.H(26));   // a size under Content positioning's (190 wide)
                     GUI.enabled = was;
-                    GUILayout.Label("where and as it was built, for everyone", Theme.SideNote, Widgets.H(26));
+                    GUILayout.Label("as built", Theme.SideNote, Widgets.H(26));
                 }
+                // the steps go there, only the apply is refused (1.0.2, the author: allow it, just do not let it apply, with
+                // the red text that it has no support)
+                if (has && unheldNow != null)
+                    GUILayout.Label("No support: " + unheldNow, Theme.Warn);
+                else if (has && poseWhy != null) GUILayout.Label(poseWhy, Theme.Warn);
             }
             GUI.enabled = was;
             if (reset || apply || undo) window.KeepOpen();                  // not a put: its message keeps the window
             if (reset) window.Act(() => Reset(s, target));
-            if (apply)
+            // what the sign holds in the pose the rows say, its place along the face kept as the rows keep it (Laid: Posed
+            // within a quarter turn, the world place when the face turns round; 1.0.2, review: WithPose moved off-centre
+            // content along the face)
+            Fit poseTo = s.Held.Fit.Laid(s.Chosen.Fit.Tilt, s.Chosen.Fit.Edge);
+            poseTo.Turn = s.Chosen.Fit.Turn;
+            SignRecipe heldRecipe = s.Held.Recipe;
+            if (apply && has && posePending)
+                window.Act(() =>
+                {
+                    beforeReset = null;
+                    Fit chosen = s.Chosen.Fit;
+                    bool contentWaits = !chosen.Same(poseTo);               // a size or place changed on Content, not applied
+                    // the stack made again in the new pose, the steps not applied with it (SignPose.Set); the content as it
+                    // is, so content changes waiting on 3 Place stay waiting
+                    List<Sign> made = SignFit.Refit(target, poseTo, GlowMode.AsMade, out Fit got);
+                    if (made.Count > 0 && heldRecipe.Kind != SignRecipe.Kinds.None)
+                        SignMarks.SetSource(made[0], heldRecipe.ToString());   // a known item keeps its recipe (as Perform)
+                    s.Chosen.Fit = contentWaits ? chosen.WithPose(got) : got;
+                    if (made.Count > 0)
+                    {
+                        window.Select(made[0], sameContent: true);
+                        UpdateMoved(made[0]);
+                    }
+                    return $"applied: every player sees it {SignPose.Describe((float)got.Tilt, (float)got.Turn)} now.";
+                });
+            else if (apply)
                 window.Act(() =>
                 {
                     beforeReset = null;                                     // a new place: the reset is behind it
@@ -227,7 +267,7 @@ namespace SignLink.UI
                     }
                     return "applied: every player sees the sign there now.";
                 });
-            BeforeReset back = undo && !pendingNow ? beforeReset : null;    // steps not applied go first, the reset after them
+            BeforeReset back = undo && !waiting ? beforeReset : null;       // steps not applied go first, the reset after them
             if (back != null)
             {
                 beforeReset = null;
@@ -239,11 +279,11 @@ namespace SignLink.UI
                     Sign root = SignFinder.Root(target);
                     SignMove.Revert();
                     UpdateMoved(root);
-                    return "undone: the sign is back where it was last applied.";
+                    Fit back = s.Chosen.Fit.Laid(s.Held.Fit.Tilt, s.Held.Fit.Edge);   // the tilt and the rotation back too, the
+                    back.Turn = s.Held.Fit.Turn;                            // place along the face as the rows had it (review)
+                    s.Chosen.Fit = back.Same(s.Held.Fit) ? s.Held.Fit : back;
+                    return "undone: the sign is back as it was last applied.";
                 });
-            Widgets.Hint("Steps and turns show only for you until Apply sign coord changes; then every player sees them. Undo steps drops " +
-                         "what is not applied (so do closing the window and picking another sign); after Reset to default it brings " +
-                         "the sign back until the window closes.");
         }
 
         /// <summary>Undo after Reset to default: the sign back where and as it stood, for everyone, the reverse of the reset,
@@ -321,20 +361,60 @@ namespace SignLink.UI
                 beforeReset = before;
                 return "the sign is back where it was built (Undo brings the steps back).";
             }
-            SignMove.Nudge(root, -SignMove.Moved(root));
-            SignMove.Turn(stack, -SignMove.Turned(root), root);
-            List<Sign> made;
-            if (tipped)
+            // the way back as steps first; refused (another sign there, a place nothing is built, nothing would hold it
+            // there now), the sign goes back to where it stood a moment ago, its steps not applied with it (1.0.2, review:
+            // the reset stopped halfway, as steps; then it dropped the player's steps)
+            Vector3 moved0 = SignMove.Moved(root);
+            float turned0 = SignMove.Turned(root);
+            bool nudged = false, turnedBack = false;
+            void Undo()
             {
-                // the pose is the signs' own, so they are made again standing as built, the moves undone with them
-                string recipe = SignMarks.Source(root);
-                Fit on = SignFit.Read(root, out _, out _, out _);
-                made = SignFit.Refit(root, on.Posed(0, 0, false), GlowMode.AsMade, out _);
-                if (made.Count > 0 && recipe.Length > 0) SignMarks.SetSource(made[0], recipe);
-                Fit chosen = s.Chosen.Fit;                                  // the rows stand too; what else they hold stays
-                s.Chosen.Fit = chosen.Posed(0, 0, chosen.Edge);
+                try
+                {
+                    if (turnedBack) SignMove.Turn(stack, turned0, root);
+                    if (nudged) SignMove.Nudge(root, moved0);
+                }
+                catch (InvalidOperationException) { SignMove.Revert(); }   // not even that: where it stands for everyone
+                UpdateMoved(root);
             }
-            else made = SignPose.Remake(root);                              // where it was built, for every player at once
+            try
+            {
+                SignMove.Nudge(root, -moved0);
+                nudged = true;
+                SignMove.Turn(stack, -turned0, root);
+                turnedBack = true;
+            }
+            catch (InvalidOperationException)
+            {
+                Undo();
+                throw;
+            }
+            string unheld = SignMove.Unheld(root);
+            if (unheld != null)
+            {
+                Undo();
+                throw new InvalidOperationException("no support where it was built: " + unheld);
+            }
+            List<Sign> made;
+            try
+            {
+                if (tipped)
+                {
+                    // the pose is the signs' own, so they are made again standing as built, the moves undone with them
+                    string recipe = SignMarks.Source(root);
+                    Fit on = SignFit.Read(root, out _, out _, out _);
+                    made = SignFit.Refit(root, on.Posed(0, 0, false), GlowMode.AsMade, out _);
+                    if (made.Count > 0 && recipe.Length > 0) SignMarks.SetSource(made[0], recipe);
+                    Fit chosen = s.Chosen.Fit;                              // the rows stand too; what else they hold stays
+                    s.Chosen.Fit = chosen.Posed(0, 0, chosen.Edge);
+                }
+                else made = SignPose.Remake(root);                          // where it was built, for every player at once
+            }
+            catch (Exception e) when (e is InvalidOperationException || e is ArgumentException)
+            {
+                Undo();                                                     // refused at the last step too (review: a sign over a
+                throw;                                                      // server's limit, a ward, copies loading): the steps come back
+            }
             if (made.Count == 0) return "the sign is gone.";
             window.Select(made[0], sameContent: true);
             UpdateMoved(made[0]);
@@ -363,7 +443,7 @@ namespace SignLink.UI
                     if (Mathf.Abs(degrees) < 0.01f) return;
                     SignMove.Turn(stack ?? SignFinder.Stack(root), degrees, root);
                     UpdateMoved(root);
-                    window.Say($"turned the sign {Mathf.Abs(degrees):0.#}° {(degrees > 0 ? "clockwise" : "anticlockwise")} ({movedText}).");
+                    window.Say($"turned the sign {Mathf.Abs(degrees):0.#}° {(degrees > 0 ? "clockwise" : "anticlockwise")} ({movedText})." + NoSupport(root));
                 }
                 catch (Exception e)
                 {
@@ -393,7 +473,7 @@ namespace SignLink.UI
                     else SignMove.Nudge(at, d * step);
                     UpdateMoved(root);
                     window.Say($"moved the sign {Length(step)} {MoveWords[dir]} (" +
-                               (moved ? $"{movedText} from where it was built)." : "back where it was built)."));
+                               (moved ? $"{movedText} from where it was built)." : "back where it was built).") + NoSupport(root));
                 }
                 catch (Exception e)
                 {
@@ -446,6 +526,10 @@ namespace SignLink.UI
         /// pressed them with the mouse).</summary>
         GUIStyle KeyStyle(int dir) =>
             keyDir == dir && (held != KeyCode.None || Time.unscaledTime - keyAt < 0.15f) ? Theme.ButtonDown : Theme.Button;
+
+        /// <summary>What a step adds to its message where the game would not hold the sign up: it went, but it cannot be applied.</summary>
+        static string NoSupport(Sign root) =>
+            SignMove.Unheld(root) != null ? " No support." : "";
 
         void UpdateMoved(Sign root)
         {

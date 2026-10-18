@@ -46,6 +46,7 @@ namespace SignLink.Animation
             public uint Revision;                    // its sign's data as the screen started over it (Step: written since?)
             public string Src;
             public int TextHash;
+            public float Dist;                       // from the player this step (the nearest uploads first)
         }
 
         /// <summary>The frames shown per second (the Playing tab, the stats) are counted over windows this long.</summary>
@@ -62,8 +63,14 @@ namespace SignLink.Animation
         /// <summary>A screen that shows no new frame for this long says why in the log, once.</summary>
         const float IdleSeconds = 3f;
 
-        /// <summary>The most the screens may hold in frames, all together: a GIF over it is placed as a still.</summary>
-        public const long Budget = 256L << 20;
+        /// <summary>What every moving GIF's frames may take together on this computer: Settings › Playback › GIF memory
+        /// (256 MB until 1.0.2; the author: 512 and 1024 too). Lowered under what is held, Trim parks the farthest screens.</summary>
+        public static long Budget => (long)(PluginConfig.GifMemory?.Value ?? 256) << 20;
+
+        /// <summary>The most one GIF's kept frames may take: past it every k-th frame is kept (GifDecoder.Stride), counted at
+        /// the screen's size. 200 MB of the 256 (1.0.1 counted the full-size frames: a GIF on a small sign lost every second
+        /// frame for nothing, 1.0.2 review).</summary>
+        public static long FrameCap => Budget * 25 / 32;
 
         /// <summary>The shader of a screen lit by the scene: Unity's Lambert surface shader, in the set every build
         /// includes (unity_builtin_extra; verified in Valheim 1.0.17). Lit like the sign's text material (sun, ambient,
@@ -77,6 +84,9 @@ namespace SignLink.Animation
         }
 
         readonly List<Screen> screens = new List<Screen>();
+        /// <summary>How many screens show each frame: the budget counts a frame once, however many signs show it (1.0.2,
+        /// the author: a GIF copied onto a third sign stayed still, its frames counted three times though shared).</summary>
+        readonly Dictionary<byte[], int> users = new Dictionary<byte[], int>();
         readonly Dictionary<string, Parked> parked = new Dictionary<string, Parked>();
         long held, parkedBytes;
         static Material litMaterial;
@@ -115,20 +125,24 @@ namespace SignLink.Animation
         /// <summary>Is there room for this many bytes of frames? Parked frames make room, oldest first.</summary>
         public bool CanHold(long bytes)
         {
+            if (bytes == 0) return true;                                    // frames playing already (the same GIF on another
+                                                                            // sign) take nothing, whatever the limit (1.0.2, review)
             if (held + bytes > Budget) return false;                        // never, whatever is dropped: keep the parked sets
-            while (held + parkedBytes + bytes > Budget && parked.Count > 0)
-            {
-                string oldest = null;
-                float at = float.MaxValue;
-                foreach (KeyValuePair<string, Parked> p in parked)
-                    if (p.Value.At < at)
-                    {
-                        at = p.Value.At;
-                        oldest = p.Key;
-                    }
-                Drop(oldest, "to make room");
-            }
+            while (held + parkedBytes + bytes > Budget && parked.Count > 0) DropOldest("to make room");
             return held + parkedBytes + bytes <= Budget;
+        }
+
+        void DropOldest(string why)
+        {
+            string oldest = null;
+            float at = float.MaxValue;
+            foreach (KeyValuePair<string, Parked> p in parked)
+                if (p.Value.At < at)
+                {
+                    at = p.Value.At;
+                    oldest = p.Key;
+                }
+            if (oldest != null) Drop(oldest, why);
         }
 
         /// <summary>The frames parked under this key, out of the park (the screen started with them holds them from
@@ -158,14 +172,48 @@ namespace SignLink.Animation
             return parked.TryGetValue(key, out Parked p) ? p.Frames : null;
         }
 
+        /// <summary>The frames of this file (its Stamp) at the size a sign shows it (1.0.2: a screen is sized to its sign,
+        /// PictureImporter.ScreenKey): screenW gives the screen's width for the GIF's own size, which the frames carry.</summary>
+        public ScreenFrames FramesFor(string stamp, Func<int, int, int> screenW)
+        {
+            if (stamp == null) return null;
+            string prefix = stamp + "@";
+            foreach (Screen sc in screens)
+                if (sc.Key != null && sc.Key.StartsWith(prefix, StringComparison.Ordinal) && sc.W == screenW(sc.SourceW, sc.SourceH))
+                    return FramesFor(sc.Key);
+            foreach (KeyValuePair<string, Parked> p in parked)
+                if (p.Key.StartsWith(prefix, StringComparison.Ordinal) && p.Value.Frames.W == screenW(p.Value.Frames.SourceW, p.Value.Frames.SourceH))
+                    return p.Value.Frames;
+            return null;
+        }
+
         /// <summary>Is there room for this many bytes of frames on this sign, ever: what the other screens play (parked
         /// frames make room, this sign's own screen goes first), checked before a request's frames are copied.</summary>
         bool Fits(Sign s, long bytes)
         {
             long others = held;
             foreach (Screen sc in screens)
-                if (ReferenceEquals(sc.Sign, s)) others -= sc.Bytes;
+                if (ReferenceEquals(sc.Sign, s)) others -= OnlyHere(sc);
             return others + bytes <= Budget;
+        }
+
+        /// <summary>The room a new picture on this sign gets back from the screen over it now (its own frames go first).</summary>
+        public long Frees(Sign s)
+        {
+            long n = 0;
+            foreach (Screen sc in screens)
+                if (ReferenceEquals(sc.Sign, s)) n += OnlyHere(sc);
+            return n;
+        }
+
+        /// <summary>The bytes of this screen's frames no other screen shows (what stopping it frees).</summary>
+        long OnlyHere(Screen sc)
+        {
+            long n = 0;
+            var seen = new HashSet<byte[]>();
+            foreach (byte[] f in sc.Frames)
+                if (seen.Add(f) && users.TryGetValue(f, out int u) && u == 1) n += f.Length;
+            return n;
         }
 
         /// <summary>Parked frames nobody took again in this long are dropped (0.20.132, review: a few GIFs left behind held
@@ -280,9 +328,20 @@ namespace SignLink.Animation
             }
             Stop(s, keep: false);                                            // the same sign again: the old frames go
             Plugin.Text.Stop(s);                                             // a tool's local frame goes: the saved text shows under the screen
-            if (key != null) TakeParked(key, out _);                         // the same frames parked: they play now
-            if (!CanHold(bytes))
+            Parked wasParked = null;                                         // the same frames parked: they play now
+            if (key != null && parked.TryGetValue(key, out wasParked)) TakeParked(key, out _);
+            long added = 0;                                                  // only frames no screen shows yet take room
+            foreach (byte[] f in distinct)
+                if (!users.ContainsKey(f)) added += f.Length;
+            if (!CanHold(added))
+            {
+                if (wasParked != null && !parked.ContainsKey(key))          // back in the park: a later try needs no decode
+                {                                                           // (1.0.2, review: they were dropped)
+                    parked[key] = wasParked;
+                    parkedBytes += wasParked.Frames.Bytes;
+                }
                 throw new ArgumentException($"too big to play: the screens hold {Held >> 20} MB of frames already (at most {Budget >> 20} MB)");
+            }
             long[] ends = FrameTimes.Ends(delaysMs);
             long total = ends[ends.Length - 1];
             float fps = frames.Length * 1000f / Math.Max(1, total);
@@ -310,7 +369,9 @@ namespace SignLink.Animation
             List<Sign> hidden = hideText ? SignFinder.Stack(s) : new List<Sign>();
             foreach (Sign o in hidden) o.m_textWidget.enabled = false;
 
-            held += bytes;
+            foreach (byte[] f in distinct)
+                users[f] = users.TryGetValue(f, out int u) ? u + 1 : 1;
+            held += added;
             screens.Add(new Screen { Sign = s, Id = SignFinder.Id(s), Key = key, Go = go, Tex = tex, Frames = frames, Delays = delaysMs,
                                      Revision = SignFinder.Zdo(s)?.DataRevision ?? 0, Src = SignMarks.Source(s), TextHash = SignText.SavedText(s).GetHashCode(),
                                      SourceW = sourceW, SourceH = sourceH, Ends = ends, Total = total, Bytes = bytes,
@@ -347,6 +408,11 @@ namespace SignLink.Animation
             bool play = PluginConfig.PlayGifs.Value;                        // GIFs have a switch of their own (0.20.160)
             Player p = Player.m_localPlayer;
             float far = PluginConfig.PlayDistance.Value;
+            Trim(now, p);
+            foreach (Screen sc in screens)                                  // the nearest uploads first (FrameBudgetMs): the
+                sc.Dist = p && sc.Sign ? Vector3.Distance(p.transform.position, sc.Sign.transform.position) : 0f;   // loop runs from the end
+            screens.Sort(Farther);
+            double frameMs = 0;
             for (int i = screens.Count - 1; i >= 0; i--)
             {
                 Screen sc = screens[i];
@@ -380,13 +446,13 @@ namespace SignLink.Animation
                 }
                 if (!play)
                 {
-                    Idle(sc, now, "GIFs are paused (Playing tab)");
+                    Idle(sc, now, "GIFs are paused (Playing tab)", expected: true);
                     continue;
                 }
-                float dist = p ? Vector3.Distance(p.transform.position, sc.Sign.transform.position) : 0f;
+                float dist = sc.Dist;
                 if (dist > far)
                 {
-                    Idle(sc, now, $"{dist:0} m from the sign, over the Playback Distance of {far:0} m");
+                    if (Stale(sc, now)) Idle(sc, now, $"{dist:0} m from the sign, over the Playback Distance of {far:0} m", expected: true);
                     continue;
                 }
                 long elapsed = (long)((now - sc.Started) * 1000f);
@@ -394,7 +460,12 @@ namespace SignLink.Animation
                 int index = FrameTimes.FrameAt(sc.Ends, sc.Loop ? elapsed % sc.Total : elapsed);
                 if (index == sc.Index)
                 {
-                    Idle(sc, now, $"frame {index} of {sc.Frames.Length} is due (the frames last {sc.Total} ms together)");
+                    if (Stale(sc, now)) Idle(sc, now, $"frame {index} of {sc.Frames.Length} is due (the frames last {sc.Total} ms together)");
+                    continue;
+                }
+                if (frameMs > FrameBudgetMs)                                     // the nearer screens took this game frame's
+                {                                                                // upload time: at the next one (1.0.2, review)
+                    if (Stale(sc, now)) Idle(sc, now, $"the nearer GIFs take the {FrameBudgetMs:0} ms a game frame gives the uploads", expected: true);
                     continue;
                 }
                 // a screen whose uploads would cost over 50 ms of every second shows every k-th frame instead
@@ -402,7 +473,7 @@ namespace SignLink.Animation
                 int keep = load > 50 ? (int)Math.Ceiling(load / 50) : 1;
                 if (keep > 1 && now - sc.LastUpload < keep / sc.Fps)
                 {
-                    Idle(sc, now, $"its uploads cost {load:0} ms of every second: every {keep}th frame shows");
+                    if (Stale(sc, now)) Idle(sc, now, $"its uploads cost {load:0} ms of every second: every {keep}th frame shows");
                     continue;
                 }
                 sc.Skipped += ((index - sc.Index - 1) % sc.Frames.Length + sc.Frames.Length) % sc.Frames.Length;
@@ -410,6 +481,7 @@ namespace SignLink.Animation
                 sc.Tex.LoadRawTextureData(sc.Frames[index]);
                 sc.Tex.Apply(false);
                 double ms = sw.Elapsed.TotalMilliseconds;
+                frameMs += ms;
                 sc.SumMs += ms;
                 sc.MaxMs = Math.Max(sc.MaxMs, ms);
                 sc.Index = index;
@@ -420,12 +492,119 @@ namespace SignLink.Animation
             }
         }
 
-        /// <summary>A screen with no new frame for IdleSeconds says why, once, until it shows one again.</summary>
-        static void Idle(Screen sc, float now, string why)
+        /// <summary>The most the uploads of every screen may take of one game frame, the nearest first (1.0.2, review: the
+        /// 50 ms a second rule is each screen's own, so many big GIFs together could stall a weak CPU).</summary>
+        const double FrameBudgetMs = 5;
+        static readonly Comparison<Screen> Farther = (a, b) => b.Dist.CompareTo(a.Dist);
+
+        /// <summary>Would Idle say something now? Asked before its words are built (1.0.2, review: a string a game frame a screen).</summary>
+        static bool Stale(Screen sc, float now) => !sc.Idle && now - sc.LastUpload >= IdleSeconds;
+
+        /// <summary>A screen with no new frame for IdleSeconds says why, once, until it shows one again: a warning, or a
+        /// plain line when nothing is wrong (expected: paused, or far away; 1.0.2, the night's test: a walk away put
+        /// warnings in the log).</summary>
+        static void Idle(Screen sc, float now, string why, bool expected = false)
         {
-            if (sc.Idle || now - sc.LastUpload < IdleSeconds) return;
+            if (!Stale(sc, now)) return;
             sc.Idle = true;
-            Plugin.Log.LogWarning($"screen on {sc.Id} has shown no new frame for {IdleSeconds:0} s: {why}");
+            string line = $"screen on {sc.Id} has shown no new frame for {IdleSeconds:0} s: {why}";
+            if (expected) Plugin.Log.LogInfo(line);
+            else Plugin.Log.LogWarning(line);
+        }
+
+        /// <summary>Room for a GIF about to play on `near`: true when the screens leave it; else the screens idle because they
+        /// stand beyond the Playback Distance, or paused, park, the farthest first, until it fits (1.0.2, review: the budget
+        /// went to whatever loaded first, so a GIF beside the player waited for a far one's zone to unload). False when even
+        /// that leaves too little.</summary>
+        public bool MakeRoom(long need, Sign near, float now)
+        {
+            if (Room >= need) return true;
+            Player p = Player.m_localPlayer;
+            if (!p || !near) return false;
+            float far = PluginConfig.PlayDistance.Value;
+            Vector3 me = p.transform.position;
+            Func<Screen, float, bool> idle = (sc, d) => !ReferenceEquals(sc.Sign, near) && (d > far || sc.Paused);
+            // parked only when the idle screens together give what is needed: a set one near screen shares stays whatever
+            // its other users do, and nothing is parked for nothing
+            long gain = IdleGain(me, idle);
+            if (Room + gain < need) return false;
+            while (Room < need)
+            {
+                Screen pick = Farthest(me, idle);
+                if (pick == null) return false;
+                screens.Remove(pick);
+                Dispose(pick, $"parked to make room for a GIF {Vector3.Distance(me, near.transform.position):0} m from you (it stood " +
+                              $"{Vector3.Distance(me, pick.Sign.transform.position):0} m away{(pick.Paused ? ", paused" : "")})", now, keep: true);
+            }
+            return true;
+        }
+
+        /// <summary>What parking the screens `idle` says are idle would free: the frames no other screen uses.</summary>
+        long IdleGain(Vector3 me, Func<Screen, float, bool> idle)
+        {
+            var among = new Dictionary<byte[], int>();                      // each frame's users among the idle screens
+            foreach (Screen sc in screens)
+                if (sc.Sign && idle(sc, Vector3.Distance(me, sc.Sign.transform.position)))
+                    foreach (byte[] f in new HashSet<byte[]>(sc.Frames))
+                        among[f] = among.TryGetValue(f, out int n) ? n + 1 : 1;
+            long gain = 0;
+            foreach (KeyValuePair<byte[], int> f in among)
+                if (users.TryGetValue(f.Key, out int u) && u == f.Value) gain += f.Key.Length;
+            return gain;
+        }
+
+        /// <summary>What MakeRoom could free for a GIF on `near` without parking anything yet: the frames of the screens
+        /// idle far away or paused that no other screen uses (1.0.2, review: the Moving row warned of GIFs that would play).</summary>
+        public long Parkable(Sign near)
+        {
+            Player p = Player.m_localPlayer;
+            if (!p || !near) return 0;
+            float far = PluginConfig.PlayDistance.Value;
+            return IdleGain(p.transform.position, (sc, d) => !ReferenceEquals(sc.Sign, near) && (d > far || sc.Paused));
+        }
+
+        /// <summary>Do frames under this key play on a screen now (parked ones do not: starting them takes their room)?</summary>
+        public bool Playing(string key)
+        {
+            if (key == null) return false;
+            foreach (Screen sc in screens)
+                if (sc.Key == key) return true;
+            return false;
+        }
+
+        /// <summary>The farthest screen `takes` allows: one whose frames are its own first (parking it frees them), else any
+        /// (a set shared by screens all parked frees as the last of them goes); null when there is none.</summary>
+        Screen Farthest(Vector3 me, Func<Screen, float, bool> takes)
+        {
+            Screen pick = null;
+            float farthest = -1f;
+            for (int pass = 0; pass < 2 && pick == null; pass++)
+                foreach (Screen sc in screens)
+                {
+                    if (!sc.Sign) continue;
+                    float d = Vector3.Distance(me, sc.Sign.transform.position);
+                    if (d > farthest && takes(sc, d) && (pass == 1 || OnlyHere(sc) > 0))
+                    {
+                        farthest = d;
+                        pick = sc;
+                    }
+                }
+            return pick;
+        }
+
+        /// <summary>The limit lowered (Settings › Playback › GIF memory, 1.0.2): the farthest screens park until the rest fit,
+        /// and the oldest parked sets go until everything kept fits.</summary>
+        void Trim(float now, Player p)
+        {
+            long budget = Budget;
+            while (held > budget && screens.Count > 0)
+            {
+                Screen pick = Farthest(p ? p.transform.position : Vector3.zero, (sc, d) => true);
+                if (pick == null) break;
+                screens.Remove(pick);
+                Dispose(pick, $"stopped: the GIF memory is {budget >> 20} MB now (the farthest first)", now, keep: true);
+            }
+            while (held + parkedBytes > budget && parked.Count > 0) DropOldest("over the GIF memory");
         }
 
         /// <summary>Stops the screen over this sign (null: every screen). keep: its frames are parked, to play again
@@ -510,8 +689,20 @@ namespace SignLink.Animation
 
         void Dispose(Screen sc, string why, float now, bool keep)
         {
-            held -= sc.Bytes;
+            long freed = 0;
+            foreach (byte[] f in new HashSet<byte[]>(sc.Frames))           // a frame another screen shows stays counted
+            {
+                if (!users.TryGetValue(f, out int u)) continue;
+                if (u > 1) users[f] = u - 1;
+                else
+                {
+                    users.Remove(f);
+                    held -= f.Length;
+                    freed += f.Length;
+                }
+            }
             if (keep) Park(sc, now);
+            if (freed > 0) Plugin.Restore?.RoomFreed();                     // a GIF waiting for room is looked at again now
             if (sc.Go) Object.Destroy(sc.Go);
             if (sc.Tex) Object.Destroy(sc.Tex);
             int shown = 0;
@@ -530,7 +721,9 @@ namespace SignLink.Animation
         {
             var list = new List<Row>();
             bool play = PluginConfig.PlayGifs.Value;
-            foreach (Screen sc in screens)
+            var ordered = new List<Screen>(screens);                       // a steady order (review: the rows swapped places as
+            ordered.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));      // you walked: Step sorts the screens by distance)
+            foreach (Screen sc in ordered)
             {
                 string state = sc.Paused ? "paused" : !play ? "frozen (Play all GIFs)" : $"{sc.Rate:0.#} shown/s";
                 list.Add(new Row

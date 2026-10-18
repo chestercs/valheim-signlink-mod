@@ -22,6 +22,7 @@
 #                                resized and moved texts laid out by the engine (signart/transform_check.py)
 #   ./sign.sh cstest             the C# checks alone (after one modtest, which writes the vectors)
 #   ./sign.sh pagetest          the import page (mod/SignLink/Web) in jsdom against a mock of the API
+#   ./sign.sh qrtest             the QR template as the sign shows it: cstest writes its text, the TMP model renders it, zbar reads it
 #   ./sign.sh art                regenerate the art built into SignLink (mod/SignLink/Art, from the concept rounds)
 #   ./sign.sh palette            the text templates' glyph table (mod/SignLink/Pictures/GlyphData.cs, from out/glyphs.json)
 #   ./sign.sh package            the Thunderstore zip -> mod/out/SignLink-<version>.zip (checks versions; uploads nothing)
@@ -65,6 +66,19 @@ case "$cmd" in
            docker run --rm -v "$ROOT/mod:/src" -w /src/SignLink.Tests mcr.microsoft.com/dotnet/sdk:8.0 dotnet run -c Release -- vectors/vectors.json
            run "$IMG" python transform_check.py /work/mod/SignLink.Tests/vectors/transformed.json ;;
   cstest)  docker run --rm -v "$ROOT/mod:/src" -w /src/SignLink.Tests mcr.microsoft.com/dotnet/sdk:8.0 dotnet run -c Release -- vectors/vectors.json ;;   # the C# checks alone (modtest once first: it writes the vectors)
+  qrtest)  "$0" cstest | grep -E "^(qr|FAIL|ALL)"                           # writes mod/SignLink.Tests/qr_sample.txt
+           run "$IMG" python qr_render.py /work/mod/SignLink.Tests/qr_sample.txt /work/mod/SignLink.Tests/qr_sample.png
+           got=$(docker run --rm -v "$ROOT/mod/SignLink.Tests:/t:ro" python:3.12-slim sh -c "apt-get update -qq >/dev/null && apt-get install -y -qq libzbar0 >/dev/null 2>&1 && pip install -q pyzbar==0.1.9 pillow==11.0.0 >/dev/null 2>&1; python -I -c \"from PIL import Image; from pyzbar import pyzbar; print(*[g.data.decode() for g in pyzbar.decode(Image.open('/t/qr_sample.png'))])\"")
+           [ "$got" = "https://github.com/chestercs/valheim-signlink-mod" ] && echo "qrtest: zbar reads the sign: $got" || { echo "qrtest FAILED: zbar read [$got]"; exit 1; }
+           run "$IMG" python qr_render.py /work/mod/SignLink.Tests/qr_sweep >/dev/null       # sizes, versions, levels (cases.tsv)
+           docker run --rm -v "$ROOT/mod/SignLink.Tests/qr_sweep:/t:ro" python:3.12-slim sh -c "apt-get update -qq >/dev/null && apt-get install -y -qq libzbar0 >/dev/null 2>&1 && pip install -q pyzbar==0.1.9 pillow==11.0.0 >/dev/null 2>&1; python -I -c \"
+from PIL import Image; from pyzbar import pyzbar
+bad = []; cases = [l.split('\t') for l in open('/t/cases.tsv', encoding='utf-8').read().splitlines()]
+for f, want in cases:
+    got = [g.data.decode() for g in pyzbar.decode(Image.open('/t/' + f[:-4] + '.png'))]
+    if got != [want]: bad.append(f)
+print('qrtest sweep: zbar reads', len(cases) - len(bad), 'of', len(cases), 'codes', *(['; not read:'] + bad if bad else []))
+raise SystemExit(1 if bad else 0)\"" || { echo "qrtest FAILED: the sweep"; exit 1; } ;;
   pagetest) ( trap 'docker rm -f signlink-mock >/dev/null 2>&1; docker network rm signlink-test >/dev/null 2>&1' EXIT   # a failing test still cleans up
            T="$ROOT/mod/SignLink.Tests/page"; mkdir -p "$T/out"; docker network create signlink-test >/dev/null 2>&1 || true
            run -v "$T/out:/out" "$IMG" python -c "import numpy as n; from PIL import Image as I; y,x=n.mgrid[0:300,0:400]; I.fromarray(n.stack([x*255//399,y*255//299,(x+y)*255//698],-1).astype(n.uint8)).save('/out/test_gradient.png')"
