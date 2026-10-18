@@ -53,8 +53,8 @@ the mod**, because they are ordinary signs saved in the world. Only the player w
 ## How to use
 
 1. Install with r2modman or the Thunderstore Mod Manager (BepInExPack Valheim is installed with it).
-2. Put your pictures (PNG, JPG or GIF) into `BepInEx/config/SignLink/images` (*Open folder* on the Picture source opens it;
-   r2modman: *Settings › Browse profile folder*). Folders inside it are fine: the list shows them, → opens one and ← goes
+2. Put your pictures (PNG, JPG or GIF) into `SignLink/images` in the game's own data folder, next to your worlds (on Windows `%USERPROFILE%\AppData\LocalLow\IronGate\Valheim\SignLink\images`) (*Open folder* on the Picture source opens it).
+   Folders inside it are fine: the list shows them, → opens one and ← goes
    back up; a sign remembers its picture's folder. Six public-domain paintings and a moving GIF are already there to start with
    (Van Gogh, Hokusai, Michelangelo, Monet, two by Arbo, and Muybridge's galloping horse).
 3. In game, build a sign where the picture should go, then press **PageUp** (or type `/signlink` in the chat; the key
@@ -139,19 +139,14 @@ Settings are on the window's *Settings* tab; each one is also a line in the conf
 | 5 - Pictures / PngTransparency | on | Settings | how every picture is made from now on: a PNG's see-through parts stay empty (every sign of a picture stays under 400 KB, always) |
 | 5 - Pictures / MovingGifs | on | 2 Content (Moving, on a GIF) | a GIF goes on moving over its still wherever its file is in the images folder; the switch keeps your last choice |
 | 5 - Pictures / FineWidth | on | Settings | A picture's Width and Height move finely (dragged, typed, Shift + mouse wheel); your Resolution stays, the exact size takes the pixels nearest it (a few more or less), never over the multiplayer limit; off: the next size it takes for the same data |
-| 9 - Developer API / Enabled, AllowNetwork, Port, Password | off, off, 8417 | Settings | a local HTTP API for developers' tools; players do not need it |
-| 9 - Developer API / LogSlowSigns | off | the file | logs sign hover texts and text refreshes that take over 30 ms (to find stalls) |
-
-**Developer API.** Off by default. On, it listens on this computer only (127.0.0.1) unless *AllowNetwork* (then it
-answers local networks only); HTTP is not encrypted, so use it on a home network only; every request needs the password
-shown on the Settings tab.
+| 9 - Diagnostics / LogSlowSigns | off | the file | logs sign hover texts and text refreshes that take over 30 ms (to find stalls) |
 
 **Manual install:** copy `SignLink.dll` into `BepInEx/plugins`. Keyboard and mouse only (no controller). A dedicated
 server does not need it.
 
 **Uninstall:** remove it in the mod manager, or delete `BepInEx/plugins/SignLink.dll`. The pictures stay as ordinary
-signs. Optional: delete `BepInEx/config/SignLink/` (your images), `BepInEx/cache/SignLink/` (thumbnails) and
-`BepInEx/config/PetyusPolisz.SignLink.cfg`.
+signs. Optional: delete the `SignLink` folder in the game's data folder (your images), `BepInEx/cache/SignLink/`
+(thumbnails) and `BepInEx/config/PetyusPolisz.SignLink.cfg`.
 
 ## Known limits
 
@@ -161,7 +156,7 @@ signs. Optional: delete `BepInEx/config/SignLink/` (your images), `BepInEx/cache
   to 50 characters (Escape leaves it alone). Such a player's game also slows down while the crosshair rests on a
   picture sign's board up close (the game reads the whole picture for its hover hint). Hiding the sign in a wall or
   the ground, with only its picture out, avoids both.
-- A GIF moves over its picture on every computer that has the GIF file in its `BepInEx/config/SignLink/images`
+- A GIF moves over its picture on every computer that has the GIF file in its SignLink images
   folder (give the file to your friends); everyone else sees its first frame. Its frames are not saved in the world.
 - A GIF reads with up to 5 000 frames and 1 500 million pixels in all (about 720 frames of 1920 x 1080). To move, its
   frames are shrunk to at most twice the sign's pixels (and 1024 a side; SignLink 1.0.2); every moving GIF shares the GIF

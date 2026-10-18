@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace SignLink.Api
+namespace SignLink
 {
     /// <summary>Runs work queued from other threads on Unity's main thread (drained in Plugin.Update).</summary>
     internal static class MainThread

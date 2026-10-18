@@ -24,10 +24,12 @@ namespace SignLink
         public static ConfigEntry<int> GifMemory;
         public static ConfigEntry<float> RefreshSeconds;
         public static ConfigEntry<bool> PictureFineWidth;
+#if SIGNLINK_DEVAPI
         public static ConfigEntry<bool> ApiEnabled;
         public static ConfigEntry<int> ApiPort;
         public static ConfigEntry<bool> ApiNetwork;
         public static ConfigEntry<string> ApiPassword;
+#endif
         public static ConfigEntry<bool> LogSlowSigns;
 
         static ConfigFile file;
@@ -46,7 +48,10 @@ namespace SignLink
             {
                 foreach (KeyValuePair<ConfigDefinition, ConfigEntryBase> e in file)
                 {
-                    if (ReferenceEquals(e.Value, ApiPassword) || Equals(e.Value.BoxedValue, e.Value.DefaultValue)) continue;
+#if SIGNLINK_DEVAPI
+                    if (ReferenceEquals(e.Value, ApiPassword)) continue;
+#endif
+                    if (Equals(e.Value.BoxedValue, e.Value.DefaultValue)) continue;
                     e.Value.BoxedValue = e.Value.DefaultValue;
                     n++;
                 }
@@ -117,7 +122,7 @@ namespace SignLink
             // starts for a GIF picked from the list, the last choice
             MovingGifs = cfg.Bind("5 - Pictures", "MovingGifs", true,
                 Desc("A GIF picked on 2 Content starts with Moving on: it plays over its still whenever its sign is near, on " +
-                     "every computer that has the GIF file in BepInEx/config/SignLink/images (its frames are not in the world). " +
+                     "every computer that has the GIF file in its SignLink images folder (its frames are not in the world). " +
                      "The Moving switch keeps your last choice here.", 1));
             // the author: can it be set in the settings? (0.20.122): a fine size costs data, so it is a choice; on by
             // default under a new name (0.20.124, the author: fine tune enabled by default; every file held the
@@ -127,6 +132,8 @@ namespace SignLink
                      "Your Resolution stays: for the exact size the picture takes the pixels nearest it, a few more or less, " +
                      "on a server never more than the multiplayer limit allows. Off: the next size it takes for the same data (20-150 cm a " +
                      "step on most pictures: the game reads only some pixel sizes exactly).", 1));
+#if SIGNLINK_DEVAPI                                                         // a developer build only (Plugin.cs); a release
+                                                                            // drops these entries from the file (ConfigMoves)
             ApiEnabled = cfg.Bind("9 - Developer API", "Enabled", false,
                 Desc("A local HTTP API for developers' tools. Players do not need it: the window does everything. " +
                      "Switches at once.", 5));
@@ -138,7 +145,8 @@ namespace SignLink
             ApiPassword = cfg.Bind("9 - Developer API", "Password", "",
                 Desc("Every request must send it (header X-SignLink-Password). Made the first time the API is switched " +
                      "on; at least 12 plain characters. Anyone with it can change your signs.", 2, browsable: false));
-            LogSlowSigns = cfg.Bind("9 - Developer API", "LogSlowSigns", false,
+#endif
+            LogSlowSigns = cfg.Bind("9 - Diagnostics", "LogSlowSigns", false,
                 Desc("Log sign hover texts and text refreshes that take over 30 ms (to find stalls); off unless asked for.", 1));
             Migrate(cfg);
         }
@@ -218,9 +226,11 @@ namespace SignLink
 
         /// <summary>Why the API password cannot be used (null: it can): at least 12 characters, ASCII, no spaces, since
         /// the header is read as ASCII and trimmed.</summary>
+#if SIGNLINK_DEVAPI
         public static string PasswordProblem() => Api.Password.Problem(ApiPassword.Value);
 
         public static string NewPassword() => Api.Password.New();
+#endif
 
         /// <summary>The window's hotkey as people write it, the modifiers first ("Shift + Page Up"; UI.HotkeyText,
         /// 0.20.82), one key a part; none for no key.</summary>

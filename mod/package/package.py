@@ -51,6 +51,9 @@ def main():
         fail("mod/out/SignLink.dll is missing: run ./sign.sh mod")
     if version.encode("utf-16-le") not in open(dll, "rb").read():
         fail(f"mod/out/SignLink.dll is not version {version}: run ./sign.sh mod")
+    for marker in (b"LocalHttpServer", b"TcpListener", b"HttpListener", b"SIGNLINK_DEVAPI"):
+        if marker in open(dll, "rb").read():         # a release has no web server (the Thunderstore moderators, 2026-10-18)
+            fail(f"mod/out/SignLink.dll is a developer build ({marker.decode()}): run ./sign.sh mod without DEVAPI")
 
     for name in ("LICENSE", "LICENSE-ART"):                          # the package's copies match the repository's
         if open(os.path.join(PKG, name), "rb").read() != open(os.path.join(MOD, "..", name), "rb").read():

@@ -1,5 +1,9 @@
 # SignLink developer API
 
+> **Not in released SignLink.** Since 1.0.3 the API exists only in a developer build made from this source
+> (`DEVAPI=true ./sign.sh mod`, or `./sign.sh dev`): it is how this repository's sign-art toolkit writes art into a
+> running game. The SignLink you get from Thunderstore, Nexus Mods or Releases opens no port.
+
 Write, animate and fill Valheim signs from your own scripts, servers and bots. This page is the reference; the
 machine-readable version is [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1). Open it in
 [Swagger Editor](https://editor.swagger.io) (*File › Import file*), Postman or Insomnia to browse it or generate a
@@ -32,7 +36,7 @@ Answers    JSON: {"ok": true, ...}  or  {"ok": false, "error": "..."} with a 4xx
 ```sh
 export PW='the password'
 curl -s -H "X-SignLink-Password: $PW" http://127.0.0.1:8417/ping
-# {"ok":true,"version":"1.0.2","inWorld":true,"player":[80.12,31.5,-95.03]}
+# {"ok":true,"version":"1.0.3","inWorld":true,"player":[80.12,31.5,-95.03]}
 ```
 
 3. Look at a sign, then write to it:
@@ -63,7 +67,7 @@ The version; with the password also whether a world is loaded and where the play
 header it answers the version only, so a tool can check that the API is on.
 
 ```json
-{"ok": true, "version": "1.0.2", "inWorld": true, "player": [80.12, 31.5, -95.03]}
+{"ok": true, "version": "1.0.3", "inWorld": true, "player": [80.12, 31.5, -95.03]}
 ```
 
 <a id="get-"></a>

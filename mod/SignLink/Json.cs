@@ -2,9 +2,9 @@ using System.Globalization;
 using System.Text;
 using UnityEngine;
 
-namespace SignLink.Api
+namespace SignLink
 {
-    /// <summary>The few JSON writers the API needs (no library: nothing to bundle).</summary>
+    /// <summary>The few JSON writers the status reports need (no library: nothing to bundle).</summary>
     internal static class Json
     {
         public static string F(double v) =>

@@ -1,10 +1,11 @@
 openapi: 3.1.0
 info:
   title: SignLink developer API
-  version: 1.0.2
+  version: 1.0.3
   summary: Write, animate and fill Valheim signs from your own tools.
   description: |
-    An optional HTTP API built into the SignLink mod. It is **off by default**: switch it on in the SignLink window,
+    An optional HTTP API in a developer build of SignLink made from the source (`DEVAPI=true ./sign.sh mod`); released
+    SignLink (Thunderstore, Nexus Mods, Releases) has no API and opens no port. Off by default: switch it on in the window,
     *Settings › Developer API*, where the password is shown, copied or renewed.
 
     - Every request except `GET /`, `GET /ping` (without a password) and `GET /favicon.ico` sends the password in the
@@ -76,10 +77,10 @@ paths:
                 required: [ok, version]
                 properties:
                   ok: {const: true}
-                  version: {type: string, examples: ['1.0.2']}
+                  version: {type: string, examples: ['1.0.3']}
                   inWorld: {type: boolean, description: With the password only.}
                   player: {$ref: '#/components/schemas/Vec3', description: 'With the password, in a world only.'}
-              example: {ok: true, version: '1.0.2', inWorld: true, player: [80.12, 31.5, -95.03]}
+              example: {ok: true, version: '1.0.3', inWorld: true, player: [80.12, 31.5, -95.03]}
         '401': {$ref: '#/components/responses/Unauthorized'}
 
   /signs:

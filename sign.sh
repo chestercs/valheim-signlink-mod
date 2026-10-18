@@ -14,7 +14,8 @@
 #   ./sign.sh row build|preview ...   the rig turned and copied into a row of blocks, one piece each (signart/row.py)
 #     ./sign.sh row build rigs/<name>.json /work/worlds/<template> /wl <NewWorld> [--force] [--dry-run]
 #   ./sign.sh mod                build the SignLink BepInEx plugin -> mod/out/SignLink.dll (.NET SDK container); fails when
-#                                it references an assembly the game does not have (mod/RefCheck)
+#                                it references an assembly the game does not have (mod/RefCheck); the release build, without the
+#                                developer API (DEVAPI=true ./sign.sh mod builds it in, as dev and plugin do)
 #   ./sign.sh dev                build, then into the profile's BepInEx/scripts: ScriptEngine reloads it in the running game
 #                                within seconds (plugins/SignLink*.dll goes: one copy only; the game holds it while it runs)
 #   ./sign.sh plugin             build, then back into BepInEx/plugins as SignLink.<version>.dll (scripts/ emptied)
@@ -26,7 +27,7 @@
 #   ./sign.sh art                regenerate the art built into SignLink (mod/SignLink/Art, from the concept rounds)
 #   ./sign.sh palette            the text templates' glyph table (mod/SignLink/Pictures/GlyphData.cs, from out/glyphs.json)
 #   ./sign.sh package            the Thunderstore zip -> mod/out/SignLink-<version>.zip (checks versions; uploads nothing)
-#   ./sign.sh live <cmd> ...     talk to SignLink in the running game (signart/live.py; ping, signs, write, anim)
+#   ./sign.sh live <cmd> ...     talk to SignLink in the running game (signart/live.py; ping, signs, write, anim; a dev build)
 #   ./sign.sh hashes save|check out/hashes.json   fingerprint every generated text (refactors must keep them)
 #
 # VALHEIM_DATA points at the game's valheim_Data folder (read-only mount); WORLD_TOOL at the
@@ -58,9 +59,9 @@ case "$cmd" in
   py)      run "$IMG" python "$@" ;;
   rig)     run -v "$WORLD_TOOL:/wt:ro" -v "$VALHEIM_USER/worlds_local:/wl" -v "$VALHEIM_USER:/vlog:ro" "$IMG" python rig.py "$@" ;;
   row)     run -v "$WORLD_TOOL:/wt:ro" -v "$VALHEIM_USER/worlds_local:/wl" -v "$VALHEIM_USER:/vlog:ro" "$IMG" python row.py "$@" ;;
-  mod)     docker run --rm -v "$ROOT/mod:/src" -v "${VALHEIM_DATA%/valheim_Data}:/game:ro" -v "$BEPINEX_PACK:/bepinex:ro" \
+  mod)     docker run --rm -e DEVAPI="${DEVAPI:-false}" -v "$ROOT/mod:/src" -v "${VALHEIM_DATA%/valheim_Data}:/game:ro" -v "$BEPINEX_PACK:/bepinex:ro" \
              -w /src/SignLink mcr.microsoft.com/dotnet/sdk:8.0 sh -c \
-             'dotnet build -c Release -o /src/build -nologo && mkdir -p /src/out && cp /src/build/SignLink.dll /src/out/ &&
+             'dotnet build -c Release -p:DevApi=$DEVAPI -o /src/build -nologo && mkdir -p /src/out && cp /src/build/SignLink.dll /src/out/ &&
               cd /src/RefCheck && dotnet run -c Release -- /src/out/SignLink.dll /game/valheim_Data/Managed /bepinex/BepInEx/core' ;;
   modtest) run -v "$WORLD_TOOL:/wt:ro" "$IMG" python encoder_vectors.py /work/mod/SignLink.Tests/vectors "$@"
            docker run --rm -v "$ROOT/mod:/src" -w /src/SignLink.Tests mcr.microsoft.com/dotnet/sdk:8.0 dotnet run -c Release -- vectors/vectors.json
@@ -90,7 +91,7 @@ raise SystemExit(1 if bad else 0)\"" || { echo "qrtest FAILED: the sweep"; exit 
   package) run "$IMG" python /work/mod/package/package.py ;;
   live)    run -v "$WORLD_TOOL:/wt:ro" -v "$BEPINEX_PROFILE/config:/cfg:ro" "$IMG" python live.py "$@" ;;      # reaches the game via host.docker.internal (Docker Desktop)
   hashes)  run -v "$WORLD_TOOL:/wt:ro" "$IMG" python hashes.py "$@" ;;   # save|check out/hashes.json
-  dev)     "$0" mod                                                     # ScriptEngine (BepInEx.Debug) watches BepInEx/scripts
+  dev)     DEVAPI=true "$0" mod                                               # ScriptEngine (BepInEx.Debug) watches BepInEx/scripts
            mkdir -p "$BEPINEX_PROFILE/scripts"                            # and loads the copy there again (0.20.135); it reads
            cp "$ROOT/mod/build/SignLink.pdb" "$BEPINEX_PROFILE/scripts/SignLink.pdb"   # the symbols too (SymbolsNotFoundException
            cp "$ROOT/mod/out/SignLink.dll" "$BEPINEX_PROFILE/scripts/SignLink.dll"     # without): them first, the DLL wakes it
@@ -101,9 +102,9 @@ raise SystemExit(1 if bad else 0)\"" || { echo "qrtest FAILED: the sweep"; exit 
            done
            echo "scripts/SignLink.dll: a running game loads it again within a few seconds (ScriptEngine)" ;;
   plugin)  v=$(sed -n 's/.*public const string Version = "\([^"]*\)".*/\1/p' "$ROOT/mod/SignLink/Plugin.cs")
-           "$0" mod
+           DEVAPI=true "$0" mod                                         # the author's own game: with the developer API
            cp "$ROOT/mod/out/SignLink.dll" "$BEPINEX_PROFILE/plugins/SignLink.$v.dll"
            rm -f "$BEPINEX_PROFILE/scripts/SignLink.dll" "$BEPINEX_PROFILE/scripts/SignLink.pdb"
            echo "plugins/SignLink.$v.dll; scripts/ emptied (an older plugins/SignLink.*.dll goes after the next start)" ;;
-  *)       sed -n '2,32p' "$0" ;;
+  *)       sed -n '2,33p' "$0" ;;
 esac

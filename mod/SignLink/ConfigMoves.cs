@@ -35,6 +35,7 @@ namespace SignLink
         {
             new[] { "1 - Menu|ShowGhost", "3 - Sign options|Highlight" },
             new[] { "5 - Pictures|PlayGifs", "5 - Pictures|MovingGifs" },                        // 0.20.160
+            new[] { "9 - Developer API|LogSlowSigns", "9 - Diagnostics|LogSlowSigns" },          // 1.0.3
         };
 
         /// <summary>Entries no version keeps any more, under every section they ever had ("Section|Key"): HoverSprites
@@ -47,7 +48,9 @@ namespace SignLink
         /// player's own, never a protection for the server), WindowSize (0.20.46: Width and Height apart; OldSize keeps
         /// its size), PreventEditor and its older names PictureSigns (1.0.2: the short hover line on a picture sign and E
         /// opening SignLink are always on; off, the game read a picture's whole text by the crosshair with a stutter, and a
-        /// file that said off kept it off once the switch left the window).</summary>
+        /// file that said off kept it off once the switch left the window), the developer API's entries (1.0.3: a released
+        /// SignLink has no web server, the Thunderstore moderators asked; a developer build binds them, so there they are no
+        /// orphans and stay, and its password with them).</summary>
         static readonly string[] Dropped =
         {
             "3 - Viewer|HoverSprites", "3 - Signs in the world|HoverSprites", "Viewer|HoverSprites",
@@ -58,6 +61,8 @@ namespace SignLink
             "3 - Sign options|ShowAll",                                     // starts off every game (0.20.123)
             "5 - Pictures|FineWidthSteps",                                  // FineWidth, on by default (0.20.124)
             "3 - Sign options|PreventEditor", "3 - Signs in the world|PictureSigns", "3 - Viewer|PictureSigns",   // always on (1.0.2)
+            "9 - Developer API|Enabled", "9 - Developer API|Port", "9 - Developer API|AllowNetwork", "9 - Developer API|Password",
+            "1 - API|Enabled", "1 - API|Port", "1 - API|AllowNetwork", "1 - API|Password",          // a release: no API (1.0.3)
         };
 
         /// <summary>For the orphaned entries ("Section|Key" to the value as written) that have a new home: the move, in

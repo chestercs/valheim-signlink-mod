@@ -5,7 +5,7 @@
     <TargetFramework>net462</TargetFramework>
     <AssemblyName>SignLink</AssemblyName>
     <RootNamespace>SignLink</RootNamespace>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>ChesTeRcs</Authors>
     <Company>PetyusPolisz</Company>
     <Product>SignLink</Product>
@@ -16,6 +16,7 @@
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
+    <DefineConstants Condition="'$(DevApi)' == 'true'">$(DefineConstants);SIGNLINK_DEVAPI</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <GameManaged Condition="'$(GameManaged)' == ''">/game/valheim_Data/Managed</GameManaged>
@@ -24,7 +25,10 @@
   <ItemGroup>
     <!-- the window kit (../Kit, namespace PetyusPolisz.Kit): shared source, no SignLink types; another mod compiles the same folder -->
     <Compile Include="../Kit/**/*.cs" LinkBase="Kit" />
-    <EmbeddedResource Include="Web/index.html" LogicalName="SignLink.Web.index.html" />
+    <!-- the developer HTTP API (Api/, Web/) only in a developer build: ../../sign.sh dev and plugin pass DevApi=true; the
+         released DLL has no web server at all (the Thunderstore moderators, 2026-10-18) -->
+    <Compile Remove="Api/**" Condition="'$(DevApi)' != 'true'" />
+    <EmbeddedResource Include="Web/index.html" LogicalName="SignLink.Web.index.html" Condition="'$(DevApi)' == 'true'" />
     <EmbeddedResource Include="Art/**/*" LogicalName="SignLink.Art.%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="Stock/*" LogicalName="SignLink.Stock.%(Filename)%(Extension)" />
   </ItemGroup>

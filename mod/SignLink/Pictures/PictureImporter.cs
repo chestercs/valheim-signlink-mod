@@ -5,7 +5,6 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using BepInEx;
-using SignLink.Api;
 using SignLink.Signs;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -82,7 +81,7 @@ namespace SignLink.Pictures
     /// as a texture screen, the way vanilla_hq.py --screen does.</summary>
     internal static class PictureImporter
     {
-        public static string Folder => Path.Combine(Paths.ConfigPath, Path.Combine("SignLink", "images"));
+        public static string Folder => PictureFolder.Images;               // the game's data folder since 1.0.3 (PictureFolder)
 
         /// <summary>Opens the images folder, or the folder of it the list shows (dir, 1.0.2), in the system's file browser,
         /// made first when it is not there yet (the Picture list's Open folder, Settings › About's, 0.20.119).</summary>

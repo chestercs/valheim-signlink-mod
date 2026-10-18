@@ -16,7 +16,9 @@ namespace SignLink.UI
         static readonly string[] GifMemoryNames = { "256 MB", "512 MB", "1024 MB" };
         static readonly int[] GifMemoryMB = { 256, 512, 1024 };
 
+#if SIGNLINK_DEVAPI
         bool showPassword;
+#endif
         // the Re-read row (Sign options): the field's value and whether it waits to be written (see Playing's Pause beyond)
         float refresh = float.NaN;
         bool refreshDirty;
@@ -105,6 +107,7 @@ namespace SignLink.UI
 
         public override string Title => "Settings";
 
+#if SIGNLINK_DEVAPI
         static string lanAddress;
 
         /// <summary>This computer's address on the local network, for the API line (0.20.151, review: it read a literal
@@ -125,8 +128,11 @@ namespace SignLink.UI
             catch (Exception) { }
             return lanAddress;
         }
+#endif
 
+#if SIGNLINK_DEVAPI
         public override void OnOpen() => showPassword = false;
+#endif
 
         /// <summary>A slider let go by closing the window still counts.</summary>
         public override void OnClose()
@@ -301,6 +307,7 @@ namespace SignLink.UI
                 Widgets.Hint("RAM for moving GIFs; 1024 wants 16 GB");
             }
 
+#if SIGNLINK_DEVAPI                                                         // a developer build only (Plugin.cs)
             Widgets.Header("Developer API");
             using (Widgets.Vertical(Theme.Section))
             {
@@ -342,6 +349,7 @@ namespace SignLink.UI
                 }
                 GUI.enabled = true;
             }
+#endif
 
             // a small table, one thing a row (0.20.97, the author: the /signlink info belongs elsewhere ... it can go to About,
             // and there let us tidy up and structure its texts): every way to open the window lives here
@@ -363,7 +371,9 @@ namespace SignLink.UI
                     });
                 GUILayout.FlexibleSpace();
             }
+#if SIGNLINK_DEVAPI
             Widgets.Hint("Password stays");
+#endif
 
             Widgets.Header("About");
             using (Widgets.Vertical(Theme.Section))

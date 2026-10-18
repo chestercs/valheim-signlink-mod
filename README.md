@@ -23,7 +23,6 @@
   <a href="docs/art-library.md"><b>Art showcase</b></a> ·
   <a href="mod/package/README.md"><b>Player guide</b></a> ·
   <a href="docs/limits.md">Limits</a> ·
-  <a href="docs/api.md">Developer API</a> ·
   <a href="docs/signart.md">Sign-art toolkit</a> ·
   <a href="mod/CHANGELOG.md">Changelog</a>
 </p>
@@ -42,7 +41,7 @@ put it on. The result is ordinary sign text, saved in the world like any other s
 - **The server needs nothing.** No server plugin, no config sync, nothing to install for your friends.
 - **Remove the mod and it stays.** The pictures remain as normal signs.
 
-> **Version 1.0.2.** Get it on **[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/)**
+> **Version 1.0.3.** Get it on **[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/)**
 > (r2modman, Thunderstore Mod Manager), **[Nexus Mods](https://www.nexusmods.com/valheim/mods/4453)** (Vortex or by
 > hand) or from [Releases](https://github.com/chestercs/valheim-signlink-mod/releases). See [Install](#install).
 
@@ -233,10 +232,10 @@ BepInExPack Valheim comes with it as a dependency.
 **With Vortex:** *Mod Manager Download* on [the Nexus Mods page](https://www.nexusmods.com/valheim/mods/4453).
 
 **By hand:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/), then
-unpack `SignLink-1.0.2-nexus.zip` (from Nexus Mods or [Releases](https://github.com/chestercs/valheim-signlink-mod/releases))
+unpack `SignLink-1.0.3-nexus.zip` (from Nexus Mods or [Releases](https://github.com/chestercs/valheim-signlink-mod/releases))
 into the Valheim folder: the mod goes to `BepInEx/plugins/SignLink/`.
 
-Put your pictures into `BepInEx/config/SignLink/images`. The *Open folder* button in the window opens it. Folders inside
+Put your pictures into `SignLink/images` in the game's own data folder, next to your worlds (on Windows `%USERPROFILE%\AppData\LocalLow\IronGate\Valheim\SignLink\images`). The *Open folder* button in the window opens it. Folders inside
 it work too: copy a whole folder in, and the Picture list shows it (→ opens a folder, ← goes back up). A sign remembers
 its picture's folder, so friends want the file in the same folder of their own images folder.
 
@@ -244,62 +243,12 @@ All settings are in the window's *Settings* tab (the file is `BepInEx/config/Pet
 player guide, every setting and its default, is in [`mod/package/README.md`](mod/package/README.md).
 
 **Uninstall:** remove it in the mod manager, or delete `BepInEx/plugins/SignLink.dll`. The pictures stay as ordinary
-signs. Optional: delete `BepInEx/config/SignLink/` (your images), `BepInEx/cache/SignLink/` (thumbnails) and
-`BepInEx/config/PetyusPolisz.SignLink.cfg`.
-
-## The developer API
-
-SignLink has an optional HTTP API built in, for people who like to script their worlds. It is **off by default**;
-players never need it. Switch it on in *Settings* and every request needs the password the window shows.
-
-**What it is for:**
-
-- **A browser page for pictures.** With the API on, `http://127.0.0.1:8417/` opens an import page served by the mod
-  itself: pick the sign under your crosshair, drop a picture, set its size and pose, place it. With network access on,
-  a phone on your home network can do it too.
-- **Your own tools.** Write any text of any length to a sign, read signs back, list the signs around you, place a
-  picture with all the window's options (size, pose, place, light, transparency), give a sign a pose, clone and delete
-  stacks.
-- **Animation.** Play text frames over several signs on one clock, or store them on the signs so every SignLink player
-  plays them, after restarts too (players without the mod see the first frame). Or stream raw RGB frames as a
-  "screen" over a sign: smooth video for SignLink players, the still underneath for everyone else.
-- **Art pipelines.** This repository's own sign-art toolkit talks to the game through it: the art is designed and
-  checked outside the game, then written live.
-
-**Ideas to build on it.** Anything that can send an HTTP request can put something on a sign: a small script, a
-home server, a Discord bot. A few ideas, none of them built in:
-
-- 🕰️ **A real clock** on the wall of the great hall, or a countdown to the next game night.
-- 📊 **A server board:** who is online, the day count, the last boss down, from the server's log.
-- 💬 **A Discord wall:** the newest messages of a channel, or announcements, on a sign in the base.
-- 🎥 **Stream overlays in the world:** viewers' chat, a poll's results or the latest follower on a sign behind you.
-- 🖼️ **A photo frame:** a slideshow from a folder, a new picture every few minutes.
-- 🌦️ **Real weather** or the news headlines on a notice board in the village.
-- 🏆 **A scoreboard:** deaths, kills or crafted items per player, kept by a script that reads the logs.
-- 🧬 **Generative art:** the Game of Life, a plasma effect or a fractal running on a stack of signs.
-- 🎵 **A music visualiser** as a screen over a sign (smooth for SignLink players, a still for everyone else).
-- 🗓️ **A group board:** the week's plans or a shared to-do list, edited from a phone.
-
-Players without SignLink see a changed sign within about 2 s, the game's own pace; SignLink players can follow faster.
-Every write obeys the same limits as the window.
-
-**Why it is safe to leave in:**
-
-- It listens on this computer only. Network access answers local networks only (home, Tailscale), never the internet.
-- A password on every request; five wrong ones in a minute lock that address out for a minute.
-- No cross-site access from web pages, strict limits on request sizes and timings, and a host check against DNS
-  rebinding.
-- It touches signs and nothing else, and it obeys the same rules as the window: wards, the multiplayer size limits,
-  the 400 KB cap per sign.
-
-📖 **[The API reference](docs/api.md)**: every route with its parameters, answers and `curl` and Python examples. The
-same as an OpenAPI 3.1 spec, [`docs/openapi.yaml`](docs/openapi.yaml), to open in Swagger Editor, Postman or Insomnia
-or to generate a client from. The full security model is in [`mod/README.md`](mod/README.md#security).
+signs. Optional: delete the `SignLink` folder in the game's data folder (your images), `BepInEx/cache/SignLink/`
+(thumbnails) and `BepInEx/config/PetyusPolisz.SignLink.cfg`.
 
 ## Coming next
 
-- **A glyph-art designer in the browser.** An HTML page, served by the developer API, to compose glyph art layer by
-  layer: runes, symbols and shapes from the game's own fonts, a colour palette, a live canvas preview of what the sign
+- **A glyph-art designer.** Compose glyph art layer by layer: runes, symbols and shapes from the game's own fonts, a colour palette, a live canvas preview of what the sign
   will show, then save it as a piece and place it from the window.
 - **Art animations on the same player as GIFs.** Moving art pieces played locally from one module, smooth, with
   nothing extra stored in the world.
@@ -315,7 +264,8 @@ This repository is also the workshop SignLink grew out of:
   facts behind the mod.
 - **[The art showcase](docs/art-library.md):** every built-in piece, rendered from the very sign texts the mod
   ships.
-- **[The developer API](docs/api.md)** and its [OpenAPI spec](docs/openapi.yaml).
+- **[The toolkit's developer API](docs/api.md):** how the toolkit writes art into a running game. It exists only in a
+  developer build made from this source; released SignLink opens no port.
 - **[The mod's internals](mod/README.md)** and its [changelog](mod/CHANGELOG.md).
 
 Everything builds and runs in Docker (`./sign.sh`); nothing needs installing on the host.

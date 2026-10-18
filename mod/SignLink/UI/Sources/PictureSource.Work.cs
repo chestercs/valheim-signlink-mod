@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SignLink.Api;
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;

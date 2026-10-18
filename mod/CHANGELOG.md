@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.3 (2026-10-18)
+
+- Your pictures have a new home: `SignLink/images` in the game's own data folder, next to your worlds (on Windows
+  `AppData/LocalLow/IronGate/Valheim/SignLink/images`). They were in `BepInEx/config/SignLink/images`, and a mod manager
+  packs the config folder into every profile it exports or shares as a code, pictures and all. The first start of 1.0.3
+  moves them over by itself (folders too); *Open folder* opens the new place.
+- No web server in SignLink any more: the developer HTTP API and its browser page are gone from the released mod, which
+  opens no port. Their settings leave the config file, the API password with them. The window does everything they did.
+- *LogSlowSigns* is under *9 - Diagnostics* now (its value carries over).
+
 ## 1.0.2 (2026-10-18)
 
 - *Text* has a *QR* template: a link or a text as a QR code that phones read, in Unicode squares on the sign, with its

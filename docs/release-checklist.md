@@ -58,13 +58,28 @@ package and uploads nothing.
 - Every page links the others: README (badges, Install), the release notes, the Nexus description, the package README
   (from the next version on Thunderstore).
 
+## Live since 1.0.2 (2026-10-18)
+
+- Thunderstore 1.0.2 (categories Mods, Client-side, Building, Utility, AI Generated), Nexus 4453 (the file uploaded
+  as an update of the 1.0.1 file, which is archived; the description from `.private/stores/nexus-description.bbcode`;
+  the gallery: the QR picture and the three new window pictures in place of the old ones), the GitHub release v1.0.2
+  with both zips, the wiki regenerated from the docs.
+- How it went: a multiplayer check on the author's dev server first (a picture at the Max, a moving GIF, Moving off
+  and on, a tilt applied), then the CHANGELOG dated, `./sign.sh mod`, `cstest` and `package`, Gogs `main`
+  fast-forwarded by `git push origin dev:main` with the tag, GitHub by `.private/stores/github-1.0.2-store.sh`
+  (`git commit-tree` of Gogs main's tree on top of GitHub's main: one commit per release, no force push; a draft
+  release, published once the stores were live). Nexus's new edit pages (`/games/valheim/mods/<id>/edit/general`,
+  `.../files`, `.../media`) take the description through the editor's source view as before. The Thunderstore upload
+  form can be filled by Claude (file, team, community, categories), but the Submit is the author's click.
+
 ### A new version
 
 1. Work on `dev`; the version is bumped there already (the first change after a release). Date the CHANGELOG's top
    entry: "x.y.z (not released yet)" becomes "x.y.z (date)" (package.py reads only the number). README.md names the
    version by hand too (its Version line and the Nexus zip's name), and so do the example answers in docs/api.md and
    docs/openapi.yaml.
-2. `./sign.sh mod`, `./sign.sh cstest`, `./sign.sh package`: `SignLink-<v>.zip` and `SignLink-<v>-nexus.zip`.
+2. `./sign.sh mod` (the release build: no developer API; `package` refuses a DLL that has it), `./sign.sh cstest`,
+   `./sign.sh package`: `SignLink-<v>.zip` and `SignLink-<v>-nexus.zip`.
 3. Gogs: `main` fast-forwards to `dev`, tag. GitHub: one commit on top of `main` with the release tree, tag, release
    with both zips.
 4. Thunderstore: upload the zip (same team and categories). Nexus: *Files* › add the nexus zip (Main, version), mark
@@ -90,13 +105,8 @@ package and uploads nothing.
 
 ### Still open
 
-- `docs/media/window-steps.gif` still shows an older window, and `window-1-sign.jpg`, `window-2-content.jpg`,
-  `window-3-place.jpg` show 0.20.193 (the old strip order, the old bottom buttons): retake all four before 1.0.2,
-  with the author (the scene they were taken in is gone).
-- `docs/media/qr-code.jpg` (2026-10-17, the author: out with 1.0.2 on every page; at sunset, framed by the author): the QR template on a stone wall in a
-  woodiron frame, its content the GitHub link (zbar reads it from the picture at 1600 and 800 px). Put it into the
-  README "What you can make" table, the package README picture table, the Nexus description and gallery. The scene
-  stands in claude_world at (110, 37.6, -86.6), facing south.
+- Nothing for the pages: the window pictures and the QR picture went out with 1.0.2 (the window pictures were taken
+  on the QR scene in claude_world at (110, 37.6, -86.6), facing south, with the Monet put on the framed sign for them).
 
 ### Feature ideas (after the stability phase; the author decides when)
 

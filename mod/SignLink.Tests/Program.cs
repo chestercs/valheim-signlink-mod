@@ -606,8 +606,8 @@ static class Program
             var fails = new List<string>();
             void Drain()
             {
-                for (int i = 0; i < 400 && job.Busy; i++) { System.Threading.Thread.Sleep(5); SignLink.Api.MainThread.Drain(); }
-                SignLink.Api.MainThread.Drain();
+                for (int i = 0; i < 400 && job.Busy; i++) { System.Threading.Thread.Sleep(5); SignLink.MainThread.Drain(); }
+                SignLink.MainThread.Drain();
             }
             Func<Func<string>> A = () => () => "A";
             job.Want("a", 0f, 0.3f, A, got.Add, e => fails.Add(e.Message));
@@ -980,9 +980,9 @@ static class Program
 
             bool ran = false;
             string timedOut = null;
-            try { SignLink.Api.MainThread.Run(() => { ran = true; return 1; }, 200); }
+            try { SignLink.MainThread.Run(() => { ran = true; return 1; }, 200); }
             catch (TimeoutException e) { timedOut = e.Message; }
-            SignLink.Api.MainThread.Drain();
+            SignLink.MainThread.Drain();
             Check(timedOut != null && !ran, "main thread: a job nobody runs times out and never runs later");
 
             var shortPng = new byte[20];
@@ -1228,11 +1228,14 @@ static class Program
             Check(Got("3 - Signs in the world|HoverSprites") == null && Got("4 - Playback|FastRefresh") == null &&
                   Got("2 - Building|AllowOnServers") == null, "config moves: a dropped setting is not moved");
             List<string> stale = SignLink.ConfigMoves.Stale(old);
-            Check(stale.Count == 9 && stale.Contains("3 - Viewer|HoverSprites") && stale.Contains("3 - Signs in the world|HoverSprites") &&
+            Check(stale.Count == 12 && stale.Contains("1 - API|Password") && stale.Contains("1 - API|Enabled") && stale.Contains("9 - Developer API|Port") &&
+                  stale.Contains("3 - Viewer|HoverSprites") && stale.Contains("3 - Signs in the world|HoverSprites") &&
                   stale.Contains("Viewer|HoverSprites") && stale.Contains("3 - Viewer|FastRefresh") && stale.Contains("4 - Playback|FastRefresh") &&
                   stale.Contains("5 - Pictures|MultiplayerSafe") && stale.Contains("3 - Viewer|PictureSigns") &&
                   stale.Contains("5 - Building|AllowOnServers") && stale.Contains("2 - Building|AllowOnServers"),
-                  "config moves: a dropped setting leaves the file from every section it had (FastRefresh since 0.20.17, MultiplayerSafe since 0.20.39, AllowOnServers since 0.20.44, PictureSigns since 1.0.2)");
+                  "config moves: a dropped setting leaves the file from every section it had (FastRefresh since 0.20.17, MultiplayerSafe since 0.20.39, AllowOnServers since 0.20.44, PictureSigns since 1.0.2, the developer API's entries in a release since 1.0.3)");
+            Check(SignLink.ConfigMoves.Plan(new Dictionary<string, string> { ["9 - Developer API|LogSlowSigns"] = "true" }).Exists(m => m.To == "9 - Diagnostics|LogSlowSigns" && m.Value == "true"),
+                  "config moves: LogSlowSigns goes to 9 - Diagnostics (1.0.3)");
             Check(SignLink.ConfigMoves.Stale(new Dictionary<string, string> { ["1 - Menu|Scale"] = "1" }).Count == 0, "config moves: nothing stale is nothing");
             // 0.20.123: Show all is no setting any more, it starts off every game (the author: forget Show all signs
             // after a game restart, a logout and the like)
@@ -2526,8 +2529,8 @@ static class Program
                 var fails = new List<string>();
                 void Drain()
                 {
-                    for (int i = 0; i < 400 && job.Busy; i++) { System.Threading.Thread.Sleep(5); SignLink.Api.MainThread.Drain(); }
-                    SignLink.Api.MainThread.Drain();
+                    for (int i = 0; i < 400 && job.Busy; i++) { System.Threading.Thread.Sleep(5); SignLink.MainThread.Drain(); }
+                    SignLink.MainThread.Drain();
                 }
                 Func<bool> seen = null;
                 var started = new System.Threading.ManualResetEventSlim(false);

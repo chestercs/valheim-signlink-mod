@@ -153,10 +153,12 @@ namespace SignLink.UI
                         {
                             string clip = GUIUtility.systemCopyBuffer ?? "";
                             if (clip.Trim().Length == 0) throw new InvalidOperationException("the clipboard holds no text (Copy a sign first)");
+#if SIGNLINK_DEVAPI
                             // the API password (Settings › Copy) is not written where every player reads it (0.20.132, review)
                             if (Api.Password.In(clip, PluginConfig.ApiPassword.Value))
                                 throw new InvalidOperationException("the clipboard holds the API password: it is not pasted onto a sign, where every player " +
                                                                     "could read it (Copy a sign first)");
+#endif
                             SignClip got = SignClip.Unpack(clip);
                             int n = Paste(target, got, out bool moving);    // in a shared world: 512 KiB a sign, the 300 / 600 KB limits
                             if (moving) return "the moving piece is on the sign.";

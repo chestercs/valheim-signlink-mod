@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SignLink.Api;
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;
@@ -9,7 +8,7 @@ using PetyusPolisz.Kit;
 
 namespace SignLink.UI.Sources
 {
-    /// <summary>Picture: a PNG, JPG or GIF from BepInEx/config/SignLink/images onto the selected sign as saved sign text
+    /// <summary>Picture: a PNG, JPG or GIF from the images folder (PictureFolder) onto the selected sign as saved sign text
     /// (as many stacked copies as it needs) that vanilla players see; a moving GIF also plays over it for SignLink
     /// players. Its Resolution (pixels wide: the data), its width in metres (the pixels' size, free), seamless pixels and
     /// its light are chosen here; PNG transparency and moving GIFs once, on Settings (Pictures); where

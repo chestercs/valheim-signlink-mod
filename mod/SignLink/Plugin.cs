@@ -1,14 +1,16 @@
 // SignLink: write, animate and screen sign art in Valheim. Client-side BepInEx plugin, vanilla compatible.
-// Layout: Plugin (wiring) / PluginConfig / Api (local HTTP) / Signs (sign helpers, stacks, building) / Pictures
-// (PNG/JPG to sign text) / Animation (text frames, texture screens) / Patches / Presets / UI (the window).
-// Endpoints are listed in Api/Routes.cs, background in mod/README.md.
+// Layout: Plugin (wiring) / PluginConfig / Signs (sign helpers, stacks, building) / Pictures (PNG/JPG to sign text) /
+// Animation (text frames, texture screens) / Patches / Presets / UI (the window). Api (a local HTTP API for the author's
+// tools, docs/api.md) is compiled only into a developer build (SIGNLINK_DEVAPI, ./sign.sh dev): never in a release.
 using System;
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using SignLink.Animation;
+#if SIGNLINK_DEVAPI
 using SignLink.Api;
+#endif
 using SignLink.Signs;
 using UnityEngine;
 
@@ -20,7 +22,7 @@ namespace SignLink
     {
         public const string Guid = "PetyusPolisz.SignLink";              // the Thunderstore team's name (bakterhaz.signlink until 0.20.43)
         public const string Name = "SignLink";
-        public const string Version = "1.0.2";
+        public const string Version = "1.0.3";
 
         internal static ManualLogSource Log;
         internal static TextAnimator Text;
@@ -30,7 +32,9 @@ namespace SignLink
         internal static UI.ContentPreview Preview;
 
         Harmony harmony;
+#if SIGNLINK_DEVAPI
         LocalHttpServer server;
+#endif
         FastRefresh refresh;
 
         void Awake()
@@ -45,18 +49,20 @@ namespace SignLink
             Screens = new ScreenPlayer();
             Restore = new ScreenRestore();
             Stored = new StoredAnims();
+            Pictures.PictureFolder.Find();                                  // the images folder (the old one moves over once)
             Pictures.StockPictures.Place(Pictures.PictureImporter.Folder);   // the paintings and the horse GIF on every computer with
                                                                              // the mod, window opened or not (review)
             Preview = new UI.ContentPreview();
             refresh = new FastRefresh(Text);
             gameObject.AddComponent<UI.SignLinkWindow>();
             instance = this;
+            PluginConfig.GifMemory.SettingChanged += (_, __) => Restore.RoomFreed();   // raised: the GIFs waiting for room start
+                                                                                       // (lowered: ScreenPlayer.Trim at its step)
+#if SIGNLINK_DEVAPI
             ApplyApi();
             PluginConfig.ApiEnabled.SettingChanged += (_, __) => ApplyApi();
             PluginConfig.ApiNetwork.SettingChanged += (_, __) => { StopApi(); ApplyApi(); };
             PluginConfig.ApiPort.SettingChanged += (_, __) => { StopApi(); ApplyApi(); };
-            PluginConfig.GifMemory.SettingChanged += (_, __) => Restore.RoomFreed();   // raised: the GIFs waiting for room start
-                                                                                       // (lowered: ScreenPlayer.Trim at its step)
             PluginConfig.ApiPassword.SettingChanged += (_, __) =>
             {
                 string why = PluginConfig.PasswordProblem();                 // a bad password typed into the config: the API stops
@@ -67,13 +73,17 @@ namespace SignLink
                 }
                 else if (server == null) ApplyApi();
             };
-            Log.LogInfo($"{Name} {Version} loaded" + (server == null ? "" : $", developer API on port {PluginConfig.ApiPort.Value} " +
+            Log.LogInfo($"{Name} {Version} loaded (developer build)" + (server == null ? "" : $", developer API on port {PluginConfig.ApiPort.Value} " +
                         (PluginConfig.ApiNetwork.Value ? "(network: every interface)" : "(this computer only)")));
+#else
+            Log.LogInfo($"{Name} {Version} loaded");
+#endif
             Commands.Register();                                            // last, and guarded: a game update to the console
         }                                                                   // must not stop the rest of the plugin
 
         static Plugin instance;
 
+#if SIGNLINK_DEVAPI
         /// <summary>The developer API follows its switch at once (window or config), no restart needed.</summary>
         void ApplyApi()
         {
@@ -111,6 +121,9 @@ namespace SignLink
 
         /// <summary>Is the developer API listening (for the Settings tab)?</summary>
         internal static bool ApiRunning => instance && instance.server != null && instance.server.Running;
+#else
+        internal static bool ApiRunning => false;
+#endif
 
         static readonly HashSet<Type> patched = new HashSet<Type>();
 
@@ -199,7 +212,9 @@ namespace SignLink
         void OnDestroy()
         {
             ForgetCopiedPassword(0f, closing: true);
+#if SIGNLINK_DEVAPI
             server?.Stop();
+#endif
             try
             {
                 Text?.Stop(null);                                           // the API's animations: the signs' texts back

@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using SignLink.Api;
 
 namespace SignLink.UI
 {

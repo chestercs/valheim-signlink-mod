@@ -33,7 +33,7 @@
     <Compile Include="../SignLink/Signs/SignRecipe.cs" />
     <Compile Include="../SignLink/Animation/AnimBlob.cs" />
     <Compile Include="../SignLink/Animation/FrameTimes.cs" />
-    <Compile Include="../SignLink/Api/MainThread.cs" />
+    <Compile Include="../SignLink/MainThread.cs" />
     <Compile Include="../SignLink/Api/Password.cs" />
     <Compile Include="../SignLink/Api/HttpRules.cs" />
     <Compile Include="../SignLink/UI/Jobs.cs" />
