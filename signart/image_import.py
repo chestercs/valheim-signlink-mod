@@ -15,7 +15,7 @@
   docs/limits.md). --max-kb (default 400) lowers the pixel count until the text fits; 0 = no cap (single
   player only).
 - Placement: relative to the sign itself, centred over it, the bottom `above` wu (40 = 1 m) higher,
-  so `live.py write ID --file out/import/NAME.txt --mode zdo` puts it on any sign.
+  so a save edit (rig.py) or the window's Text source puts it on any sign.
 
 Writes out/import/NAME.txt (the sign text) and out/import/NAME.png (what the sign will show, one
 pixel per sign pixel, scaled up).

@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using PetyusPolisz.Kit;
 
 namespace SignLink.Presets
 {
@@ -87,19 +88,6 @@ namespace SignLink.Presets
             return false;
         }
 
-        /// <summary>The part of the name before " (": presets that share it are listed together.</summary>
-        public string Group
-        {
-            get
-            {
-                int i = Name.IndexOf(" (", StringComparison.Ordinal);
-                return i > 0 ? Name.Substring(0, i) : Name;
-            }
-        }
-
-        /// <summary>The rest of the name, out of its brackets: "Cat (still)" -> "still".</summary>
-        public string Variant => Name.Length > Group.Length ? Name.Substring(Group.Length).Trim().TrimStart('(').TrimEnd(')') : "";
-
         public string KindLabel => Kind == Kinds.Anim ? "animation" : Kind == Kinds.Stack ? "several signs" : "one sign";
 
         public string SizeLabel => Bytes >= 1048576 ? $"{Bytes / 1048576.0:0.#} MB" : $"{Math.Max(1, Bytes / 1024)} KB";
@@ -135,24 +123,24 @@ namespace SignLink.Presets
         public Content Load()
         {
             if (Bytes > MaxBytes)
-                throw new ArgumentException($"{Name}: {Bytes / 1048576.0:0.#} MB is too large to be a sign piece (up to {MaxBytes / 1048576} MB)");
+                throw new ArgumentException(Lang.F("{0}: {1:0.#} MB is too large to be a sign piece (up to {2} MB)", Name, Bytes / 1048576.0, MaxBytes / 1048576));
             string all = ReadText();
             switch (Kind)
             {
                 case Kinds.Stack:
                     string[] texts = all.Split(SignSep);
-                    if (texts.Length > MaxSigns) throw new ArgumentException($"{Name}: {texts.Length} signs is too large to be a sign piece (up to {MaxSigns})");
+                    if (texts.Length > MaxSigns) throw new ArgumentException(Lang.F("{0}: {1} signs is too large to be a sign piece (up to {2})", Name, texts.Length, MaxSigns));
                     return new Content { Texts = texts };
                 case Kinds.Anim:
                     int nl = all.IndexOf('\n');
-                    if (!all.StartsWith(AnimHeader, StringComparison.Ordinal) || nl < 0) throw new ArgumentException($"{Name}: no '{AnimHeader} fps=F' first line");
+                    if (!all.StartsWith(AnimHeader, StringComparison.Ordinal) || nl < 0) throw new ArgumentException(Lang.F("{0}: no '{1} fps=F' first line", Name, AnimHeader));
                     float fps = 4f;
                     foreach (string part in all.Substring(0, nl).Split(' '))
                         if (part.StartsWith("fps=", StringComparison.Ordinal) &&
                             float.TryParse(part.Substring(4), NumberStyles.Float, CultureInfo.InvariantCulture, out float f) && f > 0 && f <= 60)
                             fps = f;
                     string[] frames = all.Substring(nl + 1).Split(FrameSep);
-                    if (frames.Length > MaxFrames) throw new ArgumentException($"{Name}: {frames.Length} frames is too large to be a sign piece (up to {MaxFrames})");
+                    if (frames.Length > MaxFrames) throw new ArgumentException(Lang.F("{0}: {1} frames is too large to be a sign piece (up to {2})", Name, frames.Length, MaxFrames));
                     return new Content { Texts = frames, Fps = fps };
                 default:
                     return new Content { Texts = new[] { all } };

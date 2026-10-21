@@ -14,9 +14,6 @@ mod/**/bin/
 mod/**/obj/
 mod/build/
 mod/SignLink.Tests/vectors/
-mod/SignLink.Tests/page/out/
-mod/SignLink.Tests/page/node_modules/
-mod/SignLink.Tests/page/package*.json
 
 # input pictures for image_import.py (not ours to publish)
 signart/images/

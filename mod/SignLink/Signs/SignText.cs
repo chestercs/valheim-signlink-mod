@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using PetyusPolisz.Kit;
 using SignLink.Pictures;
 using Splatform;
 
@@ -34,7 +35,7 @@ namespace SignLink.Signs
 
         public static void RequireEdit(Sign s)
         {
-            if (!CanEdit(s)) throw new InvalidOperationException("a ward you have no access to protects this sign");
+            if (!CanEdit(s)) throw new InvalidOperationException(Lang.T("a ward you have no access to protects this sign"));
         }
 
         /// <summary>Multiplayer: other players receive this world's signs (playing on a server, hosting a world others can join
@@ -46,7 +47,8 @@ namespace SignLink.Signs
 
         /// <summary>In a shared world, refuses to let the stack of any hold newBytes (SaveCost.Bytes) when that breaks a
         /// multiplayer limit (SaveCost.Allowed: SignLimit on the stack, AreaLimit for the signs around it unless it gets
-        /// no bigger); what says what is being stored, for the message. Single player: nothing to check.</summary>
+        /// no bigger); what says what is being stored, for the message (in the player's language). Single player: nothing
+        /// to check.</summary>
         public static void RequireRoom(Sign any, long newBytes, string what = null)
         {
             if (!Shared()) return;
@@ -55,7 +57,8 @@ namespace SignLink.Signs
             long old = root ? SignPose.Stored(root) : 0;
             long others = root ? SignArea.Others(root.transform.position, stack, out _) : 0;
             if (!SaveCost.Allowed(newBytes, old, others, true, out string why))
-                throw new InvalidOperationException((what != null ? what + ": " : "") + why + " (single player has no limit)");
+                throw new InvalidOperationException(what != null ? Lang.F("{0}: {1} (single player has no limit)", what, why)
+                                                                 : Lang.F("{0} (single player has no limit)", why));
         }
 
         public const int NetworkLimit = 512 * 1024;
@@ -63,7 +66,7 @@ namespace SignLink.Signs
         public static void RequireSendable(string text)
         {
             if (Shared() && System.Text.Encoding.UTF8.GetByteCount(text ?? "") > NetworkLimit)
-                throw new InvalidOperationException("a sign would hold over 512 KB: more than other players can receive (only single player allows that)");
+                throw new InvalidOperationException(Lang.T("a sign would hold over 512 KB: more than other players can receive (only single player allows that)"));
         }
 
         /// <summary>Shows text on the sign and returns the milliseconds it took, TMP mesh included. local: only this

@@ -13,7 +13,7 @@ Code references: `Sign.cs`, `TextInput.cs` = decompiled `assembly_valheim` (see 
 
 | | **Typable** (`Art(mode="typable")`, default) | **Detailed** (`mode="detailed"`) |
 |---|---|---|
-| Who can build it | anyone, by copy-pasting commands into signs | save edit today (`rig.py`, `row.py`), a mod later |
+| Who can build it | anyone, by copy-pasting commands into signs | a save edit (`rig.py`, `row.py`) or SignLink's window |
 | Per sign | one glyph, <= 50 UTF-16 characters | any number of glyphs (`<line-height=0>` + `<br>`), no limit |
 | Layout | `Art.build` / `assign_cells`: touching glyphs share a cell, tagged rows share a layer (plane) | `build_planes` / `assign_planes`: a whole piece in one stack |
 | Glow | 5-character `<font>` alias + one loader sign | full `<font=valheim_fonts/valheim-norse>` path |
@@ -39,7 +39,7 @@ Gallery 3 (`concepts/row2.py`, world `MyWorld_gallery3`) shows both: blocks 1-3 
 
 The 50-character limit is a property of the input field only (`TMP_InputField.cs:1874` truncates
 `m_Text.Length`, the raw UTF-16 string: tags count, an emoji counts 2). The ZDO `text` string itself has
-no limit, so a save editor or a mod can write longer sign texts (see section 8).
+no limit, so a save editor or a mod can write longer sign texts (section 7c).
 
 ## 2. Position model (why 40/20 per sign)
 
@@ -313,8 +313,8 @@ fits one sign; it takes several only because overlapping glyphs of different fon
 separate signs (layers).
 Since gallery 7 all loose glyphs share the main layer-1 sign: the 2400-pixel landscape is ONE sign
 (42 078 characters), so no seam can appear: **verified 2026-10-08**, the picture is flawless in game.
-Multiplayer sync of such long ZDO strings is untested. One sign held
-17 108 characters (641-glyph aurora) without trouble in game.
+One sign held 17 108 characters (641-glyph aurora) without trouble in game. Over the network a sign must stay under
+512 KiB, and big signs delay arriving players ([limits.md](limits.md), "One sign over the network" and "Network").
 
 **Typable mode keeps rows on one plane too** (`assign_cells`): an island of touching glyphs fills
 one cell from L1; loose glyphs with the same tag (a rune row) take one layer across the cells, the
@@ -416,8 +416,8 @@ Seen in gallery 10: after looking at a sign with `<sprite anim=...>`, a face sta
 - It goes away when any other hover text is shown: a full layout stops the animations.
 
 Possible uses: a sign that leaves a "sticker" in the reader's HUD (`<sprite anim="3,3,1">` is a still
-face), or hover texts styled with tags that contain dots (sizes). SignLink 0.2 strips `<sprite>` from
-hover texts unless `HoverSprites = true`.
+face), or hover texts styled with tags that contain dots (sizes). SignLink always strips `<sprite>` tags from hover
+texts (the sign itself still shows them; `mod/SignLink/Patches/HoverTextPatch.cs`), so its players never get the stuck face.
 
 ## 7g. Lying and turned signs (SignLink 0.11.0-0.12.0)
 
@@ -487,7 +487,7 @@ an upper floor, and the author wants SignLink never to choose where a sign goes.
   0.20.55-0.20.108 at most 50 cm along the face and 10 cm off it, 25 cm each way before), and
   the stored base pose moves along (`SignPose.MoveBase`).
 - **Turning** is a roll about the sign's own forward axis: clockwise as seen from the front (lying: from above). The
-  Picture tab turns the offsets back (`PictureOptions.Origin`), so the picture turns around its own centre.
+  picture encoder turns the offsets back (`PictureOptions.Origin`), so the picture turns around its own centre.
 - **Other players.** `ZNetScene.CreateObject` (`client/ZNetScene.cs:88`) reads a ZDO's position and rotation only when
   the object loads, and signs have no `ZSyncTransform`: moving one would show only after a reload. So a new pose makes
   the stack's signs again: `ZDOExtraData.GetData` copies every field (text, author, `creator`, health, saved animation),
@@ -522,11 +522,11 @@ out with `engine.layout_sign` (`signart/transform_check.py`): 155 texts, every g
 **Turning around a piece's own middle (0.13.0).** A sign turns only as a whole, so a piece turned around its own
 middle c0 is the sign turned by θ plus the texts moved: `d' = R(-θ)(k c0 + d) - k c0` in the sign's own frame (`Fit`).
 SignLink keeps on a stack's first sign how it put the content on (`signlink_fit` = scale and move,
-`signlink_centre` = c0), so the fine-tuner goes from one fit to another with one TextTransform (`Fit.Between`).
+`signlink_centre` = c0), so resizing or moving placed content (3 Place) goes from one fit to another with one TextTransform (`Fit.Between`).
 c0 comes from the encoder for pictures (0, 0: made centred), from `NAME.fit` for built-in art (the bbox middle of
 every glyph as `engine.layout_sign` places them, `signart/art_centres.py`) and from a saved sign's `NAME.fit`.
 
-## 8. State and next steps## 8. State and next steps (2026-10-08)
+## 8. State and open ends
 
 Done and verified in game:
 - the two modes;
@@ -535,16 +535,10 @@ Done and verified in game:
 - the cap of one sign (50 000 pixels in this encoding);
 - escapes;
 - vanilla sprite animation;
-- SignLink: live writes, the moving fjord, the networked three-band fjord and the pixel cat (`mod/README.md`).
+- SignLink (`mod/README.md`): pictures, art and texts written live from its window, stacked copies of the selected
+  sign for pictures too big for one sign, the moving fjord, the networked three-band fjord and the pixel cat.
 
-Next:
-- **SignLink 0.2 in game**: built, waiting for a game restart to replace the DLL (group clock, no rewrite of
-  unchanged signs, hover-sprite fix).
-- **Placement** (`POST /signs`): create signs with the text and `health = -1` prefilled through `m_initZDO`
-  (prior-art section 7), so a picture goes anywhere without save editing.
-- **Live-server demo** for the friends: one sign, a set time, the server owner's go-ahead. Vanilla clients see a frame
-  every 2 s; SignLink clients see the animation.
-- **MCP adapter** over the SignLink API.
-- **Blueprint export**: an `Art -> Infinity Hammer blueprint` exporter with the ZDO data column.
+Open:
+- **Blueprint export**: an `Art -> Infinity Hammer blueprint` exporter with the ZDO data column
+  ([prior-art.md](prior-art.md) section 7), so a piece could be placed with a building mod.
 - **Simulator**: learn the multi-line model and sprites.
-- **Cheat sheet**: `\n`, `<sprite=N>` and `<sprite anim>` for the friends.

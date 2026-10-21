@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using PetyusPolisz.Kit;
 
 namespace SignLink.Pictures
 {
@@ -117,14 +118,14 @@ namespace SignLink.Pictures
                     {
                         if (!TryValue(text, b0, end, out _, out char first) || (kind == Kind.Size && (first == '+' || first == '-')))
                         {
-                            why = $"<{text.Substring(b0, end - b0)}> is not an absolute plain number";
+                            why = Lang.F("<{0}> is not an absolute plain number", text.Substring(b0, end - b0));
                             return false;
                         }
                         if (kind == Kind.Size) sized = true;
                     }
                     else if (kind == Kind.Other)
                     {
-                        why = $"<{text.Substring(b0, end - b0)}> is not something SignLink can resize";
+                        why = Lang.F("<{0}> is not something SignLink can resize", text.Substring(b0, end - b0));
                         return false;
                     }
                     continue;
@@ -132,19 +133,19 @@ namespace SignLink.Pictures
                 char c = text[i++];
                 if (c == '\\' && IsEscape(text, i - 1))
                 {
-                    why = "a backslash escape (\\n, \\r, \\t, \\u) that the game reads as a character";
+                    why = Lang.T("a backslash escape (\\n, \\r, \\t, \\u) that the game reads as a character");
                     return false;
                 }
                 if (!IsGlyph(c)) continue;
                 if (!sized)
                 {
-                    why = "plain text without a size: the game sizes it itself";
+                    why = Lang.T("plain text without a size: the game sizes it itself");
                     return false;
                 }
             }
             if (!multi && (text.IndexOf('\n') >= 0 || text.Contains("<br>")))
             {
-                why = "several lines without a line height";
+                why = Lang.T("several lines without a line height");
                 return false;
             }
             return true;
@@ -252,7 +253,7 @@ namespace SignLink.Pictures
             double delta = dy == 0 ? 0 : PyMath.Round(Solve(v0, vl, dy), 2);
 
             if (!(Math.Abs(dx) <= MaxTag) || !(Math.Abs(delta) <= MaxTag))
-                throw new ArgumentException("too far from the sign: its tag numbers would pass what a sign reads");
+                throw new ArgumentException(Lang.T("too far from the sign: its tag numbers would pass what a sign reads"));
             var sb = new StringBuilder(text.Length + 48);
             if (dx != 0 && !(multi ? indentFirst : posFirst))
                 sb.Append(multi ? "<indent=" : "<pos=").Append(Number(dx)).Append('>');
@@ -274,7 +275,7 @@ namespace SignLink.Pictures
                     if (kind == Kind.Voffset) nv += delta;
                     if (kind == Kind.LineHeight) nv = PyMath.Round(nv, 6);
                     if (!(Math.Abs(nv) <= MaxTag))
-                        throw new ArgumentException("too large or too far from the sign: its tag numbers would pass what a sign reads");
+                        throw new ArgumentException(Lang.T("too large or too far from the sign: its tag numbers would pass what a sign reads"));
                     sb.Append(text, last, at - last).Append('<').Append(NameOf(kind)).Append('=').Append(Number(nv)).Append('>');
                     last = end + 1;
                 }

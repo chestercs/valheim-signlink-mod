@@ -19,23 +19,6 @@ namespace SignLink.Signs
             return o;
         }
 
-        /// <summary>Why POST /signs/clone may not make `count` copies `step` metres apart, or null (0.20.132, review). The
-        /// step is 0 (the window's spacing, SignBuilder.Clone) or from FloorPlan.Step, the finest the window uses, to maxGap,
-        /// past which the copies are no stack; and that many copies must fit one stack's depth at it, the default counted
-        /// at its finest (FloorPlan.Step). Checked before anything runs on the main thread: a step of 1e-9 m let millions
-        /// of texts through, each made a sign there. Clone checks again from the stack's front.</summary>
-        public static string CloneProblem(float step, long count, float maxGap, float depth)
-        {
-            float finest = (float)FloorPlan.Step;
-            if (!(step == 0f || (step >= finest && step <= maxGap)))
-                return string.Format(CultureInfo.InvariantCulture, "step is 0 (the default spacing) or {0}..{1} m: copies must stay one stack",
-                                     FloorPlan.Step, Math.Round(maxGap, 6));
-            double at = step == 0f ? finest : step;
-            if (count * at >= depth)
-                return string.Format(CultureInfo.InvariantCulture, "too many copies for one sign ({0} at {1:0.###} mm apart)", count, at * 1000);
-            return null;
-        }
-
         /// <summary>A pose kept on a stack's first sign (any player's game can write it): finite, the tilt -90..90°, the
         /// turn within a turn, the shift along the normal within maxShift metres; else none is kept (0.20.132, review).</summary>
         public static bool SanePose(float tilt, float turn, float shift, float maxShift) =>

@@ -1,3 +1,4 @@
+using System;
 using HarmonyLib;
 using SignLink.UI;
 using UnityEngine;
@@ -13,18 +14,27 @@ namespace SignLink.Patches
     [HarmonyPatch(typeof(Player), "Update")]
     internal static class UsePatch
     {
+        static bool off;
+
         static void Postfix(Player __instance)
+        {
+            if (off) return;
+            try { Run(__instance); }
+            catch (Exception e)
+            {
+                off = true;
+                Plugin.Log.LogWarning($"UsePatch is off after an error: {e.Message}");
+            }
+        }
+
+        static void Run(Player __instance)
         {
             if (!SignLinkWindow.IsOpen || !ReferenceEquals(__instance, Player.m_localPlayer)) return;
             if (!__instance.m_nview || !__instance.m_nview.IsValid() || !__instance.m_nview.IsOwner()) return;
             if (GUIUtility.keyboardControl != 0 || Hud.InRadial()) return;   // typing in a SignLink field
             bool press = ZInput.GetButtonDown("Use"), held = !press && ZInput.GetButton("Use");
             if (!press && !held) return;
-            bool can;
-            InputBlockPatch.Bypass = true;
-            try { can = __instance.TakeInput(); }
-            finally { InputBlockPatch.Bypass = false; }
-            if (!can) return;
+            if (!InputBlockPatch.GameTakes(__instance, c => c.TakeInput())) return;
             GameObject hovering = __instance.m_hovering;
             if (!hovering)
             {

@@ -1,35 +1,82 @@
-# Release checklist (Thunderstore)
+# Release checklist (Thunderstore, Nexus Mods, GitHub)
 
-What is ready, what the author decides, and the steps. Publishing is the author's step: Claude builds and checks the
-package and uploads nothing.
+What is settled, the steps of a release, and what went live when. Publishing is the author's step: Claude builds and
+checks the packages and prepares the uploads; the push to GitHub and the stores' final buttons are the author's.
 
-## Ready
+## The package
 
-- `./sign.sh package` builds `mod/out/SignLink-<version>.zip` and checks: one version in `Plugin.cs`, `SignLink.csproj`,
-  `manifest.json`, the top `CHANGELOG.md` entry and `docs/openapi.yaml`; the description under 250 characters; a 256 x 256 PNG icon; the DLL of that
-  version. The zip holds `manifest.json`, `icon.png`, `README.md` (the user-facing one, `mod/package/README.md`),
-  `CHANGELOG.md`, `LICENSE` (MIT) and `plugins/SignLink.dll`.
+- `./sign.sh package` (`mod/package/package.py`) builds `mod/out/SignLink-<version>.zip` (Thunderstore and mod managers)
+  and `mod/out/SignLink-<version>-nexus.zip` (Nexus Mods and manual installs: `BepInEx/plugins/SignLink/` with the DLL,
+  README, CHANGELOG and both licences). It checks first: one version in `Plugin.cs`, `SignLink.csproj`, `manifest.json`
+  and the top `CHANGELOG.md` entry, and that entry dated (not "not released yet"); the description under 250
+  characters; a 256 x 256 PNG icon; the DLL of that version, without a web server (`TcpListener`, `HttpListener`);
+  `mod/package/LICENSE` and `LICENSE-ART` the same as the repository's. The Thunderstore zip holds `manifest.json`,
+  `icon.png`, `README.md` (the player-facing `mod/package/README.md`), `CHANGELOG.md`, `LICENSE` (MIT), `LICENSE-ART`
+  (CC BY 4.0) and `plugins/SignLink.dll`.
 - Dependency `denikson-BepInExPack_Valheim-5.4.2351` (the newest on Thunderstore, checked 2026-10-10).
 - `./sign.sh mod` fails on any assembly reference the game lacks (RefCheck); no tuples in the plugin. RefCheck checks assembly
-  names only: a member renamed by a game update shows in game, so run the in-game checklist after every Valheim
-  update.
-- The developer API is off by default; nothing is downloaded or run at runtime; no obfuscation.
-- Reviewed before release (0.17.0): signs and multiplayer, the picture pipeline, the window, the API and animations,
-  then a regression review of the fixes. Again for 0.20.148 (switching between Text, Art and Picture, in the code and
-  in game) and 0.20.151 (security, bugs and multiplayer, wording and repository hygiene).
+  names only: a member renamed by a game update shows in game, so run the in-game checks after every Valheim update.
+- No listening sockets or network code (none at all since 1.1.0); nothing is downloaded or run at runtime; no
+  obfuscation.
+- Reviewed before release (0.17.0): signs and multiplayer, the picture pipeline, the window and animations, then a
+  regression review of the fixes. Again for 0.20.148 (switching between Text, Art and Picture, in the code and in game)
+  and 0.20.151 (security, bugs and multiplayer, wording and repository hygiene).
 
-## The author decides
+## Settled
 
-1. **Plugin GUID.** Decided 2026-10-11: `PetyusPolisz.SignLink` since 0.20.43 (the config file is
-   `BepInEx/config/PetyusPolisz.SignLink.cfg`; a `bakterhaz.signlink.cfg` from earlier versions takes the new name
-   once at start, settings and API password with it). It is the mod's identity for BepInEx and other mods; it does
-   not change after the first public upload.
-2. **Team name** on Thunderstore: decided 2026-10-11, `PetyusPolisz` (the package is `PetyusPolisz-SignLink`); the
-   author is ChesTeRcs (the LICENSE and the DLL's details name them).
-3. **Version.** The first public upload as 1.0.0 (a version number can never be uploaded twice).
-4. **website_url.** Empty, or a public repository (the private git server is not reachable for others).
-5. **Screenshots.** Thunderstore shows the README; pictures need public image URLs (optional, but they sell a
-   picture mod).
+- **Plugin GUID** `PetyusPolisz.SignLink` since 0.20.43 (decided 2026-10-11): the config file is
+  `BepInEx/config/PetyusPolisz.SignLink.cfg`; a `bakterhaz.signlink.cfg` from earlier versions takes the new name once
+  at start, its settings with it. It is the mod's identity for BepInEx and other mods and never changes.
+- **Team** `PetyusPolisz` on Thunderstore (the package is `PetyusPolisz-SignLink`); the author is ChesTeRcs (the LICENSE
+  and the DLL's details name them).
+- **Versions.** The first public upload was 1.0.0; a version number can never be uploaded twice.
+- **website_url** is the GitHub repository (https://github.com/chestercs/valheim-signlink-mod).
+- **Pictures.** The pages' pictures live in `docs/media/`. The package README links them as `raw.githubusercontent.com`
+  URLs of GitHub's `main`, so they show on Thunderstore once GitHub's `main` holds them.
+- **A pure mod** (the author, 2026-10-13: no loader in the published mod): the zip holds `plugins/SignLink.dll` and the
+  package files only (no ScriptEngine, no `scripts/`, nothing of the dev tool), and its CHANGELOG and README name no
+  loader.
+- **Branches.** `main` is the release branch. Work goes to `dev` on the author's Gogs server; `main` takes it with the
+  next release. GitHub's `main` gets one commit per release, the tree of Gogs `main`, on top of the last (no force
+  push). The first change after a release raises the version on `dev` at once (the author, 2026-10-17: the window must
+  not show the released number on a changed build): `Plugin.cs`, `SignLink.csproj`, `manifest.json` and the
+  CHANGELOG's top entry ("x.y.z (not released yet)", dated at the release).
+
+## A release
+
+1. **The texts.** `mod/package/README.md` reads as a page for players (the author, 2026-10-20): what the mod does and
+   how to start first, no settings table pasted in, the art showcase last; the Nexus description
+   (`.private/stores/nexus-description.bbcode`) in the same spirit. A changed text goes to the author as a draft before
+   any upload. Date the CHANGELOG's top entry ("x.y.z (date)"; package.py reads the number and refuses an undated
+   entry); README.md names the version by hand (its Version line and the Nexus zip's name).
+2. **In game.** The three steps (a text, an art piece and a picture, each picked on 2 Content and put on from 3 Place),
+   editing it later (*Update content*), the frame standing, tilted and lying, thumbnails on a folder of big photos, the
+   arrow keys, *Select sign*, a few of the art library's pieces still and with *Moving* on. Write the results into
+   `signart/ingame_tests.json`. Once as players get it: `./sign.sh plugin` (the DLL in `BepInEx/plugins`) in a
+   profile without ScriptEngine.
+3. **Multiplayer.** A dedicated server (the author's test server): a second client without SignLink sees the picture;
+   a second SignLink client sees a saved animation.
+4. **The checks**, all green: `./sign.sh mod` ("Build succeeded", RefCheck clean),
+   `./sign.sh modtest "/work/mod/SignLink/Stock/The Starry Night (Van Gogh).jpg"` (writes the vectors with an image
+   case, then the C# checks), `./sign.sh cstest`, `./sign.sh test`, `./sign.sh hashes check out/hashes.json`,
+   `./sign.sh lang check` (every table complete), `./sign.sh qrtest`, then `./sign.sh package`.
+5. **Gogs.** `main` fast-forwards to `dev` (`git push origin dev:main`), then the tag `v<version>` on it, pushed by name
+   (never `--tags`).
+6. **GitHub** (before the stores: the Thunderstore page takes its pictures from GitHub's `main`):
+   `.private/stores/github-<version>-store.sh`, run by the author. It checks that Gogs `main` holds `dev`'s tree, the
+   CHANGELOG is dated and both zips exist, makes one commit of Gogs `main`'s tree on top of GitHub's `main`
+   (`git commit-tree`), pushes it and its tag, and opens a draft release with both zips and the CHANGELOG's top
+   section as its notes.
+7. **Thunderstore** (https://thunderstore.io, Valheim community, Upload): the zip, team `PetyusPolisz`, categories
+   **Mods**, **Client-side**, **Building**, **Utility** and **AI Generated** (required for AI-written code). Claude may
+   fill in the form; the author presses Submit. The page is the uploaded version's package README, so a change to it
+   needs a new version. Since the 1.0.2 flag an update may wait for a moderator (`docs/mod-standards.md`, Thunderstore
+   review).
+8. **Nexus Mods** (https://www.nexusmods.com/valheim/mods/4453, edit pages `/games/valheim/mods/4453/edit/general`,
+   `.../files`, `.../media`): *Files* › the nexus zip as an update of the previous file (Main, the version; the old one
+   archived), a changelog line, the mod's version; the description through the editor's source view when it changed;
+   the gallery when the pictures changed.
+9. **After the stores are live:** publish GitHub's draft release.
 
 ## State at 1.0.0 (2026-10-16)
 
@@ -37,55 +84,50 @@ package and uploads nothing.
   pre-release history (0.3 to 0.20.194) is kept on the author's own Gogs server only, on the branch
   `pre-release-history`; it never goes to GitHub. Commits are by ChesTeRcs (GitHub's noreply address).
 - The 0.x changelog is [`changelog-0.x.md`](changelog-0.x.md); `mod/CHANGELOG.md` is for players from 1.0.0 on.
-- Left out of the repository, kept on the author's computer (`.gitignore`): `signart/rigs/` (real base coordinates),
-  `.private/` (the window's design notes), `CLAUDE.md` and `signart/ingame_tests.json` (the in-game log).
-- Fixes after 1.0.0 go to the branch `dev` on the author's Gogs server; `main` takes them with the next release. The
-  first change after a release raises the version on `dev` at once (the author, 2026-10-17: the window must not show
-  the released number on a changed build): Plugin.cs, SignLink.csproj, manifest.json, docs/openapi.yaml and the
-  CHANGELOG's top entry ("x.y.z (not released yet)", dated at the release), as package.py checks them.
+- Left out of the public repository (`.gitignore`): `signart/rigs/` (real base coordinates), `.private/` (the window's
+  design notes, the store scripts), `CLAUDE.md` and `signart/ingame_tests.json` (the in-game log).
 
 ## Live since 1.0.1 (2026-10-16)
 
 - Thunderstore: https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/ (team PetyusPolisz; categories Mods,
-  Client-side, Building, Utility, AI Generated). Its page is the package README of the uploaded version: a change
-  there needs a new version.
+  Client-side, Building, Utility, AI Generated).
 - Nexus Mods: https://www.nexusmods.com/valheim/mods/4453 (Construction; `SignLink-1.0.1-nexus.zip`, requires
   BepInExPack Valheim 5.4.2351; description in BBCode, gallery with two single player / multiplayer comparisons;
   permissions: re-upload, conversion, modification and asset use allowed with credit). Mod Rewards opt-in once Nexus
   lists the mod on its rewards page.
 - GitHub: public, release v1.0.1 (both zips), wiki, social preview, homepage = the Thunderstore page,
-  `.github/FUNDING.yml` (Buy Me a Coffee). GitHub `main` gets one commit per release on top of the last.
-- Every page links the others: README (badges, Install), the release notes, the Nexus description, the package README
-  (from the next version on Thunderstore).
+  `.github/FUNDING.yml` (Buy Me a Coffee).
+- Every page links the others: README (badges, Install), the release notes, the Nexus description, the package README.
 
 ## Live since 1.0.2 (2026-10-18)
 
-- Thunderstore 1.0.2 (categories Mods, Client-side, Building, Utility, AI Generated), Nexus 4453 (the file uploaded
-  as an update of the 1.0.1 file, which is archived; the description from `.private/stores/nexus-description.bbcode`;
-  the gallery: the QR picture and the three new window pictures in place of the old ones), the GitHub release v1.0.2
-  with both zips, the wiki regenerated from the docs.
-- How it went: a multiplayer check on the author's dev server first (a picture at the Max, a moving GIF, Moving off
-  and on, a tilt applied), then the CHANGELOG dated, `./sign.sh mod`, `cstest` and `package`, Gogs `main`
-  fast-forwarded by `git push origin dev:main` with the tag, GitHub by `.private/stores/github-1.0.2-store.sh`
-  (`git commit-tree` of Gogs main's tree on top of GitHub's main: one commit per release, no force push; a draft
-  release, published once the stores were live). Nexus's new edit pages (`/games/valheim/mods/<id>/edit/general`,
-  `.../files`, `.../media`) take the description through the editor's source view as before. The Thunderstore upload
-  form can be filled by Claude (file, team, community, categories), but the Submit is the author's click.
+- Thunderstore 1.0.2, Nexus 4453 (the file uploaded as an update of the 1.0.1 file, which is archived; the gallery: the
+  QR picture and three window pictures in place of the old ones), the GitHub release v1.0.2 with both zips, the wiki
+  regenerated from the docs.
+- How it went: a multiplayer check on the author's dev server first (a picture at the multiplayer maximum, a moving
+  GIF, Moving off and on, a tilt applied), then the CHANGELOG dated, `./sign.sh mod`, `cstest` and `package`, Gogs
+  `main` fast-forwarded with the tag, GitHub by `.private/stores/github-1.0.2-store.sh` (a draft release, published once
+  the stores were live). The Thunderstore upload form was filled by Claude, the Submit was the author's click.
 
-### A new version
+## Live since 1.0.3 (2026-10-18)
 
-1. Work on `dev`; the version is bumped there already (the first change after a release). Date the CHANGELOG's top
-   entry: "x.y.z (not released yet)" becomes "x.y.z (date)" (package.py reads only the number). README.md names the
-   version by hand too (its Version line and the Nexus zip's name), and so do the example answers in docs/api.md and
-   docs/openapi.yaml.
-2. `./sign.sh mod` (the release build: no developer API; `package` refuses a DLL that has it), `./sign.sh cstest`,
-   `./sign.sh package`: `SignLink-<v>.zip` and `SignLink-<v>-nexus.zip`.
-3. Gogs: `main` fast-forwards to `dev`, tag. GitHub: one commit on top of `main` with the release tree, tag, release
-   with both zips.
-4. Thunderstore: upload the zip (same team and categories). Nexus: *Files* › add the nexus zip (Main, version), mark
-   the old one Old, add a changelog line, update the mod version.
+- Thunderstore's moderators hid the Valheim listing after the 1.0.2 upload ("Invalid submission"). Asked in their
+  Discord's rejected-uploads forum, a moderator named two things: pictures must not live in the config folder (a mod
+  manager packs `BepInEx/config` into every exported profile and profile code, which must stay small) and the web
+  server must go. 1.0.3 did both: the images folder is `SignLink/images` in the game's data folder (moved over once),
+  and the released build has no web server (1.1.0 has none in any build); `package.py` refuses a DLL with one.
+- GitHub release v1.0.3 (`.private/stores/github-1.0.3-store.sh`), Nexus 4453 (the file as an update of 1.0.2,
+  archived; one description line), the wiki updated, Thunderstore 1.0.3 uploaded (the author's Submit); the listing
+  showed again once the moderators approved it.
+- Rules to keep: nothing big under `BepInEx/config` (only the .cfg); no listening sockets or network code in a release.
 
-### Multiplayer test (2026-10-16, the author's dedicated test server)
+## 1.1.0's pictures
+
+New in `docs/media/` for the README, the package README and the Nexus gallery: `window-1-sign.jpg` to
+`window-5-settings.jpg` (one per tab), `window-steps.gif` (the three steps) and `transparency.jpg` (a cut-out PNG on a
+sign hidden in the ground).
+
+## Multiplayer test (2026-10-16, the author's dedicated test server)
 
 - Pictures, the limits, poses, Copy/Paste of a moving piece, Pause, leaving and coming back: as in single player.
   Playback stops beyond 64 m; the area counts a sign 97 m away and not one 107 m away.
@@ -99,16 +141,11 @@ package and uploads nothing.
   two-sign glyph art and a moving piece tilted 30° show as with SignLink (same ids, places, poses and texts; the moving
   piece stands on its first frame). The game's own hover over a picture sign's board costs that player about 150 ms
   a frame (README, known limits). SignLink back: its short hover line, the stack and the movement return.
-- 25 moving pieces in one place hitched twice a second; fixed on `dev` (updates spread over the second).
+- 25 moving pieces in one place hitched twice a second; fixed in 1.0.1 (updates spread over the second).
 - The area limit counts only the zones this game has loaded: kept as it is. A player can place more than 600 KB
   within 100 m by standing far from the older signs, and the test showed that a server carries far more than that.
 
-### Still open
-
-- Nothing for the pages: the window pictures and the QR picture went out with 1.0.2 (the window pictures were taken
-  on the QR scene in claude_world at (110, 37.6, -86.6), facing south, with the Monet put on the framed sign for them).
-
-### Feature ideas (after the stability phase; the author decides when)
+## Feature ideas (after the stability phase; the author decides when)
 
 - **Mod-only pictures** (the author, 2026-10-16): the sign holds only a reference to the picture (its name or id),
   plus how the uploader placed it (size, place, pose, Resolution, light, GIF playback). A vanilla player sees nothing of
@@ -124,29 +161,10 @@ package and uploads nothing.
   - To settle first: what a vanilla player sees (an empty sign, or a short line naming SignLink); what happens when
     nobody online has the file; size caps and the server's share of the traffic; whether the reference may go stale
     (a renamed or changed file).
-
-## Before the upload
-
-1. In game: the three steps (a text, an art piece and a picture, each picked on 2 Content and put on from 3 Place),
-   editing it later (*Update*), the frame standing, tilted and lying, thumbnails on a folder of big photos, the
-   arrow keys, *Pick in view*, a few of the art library's pieces still and with *Moving* on. Write the results into
-   `signart/ingame_tests.json`.
-2. Multiplayer: a dedicated server (the author's test server), a second client without SignLink sees the picture; a
-   second SignLink client sees a saved animation.
-3. `./sign.sh mod`, `./sign.sh cstest`, `./sign.sh modtest`, `./sign.sh test`, `./sign.sh hashes check out/hashes.json`,
-   `./sign.sh pagetest`, `./sign.sh qrtest`, `./sign.sh package`: all green.
-4. **A pure mod** (the author's decision, 2026-10-13: no loader in the published mod): the zip holds
-   `plugins/SignLink.dll` and the package files only (no ScriptEngine, no `scripts/`, nothing of the dev tool), and its
-   CHANGELOG and README name no loader. Test the release once as players get it: `./sign.sh plugin` (the DLL in
-   `BepInEx/plugins`) in a profile without ScriptEngine.
-5. **The public repository** (the author decides how): `signart/rigs/` holds real base coordinates and goes before
-   anything is public; the history also holds working notes, so a fresh repository (or a rewritten history) is
-   safer than making this one public.
-6. The version 1.0.0 in all five places, and a player-facing CHANGELOG entry.
-
-## Upload (author)
-
-- thunderstore.io, Valheim community, Upload: the zip; categories **Client-side**, **Building** and **AI Generated** (required for
-  AI-written code; check the exact names on the upload page): the one list, which `mod/README.md` and
-  `docs/mod-standards.md` point to.
-- Or `tcli publish` with a `thunderstore.toml` and `TCLI_AUTH_TOKEN` (see `docs/mod-standards.md`).
+- **GIFs moving before the put** (the author, 2026-10-20; later, not in 1.1.0): a GIF picked on 2 Content › Picture
+  plays in the Quick view and in the live preview on the sign, as it will once put (the preview's motion only). About
+  250-300 lines: a frames job in PictureSource (`GifScreen` at the screen width, `Plugin.Screens.FramesFor` first),
+  counted against the GIF memory (a hold or a pinned park in ScreenPlayer, so the put reuses the frames and moves at
+  once), Thumb playing timed RGB24 frames (`FrameTimes`), and a screen of its own over ContentPreview's picture
+  (overscan as `PlayOver`, lit as the put, its texture destroyed on Clear). Risks: decode time of long GIFs, memory
+  while picking one GIF after another, upload cost per frame.

@@ -1,6 +1,6 @@
 # Prior art: Img2Bpl and "Create ART with Signs" (and what it means for a mod)
 
-Reviewed 2026-10-08. Sources: the video, its auto captions, and both code bases cloned and read in full.
+Reviewed 2026-10-08; what became of the plans is brought up to date for SignLink 1.1.0. Sources: the video, its auto captions, and both code bases cloned and read in full.
 Game-code references are to the decompiled client 1.0.16 (`client/File.cs:line`, sibling repo
 `valheim-world-tool/decompiled`) and the game's `Unity.TextMeshPro.dll` (`TMP_*.cs`).
 Anything not checked in game is marked **unverified**.
@@ -70,22 +70,23 @@ about 120 pixels of width "may crash the game" (**unverified**; it predates the 
 
 | | Img2Bpl | signart |
 |---|---|---|
-| Who places it | anyone with Infinity Hammer or PlanBuild, anywhere, also on a live server | typable: anyone, by hand; detailed: save edit into a world copy |
-| Signs per picture | 2 x width (400 for 200 x 200) | 1 (2 400 pixels verified, 42 078 characters; gallery 8 tests up to 55 200) |
-| Characters per pixel | 12 | ~17.5 (`<pos>`, `<voffset>`, colour, glyph, `<br>` per pixel) |
+| Who places it | anyone with Infinity Hammer or PlanBuild, anywhere, also on a live server | typable: anyone, by hand; detailed: a save edit into a world copy, or SignLink's window on any sign |
+| Signs per picture | 2 x width (400 for 200 x 200) | 1 up to 50 000 pixels (gallery 8); beyond, stacked copies of one sign (197 105 pixels on 7 signs, [limits.md](limits.md)) |
+| Characters per pixel | 12 | 5.9-8.1 in the column encoding (section 5, item 3; [limits.md](limits.md)); ~17.5 in the first one (`<pos>`, `<voffset>`, colour, glyph, `<br>` per pixel) |
 | Geometry | empirical factors, one plane, no seam model | calibrated TMP model (ascender/descender, per-line centring), per-sign measured positions, seam-free mosaics |
 | Colour | 24-bit, no dithering | 12-bit `<#rgb>` with Bayer dithering and supersampling |
 | Transparency | alpha-00 glyphs (still drawn) | empty pixels are simply not written |
 | Glow, fonts | none | unlit `<font>` path or alias, sub-mesh aware layering |
-| Lag | many objects; placing is very slow | one object; load cost per long sign still to measure (gallery 8) |
+| Lag | many objects; placing is very slow | one object; about 13.5 µs per glyph when a sign loads, 0.7 s for 50 000 pixels ([limits.md](limits.md)) |
 
 ## 5. What to take from it
 
 1. **Placement by a building mod is the distribution channel.** A blueprint is just sign positions and
    texts; the viewers stay vanilla. Our detailed pieces are mostly one sign, so a blueprint (or a mod
    command) carrying one long text would let anyone place them on any server, without save editing.
-   An exporter `Art -> .blueprint` is cheap. Whether Infinity Hammer and PlanBuild keep 40k-character
-   texts intact is **unverified**.
+   SignLink's window became that channel for its own players (the viewers still stay vanilla); an exporter
+   `Art -> .blueprint` for building-mod users is still cheap and not written. Whether Infinity Hammer and
+   PlanBuild keep 40k-character texts intact is **unverified**.
 2. **`\n` is a 2-character line break.** In the typable mode it saves 2 characters over `<br>` (4) on every
    line. **Verified** in gallery 9 (a save-written sign; typing it in the editor stores the same
    characters). `\uXXXX` and `\UXXXXXXXX` type any character by its code.
@@ -94,7 +95,7 @@ about 120 pixels of width "may crash the game" (**unverified**; it predates the 
    against the 17.29-unit wrap box, and `<nobr>` does not help, because TMP breaks the first word of a line
    between characters anyway (`TextMeshProUGUI.cs:2642-2649`). Margins cannot be negative and `<width>` only
    narrows, so a row-encoded picture is at most one board wide (0.86 m). Two encodings follow from it, both
-   on test in gallery 9 (`concepts/row4.py`):
+   tested in gallery 9 (`concepts/row4.py`):
    - **rows** (board-sized pictures): `<mspace>` = `<line-height>` = pitch, ~4-6 characters per pixel,
      one visible character per pixel plus one per row;
    - **columns** (any size): one glyph per line, so nothing wraps; `<indent>` once per column (it persists
@@ -102,8 +103,9 @@ about 120 pixels of width "may crash the game" (**unverified**; it predates the 
      pixel for the 60 x 40 fjord against 21 for the current encoding (19 344 vs 50 532).
    Line breaks can be raw line feeds in a save (1 character). **Verified** in gallery 9 (2026-10-08), see
    `sign-rendering.md` 7e.
-4. **Count objects and warn early.** The tool shows "this will consist of N objects" before converting;
-   our renders should report characters, signs and an estimated load cost per piece.
+4. **Count objects and warn early.** The tool shows "this will consist of N objects" before converting.
+   SignLink's window does the same: it shows a piece's *Content size* and checks the multiplayer limits before
+   anything goes on a sign.
 5. **Their pain points confirm our choices:** one plane with the sign as backing, no depth handling, and
    lag from hundreds of signs.
 
@@ -131,38 +133,34 @@ about 120 pixels of width "may crash the game" (**unverified**; it predates the 
 | World Edit Commands (JereKuusela) | `object field=component,field,value` sets component fields on objects; `spawn_object` with fields; vanilla compatible | scripted edits from the console; sign text through it **unverified** |
 | Infinity Hammer (JereKuusela) | loads PlanBuild `.blueprint` and `.vbuild`, saves blueprints (`hammer_save`, `hammer_blueprint`, `hammer_place` in the video) | placing exported pieces |
 
-None of them offers an outside API (a program or Claude driving the game); all work through the
-in-game console or editor (**unverified** for the full mod lists).
+All of them work through the in-game console or editor (**unverified** for the full mod lists).
 
-### Proposed: our own plugin plus an MCP adapter
+### What was built: SignLink
 
-A small BepInEx client plugin that listens on `127.0.0.1` (HTTP or WebSocket):
+SignLink is a BepInEx client plugin driven from its own in-game window; it takes no outside requests.
 
-- `GET /signs?near=r`: id, position, rotation, text length of the signs around the player;
-- `POST /sign/{id}/text` writes the ZDO (`ClaimOwnership` + `s_text`, as `Sign.SetText` does): everyone
-  sees it, vanilla viewers within 2 s;
-- `POST /sign/{id}/local` sets only `m_textWidget.text`: just this client sees it, at any rate, no network;
-- `POST /signs` creates a sign at a position and rotation with a text: replaces save editing;
-- `POST /anim` uploads frames once, then the plugin flips them itself (local or networked).
+- It writes the selected sign's ZDO text (`ClaimOwnership` + `s_text`, as `Sign.SetText` does): everyone sees it,
+  vanilla viewers within 2 s.
+- A picture too big for one sign goes on stacked copies of the selected sign, at its exact rotation, a hair apart
+  (`mod/SignLink/Signs/SignBuilder.cs`): no save editing. It never places a sign anywhere else by itself.
+- An animation is stored on the sign once, and every SignLink client plays it locally (path A below); vanilla
+  viewers see its first frame.
 
-An MCP server (Python, stdio) wraps those endpoints as tools (`signs_near`, `sign_write`, `sign_place`,
-`art_place` using this engine, `anim_play`), so Claude can draw and animate live. Writing to signs on
-the live server is a live-server change: it needs the server owner's go-ahead each time; the PoC runs in a
-local world.
+Writing to signs on a shared server is a live change there: it needs the server owner's go-ahead each time.
 
 ### Moving picture: what limits it
 
 | Path | Who sees it | Frame rate | Cost / risk |
 |---|---|---|---|
-| A. Local flipbook: the plugin sets `m_textWidget.text` | only the plugin user | as fast as TMP rebuilds the mesh | measure TMP cost per frame vs frame size |
-| B. Networked frames: write the ZDO each frame | modded viewers smoothly (a viewer patch re-reads on every revision change); vanilla viewers at most 0.5 fps, random phase per client | bandwidth: a frame must stay small (a few KB), or split into tiles and write only the tiles that changed | stalls other ZDO traffic if frames are big |
+| A. Local flipbook: the plugin sets `m_textWidget.text` | only the plugin user | as fast as TMP rebuilds the mesh | about 13.5 µs per glyph and frame on the main thread (measured) |
+| B. Networked frames: write the ZDO each frame | modded viewers smoothly only with a viewer patch that re-reads on every revision change (SignLink has none); vanilla viewers at most 0.5 fps, random phase per client | bandwidth: a frame must stay small (a few KB), or split into tiles and write only the tiles that changed | stalls other ZDO traffic if frames are big |
 | C. Respawn trick: destroy the sign and create a new one per frame | everyone, vanilla included, as the new object reads its text in `Awake` | limited by object creation and ZDO create/destroy traffic | **unverified**; possible flicker; z-fighting if old and new overlap |
 | D. `<sprite anim="first,last,fps">` | everyone, no mod, no network | any | only the 16 faces of TMP's EmojiOne sprite sheet (the default asset); **verified** in gallery 9: `<sprite anim="0,15,8">` cycles them in vanilla (`TMP_Text.cs:6409-6417`, `TMP_SpriteAnimator.cs:33-60`) |
 
-Suggested order: (1) test D, `\n` and the row tags in a vanilla sign (minutes, typable);
-(2) plugin with path A and a small animated scene (for example the gallery-8 fjord with a moving aurora,
-`scene(u, v, t)`), measuring frame time against characters per frame; (3) path B with a frame-size
-budget and tile diffs, and a look at C; (4) the MCP adapter on top.
+What came of it: D, `\n` and the row tags were verified in galleries 9 and 10. Path A was measured with the moving
+fjord (about 13.5 µs per glyph, [limits.md](limits.md)) and became SignLink's saved animations, played by every
+SignLink client from frames stored on the sign. Path B ran with the fjord in three bands (only the moving band
+resent). C was never tried.
 
 ## 7. What the mod code shows (survey 2026-10-08)
 
@@ -180,7 +178,8 @@ PlanBuild (WTFPL), SignStyler (MIT), ComfySigns (GPL-3.0: read only, nothing cop
 - **Floating pieces.** Neither handles support. Both write `health = -1` through `HasFields` (PlanBuild
   `:401-410`, IH `behavior/CustomHealth.cs:283-316`). `WearNTear.ApplyDamage` returns early at health <= 0
   (`client/WearNTear.cs:1248-1254`), so the no-support damage never lands. `HasFields` is applied by vanilla
-  `ZNetView.LoadFields`, so it holds for unmodded clients too. This is how our plugin can hang signs in the air.
+  `ZNetView.LoadFields`, so it holds for unmodded clients too. This is how a plugin could hang signs in the air (SignLink does not: its
+  copies hang where the original hangs and share its support).
 - **Sign text in blueprints.**
   - PlanBuild reads the displayed text (`TextReceiver.GetText`, possibly censored), deletes semicolons and
     turns commas into dots on load (`PieceEntry.cs:27-30, 107-120`).
@@ -193,7 +192,7 @@ PlanBuild (WTFPL), SignStyler (MIT), ComfySigns (GPL-3.0: read only, nothing cop
   vanilla ZDO sync and on each component's polling; there are no custom RPCs.
 - **Sign mods.** ComfySigns sets `m_characterLimit = 999` in a `Sign.Awake` postfix. SignStyler raises the input
   limit after `TextInput.RequestText` (400 by default, up to 2 000) and closes tags left open in a `SetText`
-  prefix. Neither changes the 2-second polling; SignLink's FastRefresh does.
+  prefix. Neither changes the 2-second polling (nor does SignLink).
 - **Scale.** A scaled `sign` is not visible to vanilla clients: `ZNetView.Awake` reads the scale only for
   prefabs with `m_syncInitialScale`, and a `HasFields` override comes too late (`client/ZNetView.cs:67-82`
   vs `:107`). `<size>` stays the vanilla-visible way to scale.
@@ -203,9 +202,9 @@ PlanBuild (WTFPL), SignStyler (MIT), ComfySigns (GPL-3.0: read only, nothing cop
   - Server Devcommands `Selector.GetNearby`/`GetHovered`;
   - IH `HammerBlueprint.cs:116-277`, which parses both `.blueprint` and `.vbuild`.
 
-  None of them has an HTTP endpoint or a main-thread queue; SignLink's are its own.
+  None of them has a main-thread queue for work from other threads; SignLink has its own (`mod/SignLink/MainThread.cs`).
 
-Next for SignLink (0.2): `POST /signs` creates signs through `m_initZDO` with the text and `health = -1`
-prefilled, so a whole piece can be placed live without save editing. Add an `Art -> IH blueprint`
-exporter with the ZDO data column.
+SignLink uses the `m_initZDO` path when it makes a sign again in a new pose (`mod/SignLink/Signs/SignPose.cs`: text, author,
+creator, health and saved animation are on the ZDO before the object exists). Still open: an `Art -> IH blueprint`
+exporter with the ZDO data column, so a piece could also be placed with Infinity Hammer.
 

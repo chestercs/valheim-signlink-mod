@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The art that comes with SignLink (its Art tab), and stacked pictures for its Saved tab.
+"""The art that comes with SignLink (its Art tab).
 
   presets.py OUT_DIR [--images IMAGE ...]
   ./sign.sh art        -> mod/SignLink/Art/glyph/*, mod/SignLink/Art/pixel/* (embedded in the DLL)

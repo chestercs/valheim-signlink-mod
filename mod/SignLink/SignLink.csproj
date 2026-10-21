@@ -5,7 +5,7 @@
     <TargetFramework>net462</TargetFramework>
     <AssemblyName>SignLink</AssemblyName>
     <RootNamespace>SignLink</RootNamespace>
-    <Version>1.0.3</Version>
+    <Version>1.1.0</Version>
     <Authors>ChesTeRcs</Authors>
     <Company>PetyusPolisz</Company>
     <Product>SignLink</Product>
@@ -16,7 +16,6 @@
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
-    <DefineConstants Condition="'$(DevApi)' == 'true'">$(DefineConstants);SIGNLINK_DEVAPI</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <GameManaged Condition="'$(GameManaged)' == ''">/game/valheim_Data/Managed</GameManaged>
@@ -25,12 +24,10 @@
   <ItemGroup>
     <!-- the window kit (../Kit, namespace PetyusPolisz.Kit): shared source, no SignLink types; another mod compiles the same folder -->
     <Compile Include="../Kit/**/*.cs" LinkBase="Kit" />
-    <!-- the developer HTTP API (Api/, Web/) only in a developer build: ../../sign.sh dev and plugin pass DevApi=true; the
-         released DLL has no web server at all (the Thunderstore moderators, 2026-10-18) -->
-    <Compile Remove="Api/**" Condition="'$(DevApi)' != 'true'" />
-    <EmbeddedResource Include="Web/index.html" LogicalName="SignLink.Web.index.html" Condition="'$(DevApi)' == 'true'" />
     <EmbeddedResource Include="Art/**/*" LogicalName="SignLink.Art.%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="Stock/*" LogicalName="SignLink.Stock.%(Filename)%(Extension)" />
+    <!-- the window's language tables (1.1.0: Hungarian, Chinese, Russian), Lang/<Language>.txt by the game's name for the language -->
+    <EmbeddedResource Include="Lang/*.txt" LogicalName="SignLink.Lang.%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
@@ -49,6 +46,7 @@
     <Reference Include="Splatform"><HintPath>$(GameManaged)/Splatform.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(GameManaged)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.InputLegacyModule"><HintPath>$(GameManaged)/UnityEngine.InputLegacyModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(GameManaged)/Unity.InputSystem.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(GameManaged)/UnityEngine.TextRenderingModule.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Unity.TextMeshPro"><HintPath>$(GameManaged)/Unity.TextMeshPro.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="BepInEx"><HintPath>$(BepInExCore)/BepInEx.dll</HintPath><Private>false</Private></Reference>

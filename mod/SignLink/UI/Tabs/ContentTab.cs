@@ -15,6 +15,7 @@ namespace SignLink.UI
     {
         readonly Source[] sources;
         string[] names;
+        string namesIn;
         int at;
         /// <summary>The player's own source, back with their own slot (SourceFollow).</summary>
         readonly SourceFollow follow = new SourceFollow();
@@ -41,7 +42,7 @@ namespace SignLink.UI
             };
         }
 
-        public override string Title => "2 Content";
+        public override string Title => Lang.T("2 Content");
         public override bool UsesTarget => true;
         public override void OnOpen() { foreach (Source s in sources) s.OnOpen(); }
 
@@ -86,7 +87,12 @@ namespace SignLink.UI
         public override void Pinned()
         {
             Session s = Window.Session;
-            if (names == null) names = Array.ConvertAll(sources, x => x.Title);
+            string lang = Lang.Current;                                     // the sources' names in the language shown
+            if (names == null || lang != namesIn)
+            {
+                names = Array.ConvertAll(sources, x => Lang.T(x.Title));          // Art, Picture, Text: their own keys (lang:keys)
+                namesIn = lang;
+            }
             int pick = Widgets.Toolbar(at, names, Theme.Tab, Widgets.W(Widgets.ContentWidth - 30));
             if (pick != at)
                 Window.Later(() =>
@@ -135,6 +141,8 @@ namespace SignLink.UI
             at = want;
         }
 
+        public override bool HasFooter => true;
+
         /// <summary>The way on: 3 Place, where the verb button is; greyed with the reason while nothing can go on yet
         /// (nothing picked, the picture still being read, a ward).</summary>
         public override void Footer()
@@ -148,16 +156,16 @@ namespace SignLink.UI
             GUI.enabled = has && problem == null;
             // in the way-on yellow whenever it can be pressed, as the bottom button of every tab (1.0.2, the author: editing
             // a sign, Next was grey; before, 0.20.56, it glowed only when something would go on or change)
-            string label = !has ? "Select a sign first" : problem != null && src.Calculating(s) ? "Calculating ..."   // grey while it counts (0.20.134)
-                : "Next ▸";                                                 // the clearest word (1.0.2, the author)
+            string label = !has ? Lang.T("Select a sign first") : problem != null && src.Calculating(s) ? Lang.T("Calculating ...")   // grey while it counts (0.20.134)
+                : Lang.T("Next ▸");                                         // the clearest word (1.0.2, the author)
             if (Widgets.NextButton(label))
-                Window.Later(() => Window.ShowTab("3 Place"));
+                Window.Later(() => Window.ShowTab(Lang.T("3 Place")));     // the tab's Title, in the language shown
             GUI.enabled = true;
             // the area limit under the button, where a line on what 3 Place does was (0.20.72, the author: delete this
             // "On 3 place: its size its place" blah text ... and put the area KB indicator there)
             AreaMeter.Draw(s, Change.AreaBytes(v, src.Bytes(s)), underButton: true);   // multiplayer: the area limit, with the pick in place
             if (has && problem != null) Widgets.Hint(problem);              // only what stops it (1.0.2, the author: no long texts)
-            else if (has && Plugin.Preview.Showing) Widgets.Hint("Preview: only you");   // ContentPreview (0.20.129)
+            else if (has && Plugin.Preview.Showing) Widgets.Hint(Lang.T("Preview: only you"));   // ContentPreview (0.20.129)
         }
 
         /// <summary>What putting something on also does to the selected sign: " and lay it face up", " and stand it up",
@@ -171,7 +179,7 @@ namespace SignLink.UI
             bool sign = Math.Abs(c.Tilt - s.SignTilt) > 0.05 || Math.Abs(Mathf.DeltaAngle((float)c.Turn, s.SignTurn)) > 0.05;
             bool content = v == Verb.Place || v == Verb.Put || v == Verb.Update ||
                            Change.SizeChanged(s.Held, s.Chosen) || Change.PlaceChanged(s.Held, s.Chosen) || Change.LightChanged(s.Held, s.Chosen);
-            return sign && content ? "Update sign and content" : content ? "Update content" : "Update sign";
+            return sign && content ? Lang.T("Update sign and content") : content ? Lang.T("Update content") : Lang.T("Update sign");
         }
 
         /// <summary>The Place tab's footer: the verb button. Place, Put and Update go through the source (and its
@@ -179,30 +187,42 @@ namespace SignLink.UI
         public static void DrawVerbButton(SignLinkWindow w, Source src, Confirm confirm)
         {
             Session s = w.Session;
-            Verb v = s.Verb;
-            string problem = src.Problem(s) ?? src.Limit(s) ?? s.Reason;
+            // what the rows show is decided at the Layout and kept for the frame's other events (1.1.0, a log: a count that
+            // finished between the Layout and the Repaint added the hint under the button, and the footer threw)
+            if (Event.current.type == EventType.Layout || !heldFor)    // heldFor: a safety net, a Layout always comes first
+            {
+                heldVerb = s.Verb;
+                heldHas = s.HasTarget;
+                heldProblem = src.Problem(s) ?? src.Limit(s) ?? s.Reason;
+                heldPose = PoseProblem(s);                                // in red: the sliders took it, the button may not
+                heldReason = s.Reason;
+                heldSrcBusy = src.Busy;
+                heldBusy = w.Busy || SourcesBusy;
+                heldFor = true;
+            }
+            Verb v = heldVerb;
+            string problem = heldProblem, pose = heldPose;
             string key = s.Chosen.Recipe.ToString() + "|" + s.Chosen.Fit.Describe(s.Chosen.Light);
-            string pose = PoseProblem(s);                                 // in red: the sliders took it, the button may not
-            if (!s.HasTarget) Grey("Select a sign first", null);
+            if (!heldHas) Grey(Lang.T("Select a sign first"), null);
             else if (v == Verb.None)                                        // the label stays short; why, under it
-                Grey("As it is", s.Chosen.Recipe.Kind == SignRecipe.Kinds.None
+                Grey(Lang.T("As it is"), s.Chosen.Recipe.Kind == SignRecipe.Kinds.None
                     ? null : problem);
             else if (v == Verb.Apply || v == Verb.Refit)
             {
-                GUI.enabled = s.Reason == null && pose == null && !w.Busy && !SourcesBusy;
+                GUI.enabled = heldReason == null && pose == null && !heldBusy;
                 string label = VerbLabel(s, v);
-                if (Widgets.NextButton(w.Busy ? "Working ..." : label))
+                if (Widgets.NextButton(heldBusy ? Lang.T("Working ...") : label))
                 {
                     w.CloseAfterPut();                                      // done: the window closes (an error keeps it)
                     Perform(w, src, v);
                 }
                 GUI.enabled = true;
-                if (s.Reason != null) Widgets.Hint(s.Reason);
+                if (heldReason != null) Widgets.Hint(heldReason);
                 else if (pose != null) GUILayout.Label(pose, Theme.Warn);
             }
-            else if (!src.Busy && confirm.Armed(key))
+            else if (!heldSrcBusy && confirm.Armed(key))
             {
-                if (confirm.Ask(w, "Put it on anyway", problem))
+                if (confirm.Ask(w, Lang.T("Put it on anyway"), problem))
                 {
                     if (confirm.KeepsOpen) w.KeepOpen();
                     else w.CloseAfterPut();
@@ -211,15 +231,15 @@ namespace SignLink.UI
             }
             else
             {
-                bool busy = src.Busy || w.Busy || SourcesBusy;                // another tab's picture still being made too (0.20.148)
+                bool busy = heldSrcBusy || heldBusy;                          // another tab's picture still being made too (0.20.148)
                 GUI.enabled = problem == null && pose == null && !busy;
                 // grey because it still reads or counts (a press waiting for its count too): "Calculating ..." (0.20.134)
                 bool calculating = (problem != null || busy) && src.Calculating(s);
                 Stuck(calculating, problem);
-                if (Widgets.NextButton(calculating ? "Calculating ..." : busy ? "Working ..." : VerbLabel(s, v)))
+                if (Widgets.NextButton(calculating ? Lang.T("Calculating ...") : busy ? Lang.T("Working ...") : VerbLabel(s, v)))
                 {
-                    if (src.Heavy(s, out double load, out long save, out long largest))
-                        confirm.Arm(w, key, src.What(s), load, save, largest, src.Lighter(s));   // its numbers as they are now
+                    if (src.Heavy(s, out long save, out long largest))
+                        confirm.Arm(w, key, src.What(s), save, largest, src.Lighter(s));   // its numbers as they are now
                     else
                     {
                         w.CloseAfterPut();
@@ -249,7 +269,7 @@ namespace SignLink.UI
             if (unheld != null)
             {
                 PoseUnheld = true;
-                return "No support: " + unheld;
+                return Lang.F("No support: {0}", unheld);
             }
             Fit c = s.Chosen.Fit;
             if (Math.Abs(c.Tilt - s.SignTilt) <= 0.05 && Math.Abs(Mathf.DeltaAngle((float)c.Turn, s.SignTurn)) <= 0.05) return null;
@@ -272,7 +292,7 @@ namespace SignLink.UI
             }
             catch (Exception e)
             {
-                poseWhy = "The sign cannot take this pose: " + e.Message + ".";
+                poseWhy = Lang.F("The sign cannot take this pose: {0}.", e.Message);
                 poseWeak = SignMove.WeakReason(e.Message);
             }
             PoseUnheld = poseWeak;
@@ -305,6 +325,11 @@ namespace SignLink.UI
             Plugin.Log.LogWarning($"the button has said Calculating for 20 s: {problem ?? "a press waits for its count"}");
         }
 
+        // DrawVerbButton's decision for the frame (made at its Layout)
+        static Verb heldVerb;
+        static bool heldHas, heldFor, heldSrcBusy, heldBusy;
+        static string heldProblem, heldPose, heldReason;
+
         static void Grey(string label, string hint)
         {
             GUI.enabled = false;
@@ -335,6 +360,7 @@ namespace SignLink.UI
             SignRecipe recipe = v == Verb.Refit ? s.Chosen.Recipe.Copy()
                 : s.Held.Recipe.Kind != SignRecipe.Kinds.None ? s.Held.Recipe.Copy() : null;
             Sign target = s.Target;
+            bool wasTipped = Math.Abs(s.Held.Fit.Tilt) >= 0.05;
             w.Act(() =>
             {
                 List<Sign> made = SignFit.Refit(target, to, light, out Fit got);
@@ -347,7 +373,10 @@ namespace SignLink.UI
                 s.Chosen.Fit = got;
                 if (made.Count > 0) w.Select(made[0], sameContent: true);
                 string how = got.Describe(light);
-                return how.Length > 0 ? $"now {how.Substring(2)}." : "back as made.";
+                // standing is no difference from as made, so Describe leaves it out; stood up again, it is said (1.1.0, test:
+                // "now glowing." after lying face up)
+                if (wasTipped && Math.Abs(got.Tilt) < 0.05) how = Lang.Comma + Lang.T("standing") + how;   // one of Describe's ", ..." items
+                return how.Length > 0 ? Lang.F("now {0}.", how.Substring(Lang.Comma.Length)) : Lang.T("back as made.");
             });
         }
     }

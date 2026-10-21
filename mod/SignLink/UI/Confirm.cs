@@ -25,7 +25,6 @@ namespace SignLink.UI
         // the question's numbers as they were when it was armed: a slider dragged while it shows cannot change its
         // lines between a Layout event and the next (which would mislay the window)
         string what, lighter;
-        double load;
         long save, largest;
 
         /// <summary>Armed by 3 Place's Apply content changes: the window stays open after the put, as that button's puts
@@ -33,14 +32,13 @@ namespace SignLink.UI
         public bool KeepsOpen { get; private set; }
 
         /// <summary>Arms the question for this choice with its numbers (saveBytes &lt; 0: not counted yet).</summary>
-        public void Arm(SignLinkWindow w, string key, string what, double loadSeconds, long saveBytes, long largestBytes, string lighter,
+        public void Arm(SignLinkWindow w, string key, string what, long saveBytes, long largestBytes, string lighter,
                         bool keepOpen = false) =>
             w.Later(() =>
             {
                 armed = key;
                 KeepsOpen = keepOpen;
                 this.what = what;
-                load = loadSeconds;
                 save = saveBytes;
                 largest = largestBytes;
                 this.lighter = lighter;
@@ -58,20 +56,24 @@ namespace SignLink.UI
             {
                 // the way out first (0.20.186, the author: start by telling them "change resolution lower in content page")
                 if (lighter != null) GUILayout.Label(lighter, Theme.Notice);
-                GUILayout.Label($"{what ?? "This"} is very large. Put it on anyway?", Theme.Warn);
-                GUILayout.Label(save >= 0 ? SaveCost.WaitLine(load, save) : $"{load:0.#} s to build for each arriving player", Theme.Label);
+                GUILayout.Label(what == null ? Lang.T("This is very large. Put it on anyway?") : Lang.F("{0} is very large. Put it on anyway?", what), Theme.Warn);
+                // the download and the size, the Summary's words (1.1.0, the author: no build seconds, a number of this
+                // computer's; World save is Content size); armed only once counted (SaveCost.Heavy)
                 if (save >= 0)
-                    GUILayout.Label($"World save: +{SaveCost.Label(save)}", Theme.Label);
+                {
+                    GUILayout.Label(SaveCost.WaitLine(save), Theme.Label);
+                    GUILayout.Label(Lang.F("Content size: {0}", SaveCost.Label(save)), Theme.Label);
+                }
                 if (largest > SignText.NetworkLimit)                        // single player only: in multiplayer the limits stop it first
-                    GUILayout.Label($"One sign: {SaveCost.Label(largest)}, over 512 KB: no server", Theme.Warn);
+                    GUILayout.Label(Lang.F("One sign: {0}, over 512 KB: no server", SaveCost.Label(largest)), Theme.Warn);
                 else if (largest > PixelText.NetworkKb * 1024)
-                    GUILayout.Label($"One sign: {SaveCost.Label(largest)}, near 512 KB", Theme.Label);
+                    GUILayout.Label(Lang.F("One sign: {0}, near 512 KB", SaveCost.Label(largest)), Theme.Label);
                 using (Widgets.Horizontal())
                 {
                     GUI.enabled = w.HasTarget && problem == null;
                     ok = Widgets.Button(yes, Theme.Button, Widgets.Wide(34));
                     GUI.enabled = true;
-                    if (Widgets.Button("Cancel", Theme.Button, Widgets.H(34), Widgets.W(120))) w.Later(Disarm);
+                    if (Widgets.Button(Lang.T("Cancel"), Theme.Button, Widgets.H(34), Widgets.W(120))) w.Later(Disarm);
                 }
             }
             if (problem != null) Widgets.Hint(problem);

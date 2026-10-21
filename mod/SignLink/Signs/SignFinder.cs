@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PetyusPolisz.Kit;
 using UnityEngine;
 
 namespace SignLink.Signs
@@ -133,23 +134,6 @@ namespace SignLink.Signs
             return d;
         }
 
-        public static Sign Find(string id) =>
-            ById().TryGetValue(id, out Sign s) ? s
-                : throw new ArgumentException($"no loaded sign with id {id} (ids change every session: list /signs again)");
-
-        /// <summary>The sign under the crosshair, or null. For a stack, its rearmost sign: the original that the copies
-        /// were made from (the crosshair hits the front copy). Nothing is hovered while a tool such as the hammer is in
-        /// hand (Player.cs:2901).</summary>
-        public static Sign Hovered()
-        {
-            Player p = Player.m_localPlayer;
-            GameObject go = p ? p.GetHoverObject() : null;
-            Sign s = go ? go.GetComponentInParent<Sign>() : null;
-            if (!s) return null;
-            List<Sign> stack = Stack(s);
-            return stack.Count > 0 ? stack[0] : s;
-        }
-
         /// <summary>The sign and every copy stacked on it: one chain along the sign's normal (neighbours within MaxGap,
         /// the same prefab, the same rotation within a degree, within StackRadius sideways), rearmost first: the
         /// original the copies were made from. From a copy the chain reaches back to its first sign. A sign placed by
@@ -255,7 +239,7 @@ namespace SignLink.Signs
         /// within 30 cm that has no object yet (ZNetScene makes only so many a frame, right after arriving).</summary>
         public static void RequireLoaded(Sign s)
         {
-            if (!IsLoaded(s)) throw new InvalidOperationException("the sign's stack is still loading (its copies arrive one by one): try again in a moment");
+            if (!IsLoaded(s)) throw new InvalidOperationException(Lang.T("the sign's stack is still loading (its copies arrive one by one): try again in a moment"));
         }
 
         /// <summary>Is every sign of the stack at s in the game (RequireLoaded without the throw)? Zones this client

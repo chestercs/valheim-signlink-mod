@@ -1,3 +1,4 @@
+using System;
 using HarmonyLib;
 using SignLink.UI;
 using UnityEngine;
@@ -18,7 +19,20 @@ namespace SignLink.Patches
     {
         static bool lastJump, lastRun, toggledRun, lastCrouch;
 
+        static bool off;
+
         static void Postfix(PlayerController __instance)
+        {
+            if (off) return;
+            try { Run(__instance); }
+            catch (Exception e)
+            {
+                off = true;
+                Plugin.Log.LogWarning($"WalkPatch is off after an error: {e.Message}");
+            }
+        }
+
+        static void Run(PlayerController __instance)
         {
             if (!SignLinkWindow.IsOpen)
             {
@@ -28,11 +42,7 @@ namespace SignLink.Patches
             Player p = __instance.m_character;
             if (!p || __instance.m_nview && !__instance.m_nview.IsOwner()) return;
             if (GUIUtility.keyboardControl != 0) return;                     // typing in a SignLink field
-            bool can;
-            InputBlockPatch.Bypass = true;
-            try { can = __instance.TakeInput(); }
-            finally { InputBlockPatch.Bypass = false; }
-            if (!can) return;
+            if (!InputBlockPatch.GameTakes(__instance, c => c.TakeInput())) return;
 
             Vector3 move = Vector3.zero;
             if (ZInput.GetButton("Forward")) move.z += 1f;

@@ -176,12 +176,12 @@ namespace SignLink.UI.Sources
                     wHi = Mathf.Clamp(plan.W * PictureOptions.MaxPitch / 40f, wLo, 30f);
                 }
                 float k = !fine && known && plan.W > 0 && plan.H > 0 ? plan.H / (float)plan.W : aspect;
-                float wm = Widgets.Number("pic.width", "Width (free)", widthNow, wLo, wHi, 0.05f, "m", snap: fine ? null : snapWidth);
+                float wm = Widgets.Number("pic.width", Lang.T("Width"), widthNow, wLo, wHi, 0.05f, "m", snap: fine ? null : snapWidth);
                 int wSlid = Widgets.Slid;
                 if (Widgets.Notched != 0 && fine) Finer(Widgets.Notched);
                 else if (Math.Abs(wm - widthNow) > 0.0001f) SizeTo(wm, widthNow, false, wSlid);
                 float hNow = known ? plan.HeightM : o.WidthM * aspect;
-                float hm = Widgets.Number("pic.height", "Height (same shape)", hNow, wLo * k, wHi * k, 0.05f, "m", snap: fine ? null : snapHeight);
+                float hm = Widgets.Number("pic.height", Lang.T("Height (same shape)"), hNow, wLo * k, wHi * k, 0.05f, "m", snap: fine ? null : snapHeight);
                 int hSlid = Widgets.Slid;
                 if (Widgets.Notched != 0 && fine) Finer(Widgets.Notched);
                 else if (Math.Abs(hm - hNow) > 0.0001f)                     // the width of that many pixels at that height's pixel

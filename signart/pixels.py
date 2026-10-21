@@ -7,7 +7,7 @@ One place for what the mosaics (concepts/row3-5) and the animations (concepts/an
   glyph_size(pitch, cover)  TMP size of a ■ that covers a pitch-wide cell with a hair of overlap (no seams)
   items(px, pitch, ...)     -> engine.Placed glyphs ('' pixels are left out)
   column_text(items, grid)  -> one sign text in the column encoding (engine.column_cmds, verified in gallery 9)
-  sign_frames(pictures, ..) -> texts relative to the sign itself (live.py anim, any sign in any world)
+  sign_frames(pictures, ..) -> texts relative to the sign itself (any sign in any world)
 """
 import numpy as np
 

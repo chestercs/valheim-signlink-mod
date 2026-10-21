@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PetyusPolisz.Kit;
 
 namespace SignLink.Pictures
 {
@@ -19,18 +20,14 @@ namespace SignLink.Pictures
         }
 
         public static string Label(long bytes) =>
-            bytes >= 1048576 ? $"{bytes / 1048576.0:0.##} MB" : bytes >= 1024 ? $"{bytes / 1024.0:0.#} KB" : $"{bytes} bytes";
+            bytes >= 1048576 ? $"{bytes / 1048576.0:0.##} MB" : bytes >= 1024 ? $"{bytes / 1024.0:0.#} KB" : Lang.F("{0} bytes", bytes);
 
-        /// <summary>The yellow level of the wait (WaitSeconds): noticeable for a player who arrives.</summary>
+        /// <summary>The yellow level of the wait (DownloadSeconds): noticeable for a player who arrives.</summary>
         public const double NoticeSeconds = 3;
 
         /// <summary>The red level of the wait: a player who arrives next to it waits this long before it, and the objects
         /// around it, are there; Place asks first.</summary>
         public const double HeavySeconds = 10;
-
-        /// <summary>Seconds a client spends building the text meshes of this many glyphs when the signs load (about
-        /// 13.5 µs each, docs/limits.md); the objects of an area are made a few per frame, so it is felt as a freeze.</summary>
-        public static double LoadSeconds(long glyphs) => glyphs * GlyphSeconds;
 
         /// <summary>A count made for pixelsWas pixels scaled to pixelsNow (a picture's bytes and glyphs grow with its
         /// pixels): what its cost is while its new size is being counted (0.20.125, the author: it keeps clicking the
@@ -47,21 +44,19 @@ namespace SignLink.Pictures
         /// kept a base from showing for about 2 minutes after logging in.</summary>
         public static double DownloadSeconds(long bytes) => Math.Max(0, bytes) / (150.0 * 1024);
 
-        /// <summary>The wait of a player who arrives next to it on a server: the download, then the build. bytes &lt; 0:
-        /// not counted yet, the build only.</summary>
-        public static double WaitSeconds(double buildSeconds, long bytes) => DownloadSeconds(bytes) + buildSeconds;
-
-        /// <summary>0 green, 1 yellow (over NoticeSeconds), 2 red (over HeavySeconds).</summary>
+        /// <summary>0 green, 1 yellow (over NoticeSeconds), 2 red (over HeavySeconds), of a player's wait for the download
+        /// (DownloadSeconds). The build on their computer (GlyphSeconds a glyph) is not in it (1.1.0, the author: a number
+        /// of this computer's; under the multiplayer limits it stays below half a second).</summary>
         public static int Level(double waitSeconds) => waitSeconds > HeavySeconds ? 2 : waitSeconds > NoticeSeconds ? 1 : 0;
 
-        /// <summary>The red level: a long wait for every player who arrives, or a sign close to the 512 KiB a player can
-        /// receive.</summary>
-        public static bool Heavy(double buildSeconds, long bytes, long largestBytes) =>
-            Level(WaitSeconds(buildSeconds, bytes)) == 2 || largestBytes > PixelText.NetworkKb * 1024;
+        /// <summary>The red level: a long download for every player who arrives, or a sign close to the 512 KiB a player
+        /// can receive. bytes &lt; 0: not counted yet, not red.</summary>
+        public static bool Heavy(long bytes, long largestBytes) =>
+            Level(DownloadSeconds(bytes)) == 2 || largestBytes > PixelText.NetworkKb * 1024;
 
-        /// <summary>The cost line's sentence (no closing full stop).</summary>
-        public static string WaitLine(double buildSeconds, long bytes) =>
-            $"Arriving players wait {WaitSeconds(buildSeconds, bytes):0.#} s ({DownloadSeconds(bytes):0.#} s download, {buildSeconds:0.#} s build)";
+        /// <summary>The red-level question's line on the download (no closing full stop).</summary>
+        public static string WaitLine(long bytes) =>
+            Lang.F("On a server, every player who arrives waits {0:0.#} s for the download", DownloadSeconds(bytes));
 
         /// <summary>The most SignLink stores on one sign stack in a shared world (texts, signs and a saved animation, as
         /// Bytes counts them): about 2 s for every player who arrives. The author, 2026-10-11, after three large pictures froze
@@ -84,7 +79,7 @@ namespace SignLink.Pictures
 
         /// <summary>Why a stack of this size is refused in a shared world (no closing full stop).</summary>
         public static string OverLimit(long bytes) =>
-            $"{Label(bytes)} is over the {Label(SignLimit)} SignLink stores on one sign in a multiplayer world";
+            Lang.F("{0} is over the {1} SignLink stores on one sign in a multiplayer world", Label(bytes), Label(SignLimit));
 
         /// <summary>May a stack that holds oldBytes now hold newBytes, with others bytes on the other signs of its area?
         /// Single player: always. A shared world: within SignLimit (a stack over it can only become one under it), and
@@ -94,19 +89,20 @@ namespace SignLink.Pictures
         {
             why = null;
             if (!shared) return true;
-            if (newBytes < 0) why = "not counted yet";
+            if (newBytes < 0) why = Lang.T("not counted yet");
             else if (newBytes > SignLimit) why = OverLimit(newBytes);
             else if (newBytes > Math.Max(0, oldBytes) && others + newBytes > AreaLimit)
-                why = $"the SignLink signs within {AreaRadiusM} m hold {Label(others)} already: with {Label(newBytes)} more that is " +
-                      $"{Label(others + newBytes)}, over the {Label(AreaLimit)} multiplayer limit for an area";
+                why = Lang.F("the SignLink signs within {0} m hold {1} already: with {2} more that is {3}, over the {4} multiplayer limit for an area",
+                             AreaRadiusM, Label(others), Label(newBytes), Label(others + newBytes), Label(AreaLimit));
             return why == null;
         }
 
         /// <summary>The area meter's words: what the signs within AreaRadiusM hold now against the limit, and what they
         /// would hold with the picked content in place of the sign's (when that differs).</summary>
         public static string AreaLine(long now, long after) =>
-            $"{Label(now)} / {Label(AreaLimit)} multiplayer limit within {AreaRadiusM} m" +
-            (after != now ? $"; with this: {Label(after)}" : "");
+            after != now
+                ? Lang.F("{0} / {1} multiplayer limit within {2} m; with this: {3}", Label(now), Label(AreaLimit), AreaRadiusM, Label(after))
+                : Lang.F("{0} / {1} multiplayer limit within {2} m", Label(now), Label(AreaLimit), AreaRadiusM);
 
         /// <summary>The visible glyphs of sign texts, what TMP builds a mesh for: characters outside tags (read as TMP reads
         /// them, like SignGlow.Strip), spaces and line breaks not counted.</summary>

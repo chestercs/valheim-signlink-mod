@@ -1,8 +1,8 @@
 {
   "name": "SignLink",
-  "version_number": "1.0.3",
+  "version_number": "1.1.0",
   "website_url": "https://github.com/chestercs/valheim-signlink-mod",
-  "description": "Pictures on signs that every player sees, vanilla included: PNG, JPG and GIF with transparency, sized in metres, tilted onto floors and ceilings, plus built-in glyph and pixel art and animations saved in the world.",
+  "description": "Paintings, pixel art, glyph art and labels on signs that every player sees, no mod needed to view: your own PNG, JPG and GIF, 200+ art pieces (150 animated), walls, floors, ceilings. English, Hungarian, Chinese, Russian.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2351"
   ]

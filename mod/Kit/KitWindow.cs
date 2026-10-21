@@ -14,6 +14,8 @@ namespace PetyusPolisz.Kit
         float HeightShare { get; }
         /// <summary>How solid the window is, 0.5 .. 1 (the text stays opaque).</summary>
         float Opacity { get; }
+        /// <summary>The look: Theme.ClassicName or Theme.NordicName (1.1.0).</summary>
+        string ThemeName { get; }
         /// <summary>Where the window was dragged to, screen pixels; negative: the default place.</summary>
         float X { get; set; }
         float Y { get; set; }
@@ -123,7 +125,7 @@ namespace PetyusPolisz.Kit
             Widgets.Scale = s;
             Widgets.ContentWidth = w / s - 64f;
             Widgets.HeightFactor = Mathf.Clamp(h / s / 760f, 1f, 1.6f);
-            Theme.Ensure(s, look.Opacity);
+            Theme.Ensure(s, look.Opacity, look.ThemeName);
             if (!placed)
             {
                 placed = true;
@@ -137,7 +139,8 @@ namespace PetyusPolisz.Kit
                 logOpen = false;                                            // one line per open: what the window was built for
                 overSaid = false;
                 drawnWidth = drawnHeight = 0f;
-                logInfo($"window: open at text scale {s:0.00}, {w:0} x {h:0} px at {rect.x:0},{rect.y:0} on {Screen.width} x {Screen.height}");
+                logInfo($"window: open at text scale {s:0.00}, {w:0} x {h:0} px at {rect.x:0},{rect.y:0} on {Screen.width} x {Screen.height}, {look.ThemeName} look, fonts: {Theme.Faces}" +
+                        (Theme.LookError != null ? $", flat: the look failed ({Theme.LookError})" : ""));
             }
         }
 
@@ -149,7 +152,11 @@ namespace PetyusPolisz.Kit
             rect.x = Mathf.Clamp(rect.x, 0, Mathf.Max(0, Screen.width - Mathf.Max(rect.width, drawnWidth)));
             rect.y = Mathf.Clamp(rect.y, 0, Mathf.Max(0, Screen.height - Mathf.Max(rect.height, drawnHeight)));
             float wantWidth = rect.width;
-            rect = GUILayout.Window(id, rect, draw, "", Theme.Window, GUILayout.Width(rect.width), GUILayout.Height(rect.height));
+            // the window function draws with the skin current here (the look's own scrollbar, Theme.Skin): set for this call only
+            GUISkin was = GUI.skin;
+            if (Theme.Skin) GUI.skin = Theme.Skin;
+            try { rect = GUILayout.Window(id, rect, draw, "", Theme.Window, GUILayout.Width(rect.width), GUILayout.Height(rect.height)); }
+            finally { GUI.skin = was; }
             if (Event.current.type == EventType.Repaint)
             {
                 drawnWidth = rect.width;
@@ -180,14 +187,20 @@ namespace PetyusPolisz.Kit
 
         // ---------------------------------------------------------------- inside the window function
 
-        /// <summary>First in the window function: a press on an edge is the resize's before a row takes it.</summary>
-        public void BeginDraw() => ResizeEdges();
+        /// <summary>First in the window function: an open drop-down list takes its clicks, then a press on an edge is the
+        /// resize's before a row takes it.</summary>
+        public void BeginDraw()
+        {
+            Widgets.DropInput();                                            // an open drop-down list takes its clicks first
+            ResizeEdges();
+        }
 
         /// <summary>Last in the window function: the edges' marks, the title as the handle that moves it, and a click on
         /// anything but the focused field takes the keyboard focus away (at a later Layout: Widgets.DropFocus).</summary>
         public void EndDraw()
         {
             EdgeMarks();
+            Widgets.DropList(rect.height);                                  // an open drop-down list, over everything
             GUI.DragWindow(new Rect(0, 0, 10000, Widgets.U(TitleRule)));
             if (Event.current.rawType == EventType.MouseDown && GUIUtility.keyboardControl != 0 && GUIUtility.hotControl != GUIUtility.keyboardControl)
                 Widgets.DropFocus();
@@ -206,6 +219,8 @@ namespace PetyusPolisz.Kit
             var n = new GUIContent(name);
             var v = new GUIContent(version);
             float nw = Theme.TitleName.CalcSize(n).x, vw = Theme.TitleVersion.CalcSize(v).x;
+            float o = Mathf.Max(1f, Mathf.Round(Widgets.U(1)));
+            if (Theme.TitleShadow != null) GUI.Label(new Rect(x + o, top + o, nw, h), n, Theme.TitleShadow);
             GUI.Label(new Rect(x, top, nw, h), n, Theme.TitleName);
             GUI.Label(new Rect(x + nw + Widgets.U(7), top, vw, h - Widgets.U(5)), v, Theme.TitleVersion);
             float left = x + nw + Widgets.U(7) + vw + Widgets.U(28), room = edge - left;
@@ -242,7 +257,13 @@ namespace PetyusPolisz.Kit
         /// was when a hold began. EndTop closes it.</summary>
         public void BeginTop()
         {
-            if (Event.current.type == EventType.Layout) steady = GUIUtility.hotControl != 0 || GUIUtility.keyboardControl != 0;
+            if (Event.current.type == EventType.Layout)
+            {
+                steady = GUIUtility.hotControl != 0 || GUIUtility.keyboardControl != 0;
+                // a wheel step or a key (Shift + wheel on a slider, the arrow keys moving a sign) is no held control, but
+                // the rows change as much: the footer keeps its height a moment after one (1.1.0, review)
+                if (steady || Input.anyKey || Input.mouseScrollDelta.y != 0f) inputAt = Time.unscaledTime;
+            }
             topScope = Widgets.Vertical(steady && topMin > 0f ? new[] { GUILayout.MinHeight(topMin) } : NoOptions);
         }
 
@@ -272,34 +293,42 @@ namespace PetyusPolisz.Kit
             if (Event.current.type == EventType.Repaint) viewHeight = GUILayoutUtility.GetLastRect().height;
         }
 
-        // the footer only grows while it shows the same thing in a window of the same width (0.20.84: a hint under its
-        // button came and went with every change, and the buttons jumped)
-        float footKeep = -1f, footWidth = -1f, footScale = -1f;
+        // the footer only grows while a control is held (or a wheel step or key came just now) and it shows the same thing
+        // in a window of the same width (0.20.84: a hint under its button came and went with every change of a drag, and
+        // the buttons jumped); let go, it is as tall as its rows (1.1.0, the author: an empty grey stretch stayed under the
+        // button once a longer hint had gone)
+        float footKeep = -1f, footWidth = -1f, footScale = -1f, inputAt = -100f;
+        const float FootSettle = 0.75f;
         int footFor = int.MinValue;
 
-        /// <summary>The footer under the body (a section): its least height is the most it has had since what (the part
-        /// shown, the thing it works on) or the window's width changed. draw: its rows.</summary>
-        public void Footer(int what, Action draw)
+        /// <summary>The footer under the body (a section; boxed false: no box, for a part whose footer is only a status line,
+        /// 1.1.0, the author: an empty bar showed): while a control is held its least height is the most it has had since what (the part shown,
+        /// the thing it works on) or the window's width changed, else its rows' own. draw: its rows.</summary>
+        public void Footer(int what, Action draw, bool boxed = true)
         {
-            if (Event.current.type == EventType.Layout && (what != footFor || Mathf.Abs(rect.width - footWidth) > 0.5f || Widgets.Scale != footScale))
+            bool held = Time.unscaledTime - inputAt < FootSettle;               // a control held, or a wheel step or key just now
+            if (Event.current.type == EventType.Layout && (!held || what != footFor || Mathf.Abs(rect.width - footWidth) > 0.5f || Widgets.Scale != footScale))
             {
                 footFor = what;
                 footWidth = rect.width;
                 footScale = Widgets.Scale;
                 footKeep = 0f;
             }
-            using (Widgets.Vertical(Theme.Section, footKeep > 0f ? new[] { GUILayout.MinHeight(footKeep) } : NoOptions))
+            GUILayoutOption[] least = footKeep > 0f ? new[] { GUILayout.MinHeight(footKeep) } : NoOptions;
+            using (boxed ? Widgets.Vertical(Theme.Section, least) : Widgets.Vertical(least))
                 draw();
             if (Event.current.type == EventType.Repaint) footKeep = Mathf.Max(footKeep, GUILayoutUtility.GetLastRect().height);
         }
 
-        /// <summary>The last row: the keys that close the window (dim frames) and Close; true when Close was clicked.</summary>
-        public bool CloseRow(string[] keys)
+        /// <summary>The last row: left (the window's own, at the row's start: SignLink's Show all, 1.1.0), the keys that close
+        /// the window (dim frames) and Close; true when Close was clicked.</summary>
+        public bool CloseRow(string[] keys, Action left = null)
         {
             using (Widgets.Horizontal())
             {
+                left?.Invoke();
                 Widgets.Keys(keys);
-                return Widgets.Button("Close", Theme.Button, Widgets.W(90));
+                return Widgets.Button(Lang.T("Close"), Theme.Button, Widgets.W(90));
             }
         }
 
@@ -392,22 +421,25 @@ namespace PetyusPolisz.Kit
             if (Event.current.type != EventType.Repaint) return;
             Color was = GUI.color;
             float d = Mathf.Max(2f, Widgets.U(2.5f));
-            GUI.color = new Color(1f, 1f, 1f, resizing ? 0.9f : 0.45f);
+            Color grip = resizing ? Theme.GripHeld : Theme.GripColor;
+            GUI.color = new Color(grip.r, grip.g, grip.b, resizing ? 0.9f : Theme.Painted ? 1f : 0.45f);
             for (int i = 0; i < 3; i++)
                 for (int j = 0; j <= i; j++)
                     GUI.DrawTexture(new Rect(rect.width - d * 2f * (j + 1), rect.height - d * 2f * (i - j + 1), d, d), Texture2D.whiteTexture);
             int lit = resizing ? dragEdges : GUIUtility.hotControl == 0 ? EdgesAt(Event.current.mousePosition) : 0;
             if (lit != 0)
             {
-                float t = Mathf.Max(2f, Widgets.U(3));
-                GUI.color = new Color(0.98f, 0.76f, 0.36f, resizing ? 0.95f : 0.7f);
+                float t = Mathf.Max(2f, Widgets.U(Theme.EdgeThickness));
+                Color edge = Theme.EdgeColor;
+                GUI.color = new Color(edge.r, edge.g, edge.b, resizing ? 0.95f : 0.7f);
                 if ((lit & WindowSizing.Left) != 0) GUI.DrawTexture(new Rect(0, 0, t, rect.height), Texture2D.whiteTexture);
                 if ((lit & WindowSizing.Right) != 0) GUI.DrawTexture(new Rect(rect.width - t, 0, t, rect.height), Texture2D.whiteTexture);
                 if ((lit & WindowSizing.Top) != 0) GUI.DrawTexture(new Rect(0, 0, rect.width, t), Texture2D.whiteTexture);
                 if ((lit & WindowSizing.Bottom) != 0) GUI.DrawTexture(new Rect(0, rect.height - t, rect.width, t), Texture2D.whiteTexture);
             }
-            GUI.color = new Color(0.98f, 0.76f, 0.36f, 0.45f);              // the title's own line: a little room under it,
-            GUI.DrawTexture(new Rect(Widgets.U(12), Widgets.U(TitleRule), rect.width - Widgets.U(24), Mathf.Max(1f, Widgets.U(1.5f))), Texture2D.whiteTexture);
+            GUI.color = Theme.TitleRuleColor;                               // the title's own line: a little room under it,
+            float rule = Theme.Painted ? Mathf.Max(1f, Mathf.Round(Widgets.U(Theme.TitleRuleThickness))) : Mathf.Max(1f, Widgets.U(Theme.TitleRuleThickness));
+            GUI.DrawTexture(new Rect(Widgets.U(12), Widgets.U(TitleRule), rect.width - Widgets.U(24), rule), Texture2D.whiteTexture);
             GUI.color = was;                                                // then a thin rule (0.20.50)
         }
     }

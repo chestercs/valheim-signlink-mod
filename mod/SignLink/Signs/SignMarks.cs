@@ -29,10 +29,20 @@ namespace SignLink.Signs
             return src.Length > 0 && zdo.GetInt(SourceLenKey, -1) == zdo.GetString(ZDOVars.s_text, "").Length ? src : "";
         }
 
+        /// <summary>The longest recipe kept (a picture's name and its settings stay far under it): a pasted clipboard is
+        /// another player's text, and a recipe of megabytes would ride on the sign's data past every size check (1.1.0,
+        /// review). A longer one is not kept: the sign then shows its content without the recipe, as a plain text.</summary>
+        public const int MaxSource = 1024;
+
         public static void SetSource(Sign root, string source)
         {
             ZDO zdo = SignFinder.Zdo(root);
             if (zdo == null) return;
+            if (source != null && source.Length > MaxSource)
+            {
+                Plugin.Log.LogWarning($"a recipe of {source.Length} characters is not kept on {SignFinder.Id(root)} (at most {MaxSource})");
+                source = "";
+            }
             root.m_nview.ClaimOwnership();
             zdo.Set(SourceKey, source ?? "");
             zdo.Set(SourceLenKey, zdo.GetString(ZDOVars.s_text, "").Length);

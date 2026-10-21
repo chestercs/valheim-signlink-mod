@@ -1,0 +1,1118 @@
+# SignLink: the window in Chinese. english<TAB>translation; English is the key (mod/Kit/Lang.cs).
+@language	简体中文
+# Kit/KitWindow.cs:331
+Close	关闭
+# Kit/Lang.cs:106
+list|, 	，
+# Kit/Lang.cs:14
+Game default	跟随游戏
+# Kit/Widgets.Buttons.cs:121
+On	开
+# Kit/Widgets.Buttons.cs:121
+Off	关
+# SignLink/Animation/ScreenPlayer.cs:287
+the sign is gone	标牌已不在
+# SignLink/Animation/ScreenPlayer.cs:312
+too big to play: the screens hold {0} MB of frames already (at most {1} MB)	太大，无法播放：播放中的 GIF 已占用 {0} MB 帧内存（上限 {1} MB）
+# SignLink/Animation/ScreenPlayer.cs:694
+paused	已暂停
+# SignLink/Animation/ScreenPlayer.cs:694
+frozen (Play all GIFs)	已冻结（见“播放所有 GIF”）
+# SignLink/Animation/ScreenPlayer.cs:694
+{0:0.#} shown/s	实际 {0:0.#} 帧/秒
+# SignLink/Animation/ScreenPlayer.cs:697
+{0}x{1}, {2} frames at {3:0.#} fps ({4})	{0}x{1}，{2} 帧，{3:0.#} fps（{4}）
+# SignLink/Animation/ScreenPlayer.cs:698
+lit by the scene	受场景光照
+# SignLink/Animation/ScreenPlayer.cs:698
+glowing	发光
+# SignLink/Animation/ScreenPlayer.cs:699
+covers {0} signs	覆盖 {0} 个标牌
+# SignLink/Animation/StoredAnims.cs:107
+no frames	没有帧
+# SignLink/Animation/StoredAnims.cs:108
+fps must be in (0, 60]	fps 必须在 (0, 60] 之间
+# SignLink/Animation/StoredAnims.cs:110
+{0} characters in all: over the {1} a saved animation holds (no game would play it)	共 {0} 个字符：超过已保存动画的上限 {1}（游戏无法播放）
+# SignLink/Animation/StoredAnims.cs:115
+{0} KB with the first frame as text: over {1} KB, too big to send in multiplayer	连同首帧文字共 {0} KB：超过 {1} KB，多人游戏中无法发送
+# SignLink/Animation/StoredAnims.cs:116
+this animation	此动画
+# SignLink/Animation/StoredAnims.cs:163
+the sign is gone (unloaded or removed)	标牌已不在（未加载或已被移除）
+# SignLink/Animation/StoredAnims.cs:164
+that sign has no saved animation any more.	该标牌上已没有保存的动画。
+# SignLink/Animation/StoredAnims.cs:472
+{0} frames at {1:0.#} fps	{0} 帧，{1:0.#} fps
+# SignLink/Commands.cs:42
+SignLink: opens its window; 'signlink version' tells the version, 'signlink close' closes it	SignLink：打开窗口；'signlink version' 显示版本，'signlink close' 关闭窗口
+# SignLink/Commands.cs:65
+{0} {1} is running. {2} or /{3} opens its window.	{0} {1} 正在运行。按 {2} 或输入 /{3} 打开窗口。
+# SignLink/Commands.cs:66
+{0} {1} is running. /{2} opens its window.	{0} {1} 正在运行。输入 /{2} 打开窗口。
+# SignLink/Commands.cs:67
+Its window failed to load: {0}	窗口加载失败：{0}
+# SignLink/Commands.cs:73
+/{0}: open the SignLink window · /{0} version: the version that runs · /{0} close: close it	/{0}：打开 SignLink 窗口 · /{0} version：查看当前版本 · /{0} close：关闭窗口
+# SignLink/Commands.cs:78
+{0} {1}: its window failed to load ({2}); BepInEx/LogOutput.log has the details.	{0} {1}：窗口加载失败（{2}）；详情见 BepInEx/LogOutput.log。
+# SignLink/Commands.cs:79
+no window	无窗口
+# SignLink/Commands.cs:83
+{0} {1}: the window opens as soon as the chat or console closes.	{0} {1}：关闭聊天框或控制台后，窗口就会打开。
+# SignLink/Patches/PictureSignPatch.cs:102
+Open in SignLink	在 SignLink 中打开
+# SignLink/Patches/PictureSignPatch.cs:77
+A picture on {0} stacked signs	图片，占 {0} 个叠放的标牌
+# SignLink/Patches/PictureSignPatch.cs:77
+Glyph art on {0} stacked signs	字符画，占 {0} 个叠放的标牌
+# SignLink/Patches/PictureSignPatch.cs:77
+A long text on {0} stacked signs	长文本，占 {0} 个叠放的标牌
+# SignLink/Patches/PictureSignPatch.cs:78
+A picture	图片
+# SignLink/Patches/PictureSignPatch.cs:78
+Glyph art	字符画
+# SignLink/Patches/PictureSignPatch.cs:78
+A long text	长文本
+# SignLink/Pictures/Fit.cs:199
+lying face up over its edge	面朝上平放（绕底边）
+# SignLink/Pictures/Fit.cs:199
+lying face up	面朝上平放
+# SignLink/Pictures/Fit.cs:200
+lying face down over its edge	面朝下平放（绕底边）
+# SignLink/Pictures/Fit.cs:200
+lying face down	面朝下平放
+# SignLink/Pictures/Fit.cs:201
+tilted back {0:0.#}° over its edge	后仰 {0:0.#}°（绕底边）
+# SignLink/Pictures/Fit.cs:201
+tilted back {0:0.#}°	后仰 {0:0.#}°
+# SignLink/Pictures/Fit.cs:202
+tilted forward {0:0.#}° over its edge	前倾 {0:0.#}°（绕底边）
+# SignLink/Pictures/Fit.cs:202
+tilted forward {0:0.#}°	前倾 {0:0.#}°
+# SignLink/Pictures/Fit.cs:209
+at {0:0.#} %	缩放 {0:0.#}%
+# SignLink/Pictures/Fit.cs:210
+{0:0.##} m right	向右 {0:0.##} m
+# SignLink/Pictures/Fit.cs:210
+{0:0.##} m left	向左 {0:0.##} m
+# SignLink/Pictures/Fit.cs:211
+{0:0.##} m up	向上 {0:0.##} m
+# SignLink/Pictures/Fit.cs:211
+{0:0.##} m down	向下 {0:0.##} m
+# SignLink/Pictures/Fit.cs:212
+{0:0.##} m towards you	拉近 {0:0.##} m
+# SignLink/Pictures/Fit.cs:212
+{0:0.##} m away	推远 {0:0.##} m
+# SignLink/Pictures/Fit.cs:215
+rotated {0:0.#}°	旋转 {0:0.#}°
+# SignLink/Pictures/GifDecoder.cs:141
+a GIF frame of {0} x {1} pixels is too large	GIF 帧为 {0} x {1} 像素，过大
+# SignLink/Pictures/GifDecoder.cs:149
+a GIF frame without a palette	GIF 帧缺少调色板
+# SignLink/Pictures/GifDecoder.cs:152
+a GIF frame with LZW code size {0}	GIF 帧的 LZW 编码长度无效：{0}
+# SignLink/Pictures/GifDecoder.cs:86
+not a GIF	不是 GIF 文件
+# SignLink/Pictures/GifDecoder.cs:87
+the GIF is cut short	GIF 文件不完整
+# SignLink/Pictures/GifDecoder.cs:89
+the GIF is {0} x {1} pixels: at most 16 million pixels a frame (4000 x 4000)	GIF 为 {0} x {1} 像素：每帧最多 1600 万像素（4000 x 4000）
+# SignLink/Pictures/GifDecoder.cs:91
+the GIF has no frames	GIF 没有帧
+# SignLink/Pictures/GifDecoder.cs:93
+the GIF is too long or too large to read: {0} frames, {1} million pixels in all (at most {2} frames and {3} million pixels: about {4} frames of 1920 x 1080). Make it shorter or smaller	GIF 太长或太大，无法读取：{0} 帧，共 {1} 百万像素（上限为 {2} 帧、{3} 百万像素，约合 {4} 帧 1920 x 1080）。请缩短或缩小它
+# SignLink/Pictures/GlyphData.cs:31
+palette|Arrows	箭头
+# SignLink/Pictures/GlyphData.cs:31
+palette|Shapes	形状
+# SignLink/Pictures/GlyphData.cs:31
+palette|Frames	边框
+# SignLink/Pictures/GlyphData.cs:31
+palette|Runes	符文
+# SignLink/Pictures/GlyphData.cs:31
+palette|Symbols	符号
+# SignLink/Pictures/GlyphData.cs:31
+palette|Emoji	表情
+# SignLink/Pictures/PictureImporter.cs:109
+the file is {0} MB, more than the {1} MB a picture may be	文件为 {0} MB，超过图片上限 {1} MB
+# SignLink/Pictures/PictureImporter.cs:225
+Unity's image decoder is missing	缺少 Unity 的图片解码器
+# SignLink/Pictures/PictureImporter.cs:258
+not a PNG, JPG or GIF picture (its header cannot be read)	不是 PNG、JPG 或 GIF 图片（无法读取文件头）
+# SignLink/Pictures/PictureImporter.cs:260
+{0} x {1} is {2} megapixels: SignLink takes pictures up to {3} (scale it down first; a sign picture has at most a million)	{0} x {1} 为 {2} 百万像素：SignLink 最多接受 {3} 百万像素（请先缩小；标牌图片最多 100 万像素）
+# SignLink/Pictures/PictureImporter.cs:292
+not a PNG, JPG or GIF picture	不是 PNG、JPG 或 GIF 图片
+# SignLink/Pictures/PictureImporter.cs:379
+too big to play over the picture (its frames would be {0} MB, the screens hold at most {1} MB)	太大，无法在图片上播放（帧需要 {0} MB，最多只能容纳 {1} MB）
+# SignLink/Pictures/PictureImporter.cs:391
+it stays still for now: its frames would be {0} MB, the screens have room for {1} MB	暂时保持静止：帧需要 {0} MB，剩余空间只有 {1} MB
+# SignLink/Pictures/PictureImporter.cs:553
+it stays still here: {0}	在本机保持静止：{0}
+# SignLink/Pictures/PictureImporter.cs:557
+the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder	GIF 会在图片上播放；之后每当标牌加载，图片文件夹中有此文件的每台电脑都会再次播放
+# SignLink/Pictures/PictureImporter.cs:722
+{0} is on the sign{1} over {2} signs ({3} in the world save; encoded in {4:0.0} s, placed in {5:0.0} s){6}.	{0} 已放到标牌上{1}，共 {2} 个标牌 ({3} 存入世界存档；编码 {4:0.0} s，放置 {5:0.0} s){6}。
+# SignLink/Pictures/PictureImporter.cs:724
+{0} is on the sign{1} ({2} in the world save; encoded in {3:0.0} s, placed in {4:0.0} s){5}.	{0} 已放到标牌上{1} ({2} 存入世界存档；编码 {3:0.0} s，放置 {4:0.0} s){5}。
+# SignLink/Pictures/PictureImporter.cs:742
+the import was stopped.	导入已停止。
+# SignLink/Pictures/PixelText.cs:116
+the picture is fully transparent: nothing to put on a sign	图片完全透明：没有可放到标牌上的内容
+# SignLink/Pictures/PixelText.cs:222
+the picture is too large for the column encoding (tag numbers past 32 767): use fewer pixels or a smaller pixel size	图片对列编码来说太大（标签数值超过 32 767）：请减少像素或缩小像素尺寸
+# SignLink/Pictures/PixelText.cs:96
+a row of {0} pixels does not fit one sign	一行 {0} 像素放不进一个标牌
+# SignLink/Pictures/QrCode.cs:61
+{0} bytes are too long for a QR code at {1} (version 40 holds at most {2})	{0} 字节对纠错级别 {1} 的 QR 码来说太长（版本 40 最多容纳 {2}）
+# SignLink/Pictures/SaveCost.cs:104
+{0} / {1} multiplayer limit within {2} m; with this: {3}	{2} m 内多人上限 {0} / {1}；加上此项：{3}
+# SignLink/Pictures/SaveCost.cs:105
+{0} / {1} multiplayer limit within {2} m	{2} m 内多人上限 {0} / {1}
+# SignLink/Pictures/SaveCost.cs:23
+{0} bytes	{0} 字节
+# SignLink/Pictures/SaveCost.cs:59
+On a server, every player who arrives waits {0:0.#} s for the download	在服务器上，每位新进入的玩家都要等待 {0:0.#} s 下载
+# SignLink/Pictures/SaveCost.cs:82
+{0} is over the {1} SignLink stores on one sign in a multiplayer world	{0} 超过多人世界中 SignLink 单个标牌的存储上限 {1}
+# SignLink/Pictures/SaveCost.cs:92
+not counted yet	尚未计算
+# SignLink/Pictures/SaveCost.cs:95
+the SignLink signs within {0} m hold {1} already: with {2} more that is {3}, over the {4} multiplayer limit for an area	{0} m 内的 SignLink 标牌已占用 {1}：再加 {2} 共 {3}，超过多人区域上限 {4}
+# SignLink/Pictures/SignPicture.cs:37
+it holds no pixel picture SignLink can read back	其中没有 SignLink 能读回的像素图片
+# SignLink/Pictures/TextTransform.cs:121
+<{0}> is not an absolute plain number	<{0}> 不是绝对的纯数值
+# SignLink/Pictures/TextTransform.cs:128
+<{0}> is not something SignLink can resize	SignLink 无法缩放 <{0}>
+# SignLink/Pictures/TextTransform.cs:136
+a backslash escape (\\n, \\r, \\t, \\u) that the game reads as a character	含有游戏会当作字符读取的反斜杠转义（\\n、\\r、\\t、\\u）
+# SignLink/Pictures/TextTransform.cs:142
+plain text without a size: the game sizes it itself	未指定大小的纯文本：由游戏自行决定大小
+# SignLink/Pictures/TextTransform.cs:148
+several lines without a line height	多行文本未指定行高
+# SignLink/Pictures/TextTransform.cs:256
+too far from the sign: its tag numbers would pass what a sign reads	离标牌太远：标签数值会超出标牌能读取的范围
+# SignLink/Pictures/TextTransform.cs:278
+too large or too far from the sign: its tag numbers would pass what a sign reads	太大或离标牌太远：标签数值会超出标牌能读取的范围
+# SignLink/Presets/Preset.cs:126
+{0}: {1:0.#} MB is too large to be a sign piece (up to {2} MB)	{0}：{1:0.#} MB，作为标牌图案太大（上限 {2} MB）
+# SignLink/Presets/Preset.cs:132
+{0}: {1} signs is too large to be a sign piece (up to {2})	{0}：{1} 个标牌，作为标牌图案太大（上限 {2}）
+# SignLink/Presets/Preset.cs:136
+{0}: no '{1} fps=F' first line	{0}：首行缺少 '{1} fps=F'
+# SignLink/Presets/Preset.cs:143
+{0}: {1} frames is too large to be a sign piece (up to {2})	{0}：{1} 帧，作为标牌图案太大（上限 {2}）
+# SignLink/Signs/SignBuilder.cs:106
+this content	此内容
+# SignLink/Signs/SignBuilder.cs:119
+the game allows no building or removing there, so the sign keeps its {0} sign(s) and this content needs {1}	游戏不允许在此处建造或拆除，标牌只能保持 {0} 个，而此内容需要 {1} 个
+# SignLink/Signs/SignBuilder.cs:172
+not in a world	不在世界中
+# SignLink/Signs/SignBuilder.cs:28
+the sign has no ZDO	标牌没有 ZDO
+# SignLink/Signs/SignBuilder.cs:30
+prefab not found	找不到预制体
+# SignLink/Signs/SignBuilder.cs:32
+the game allows no building there	游戏不允许在此处建造
+# SignLink/Signs/SignBuilder.cs:45
+too many copies for one sign ({0} more in front of {1:0.#} mm)	一个标牌的叠放副本过多（已有 {1:0.#} mm，还要在前面再加 {0} 个）
+# SignLink/Signs/SignBuilder.cs:70
+too many copies for one sign ({0})	一个标牌的叠放副本过多（{0} 个）
+# SignLink/Signs/SignFinder.cs:242
+the sign's stack is still loading (its copies arrive one by one): try again in a moment	叠放的标牌仍在加载（副本逐个到达）：请稍后再试
+# SignLink/Signs/SignMove.cs:157
+it could not be weighed: {0}	无法计算支撑：{0}
+# SignLink/Signs/SignMove.cs:162
+nothing holds it there	那里没有东西支撑它
+# SignLink/Signs/SignMove.cs:163
+too weak there ({0:0} of {1:0})	那里支撑不足（{0:0} / {1:0}）
+# SignLink/Signs/SignMove.cs:208
+at most {0:0} m from where it was built	最多只能离建造位置 {0:0} m
+# SignLink/Signs/SignMove.cs:211
+a ward you have no access to protects that spot	该位置受你无权限的守护石保护
+# SignLink/Signs/SignMove.cs:232
+another sign stands there: it would join this sign's copies (move it a little further)	那里已有另一个标牌：它会并入这个标牌的叠放（再移远一点）
+# SignLink/Signs/SignMove.cs:266
+too weakly held there until the move is applied ({0:0} of the {1:0} it needs, as the game counts it): apply the steps so far first	应用移动之前，那里支撑不足（按游戏计算为 {0:0}，需要 {1:0}）：请先应用目前的步骤
+# SignLink/Signs/SignMove.cs:389
+no support: {0}	无支撑：{0}
+# SignLink/Signs/SignPose.cs:100
+standing	竖立
+# SignLink/Signs/SignPose.cs:394
+this sign	此标牌
+# SignLink/Signs/SignText.cs:38
+a ward you have no access to protects this sign	此标牌受你无权限的守护石保护
+# SignLink/Signs/SignText.cs:60
+{0}: {1} (single player has no limit)	{0}：{1}（单人游戏无此限制）
+# SignLink/Signs/SignText.cs:61
+{0} (single player has no limit)	{0}（单人游戏无此限制）
+# SignLink/Signs/SignText.cs:69
+a sign would hold over 512 KB: more than other players can receive (only single player allows that)	单个标牌将超过 512 KB：其他玩家无法接收（仅单人游戏允许）
+# SignLink/UI/AreaMeter.cs:32
+already {0}	已有 {0}
+# SignLink/UI/AreaMeter.cs:33
+1 SignLink sign	1 个 SignLink 标牌
+# SignLink/UI/AreaMeter.cs:33
+{0} SignLink signs	{0} 个 SignLink 标牌
+# SignLink/UI/AreaMeter.cs:34
+Area	区域
+# SignLink/UI/AreaMeter.cs:35
+{0} within {1} m	{1} m 内：{0}
+# SignLink/UI/AreaMeter.cs:46
+already {0} MB	已有 {0} MB
+# SignLink/UI/AreaMeter.cs:47
+GIFs	GIF
+# SignLink/UI/AreaMeter.cs:47
+{0} of moving GIF frames here	此处动态 GIF 帧：{0}
+# SignLink/UI/Confirm.cs:59
+This is very large. Put it on anyway?	内容很大，仍要放上吗？
+# SignLink/UI/Confirm.cs:59
+{0} is very large. Put it on anyway?	{0}很大，仍要放上吗？
+# SignLink/UI/Confirm.cs:65
+Content size: {0}	内容大小：{0}
+# SignLink/UI/Confirm.cs:68
+One sign: {0}, over 512 KB: no server	单个标牌：{0}，超过 512 KB：无法用于服务器
+# SignLink/UI/Confirm.cs:70
+One sign: {0}, near 512 KB	单个标牌：{0}，接近 512 KB
+# SignLink/UI/Confirm.cs:76
+Cancel	取消
+# SignLink/UI/FitPanel.cs:104
+Rotate (clockwise)	旋转（顺时针）
+# SignLink/UI/FitPanel.cs:128
+Right	向右
+# SignLink/UI/FitPanel.cs:129
+Up	向上
+# SignLink/UI/FitPanel.cs:134
+2D coordinates on the sign's face	标牌表面上的二维坐标
+# SignLink/UI/FitPanel.cs:32
+Standing	竖立
+# SignLink/UI/FitPanel.cs:32
+Face up	面朝上
+# SignLink/UI/FitPanel.cs:32
+Face down	面朝下
+# SignLink/UI/FitPanel.cs:75
+The sign	标牌
+# SignLink/UI/FitPanel.cs:87
+Tilt	倾斜
+# SignLink/UI/LightRow.cs:17
+Glowing	发光
+# SignLink/UI/LightRow.cs:17
+Lit by the scene	受场景光照
+# SignLink/UI/LightRow.cs:18
+As made	保持原样
+# SignLink/UI/LightRow.cs:30
+Light	光照
+# SignLink/UI/MovePanel.cs:112
+Turn (clockwise)	转向（顺时针）
+# SignLink/UI/MovePanel.cs:132
+Move by	步长
+# SignLink/UI/MovePanel.cs:146
+Away	推远
+# SignLink/UI/MovePanel.cs:156
+Towards you	拉近
+# SignLink/UI/MovePanel.cs:192
+Changes	更改
+# SignLink/UI/MovePanel.cs:193
+none	无
+# SignLink/UI/MovePanel.cs:202
+Apply sign coord changes	应用标牌位置更改
+# SignLink/UI/MovePanel.cs:205
+Undo steps	撤销步骤
+# SignLink/UI/MovePanel.cs:211
+Reset to default	恢复默认
+# SignLink/UI/MovePanel.cs:213
+as built	建造时的状态
+# SignLink/UI/MovePanel.cs:218
+No support: {0}	无支撑：{0}
+# SignLink/UI/MovePanel.cs:22
+{0} left	向左 {0}
+# SignLink/UI/MovePanel.cs:22
+{0} right	向右 {0}
+# SignLink/UI/MovePanel.cs:22
+{0} down	向下 {0}
+# SignLink/UI/MovePanel.cs:22
+{0} up	向上 {0}
+# SignLink/UI/MovePanel.cs:22
+{0} towards you	拉近 {0}
+# SignLink/UI/MovePanel.cs:22
+{0} away	推远 {0}
+# SignLink/UI/MovePanel.cs:247
+applied: every player sees it {0} now.	已应用：所有玩家现在都会看到它（{0}）。
+# SignLink/UI/MovePanel.cs:262
+applied for SignLink players; players without SignLink see it when they come back (the signs could not be made again: {0}).	已对 SignLink 玩家生效；未装 SignLink 的玩家重新进入时才会看到（标牌未能重建：{0}）。
+# SignLink/UI/MovePanel.cs:269
+applied: every player sees the sign there now.	已应用：所有玩家现在都会在新位置看到标牌。
+# SignLink/UI/MovePanel.cs:286
+undone: the sign is back as it was last applied.	已撤销：标牌恢复到上次应用时的状态。
+# SignLink/UI/MovePanel.cs:29
+where it was built	原位
+# SignLink/UI/MovePanel.cs:297
+the reset stays: the sign is gone (unloaded or removed).	重置保留：标牌已不在（未加载或已被移除）。
+# SignLink/UI/MovePanel.cs:304
+the sign is gone.	标牌已不在。
+# SignLink/UI/MovePanel.cs:310
+undoing the reset ...	正在撤销重置……
+# SignLink/UI/MovePanel.cs:327
+the reset is undone: the sign stands where and as it stood before, for everyone.	已撤销重置：对所有人而言，标牌都恢复到原来的位置和姿态。
+# SignLink/UI/MovePanel.cs:337
+the reset is undone: the sign stands where and as it stood before; the steps not applied are back (only you see them).	已撤销重置：标牌恢复到原来的位置和姿态；未应用的步骤也已恢复（仅你可见）。
+# SignLink/UI/MovePanel.cs:338
+the reset is undone: the sign stands where and as it stood before.	已撤销重置：标牌恢复到原来的位置和姿态。
+# SignLink/UI/MovePanel.cs:339
+the reset is undone: the steps not applied are back (only you see them).	已撤销重置：未应用的步骤已恢复（仅你可见）。
+# SignLink/UI/MovePanel.cs:364
+the sign is back where it was built (Undo brings the steps back).	标牌已回到建造位置（“撤销步骤”可找回这些步骤）。
+# SignLink/UI/MovePanel.cs:398
+no support where it was built: {0}	建造位置没有支撑：{0}
+# SignLink/UI/MovePanel.cs:426
+the sign stands where and as it was built: its signs were made again, every player sees it so now (Undo brings it back).	标牌已恢复到建造时的位置和姿态：标牌已重建，所有玩家现在都会看到（“撤销步骤”可撤回）。
+# SignLink/UI/MovePanel.cs:448
+turned the sign {0:0.#}° clockwise ({1}).	标牌已顺时针转向 {0:0.#}°（相对建造位置：{1}）。
+# SignLink/UI/MovePanel.cs:448
+turned the sign {0:0.#}° anticlockwise ({1}).	标牌已逆时针转向 {0:0.#}°（相对建造位置：{1}）。
+# SignLink/UI/MovePanel.cs:479
+moved the sign {0} ({1} from where it was built).	标牌已移动：{0}（相对建造位置：{1}）。
+# SignLink/UI/MovePanel.cs:480
+moved the sign {0} (back where it was built).	标牌已移动：{0}（回到建造位置）。
+# SignLink/UI/MovePanel.cs:536
+No support.	无支撑。
+# SignLink/UI/MovePanel.cs:543
+{0} · only you see it	{0} · 仅你可见
+# SignLink/UI/MovePanel.cs:567
+turned {0:0.#}° clockwise	顺时针转向 {0:0.#}°
+# SignLink/UI/MovePanel.cs:567
+turned {0:0.#}° anticlockwise	逆时针转向 {0:0.#}°
+# SignLink/UI/MovePanel.cs:570
+rotated {0:0.#}° clockwise	顺时针旋转 {0:0.#}°
+# SignLink/UI/MovePanel.cs:570
+rotated {0:0.#}° anticlockwise	逆时针旋转 {0:0.#}°
+# SignLink/UI/Session.cs:221
+SignLink {0}	SignLink {0}
+# SignLink/UI/Session.cs:221
+SignLink (older version)	SignLink（旧版本）
+# SignLink/UI/Session.cs:221
+not SignLink	非 SignLink
+# SignLink/UI/Session.cs:336
+Text too long to edit	文字太长，无法编辑
+# SignLink/UI/Session.cs:337
+{0}: not on this computer	{0}：不在这台电脑上
+# SignLink/UI/Session.cs:439
+Hidden by the game's content settings.	已被游戏的内容设置隐藏。
+# SignLink/UI/Session.cs:45
+[hidden by the game's content settings]	[已被游戏的内容设置隐藏]
+# SignLink/UI/Session.cs:51
+Hidden by the game's content settings	已被游戏的内容设置隐藏
+# SignLink/UI/SignLinkWindow.Picking.cs:176
+Click a sign  ·  Esc / {0} cancels	点击一个标牌  ·  Esc / {0} 取消
+# SignLink/UI/SignLinkWindow.Picking.cs:177
+Click a sign  ·  Esc cancels	点击一个标牌  ·  Esc 取消
+# SignLink/UI/SignLinkWindow.Picking.cs:178
+No sign there  ·  Esc / {0} cancels	那里没有标牌  ·  Esc / {0} 取消
+# SignLink/UI/SignLinkWindow.Picking.cs:179
+No sign there  ·  Esc cancels	那里没有标牌  ·  Esc 取消
+# SignLink/UI/SignLinkWindow.Signs.cs:122
+Every sign within 30 m	30 m 内的所有标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:122
+SignLink signs within {0} m	{0} m 内的 SignLink 标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:178
+{0:0.0} m ahead	前方 {0:0.0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:178
+{0:0.0} m behind	后方 {0:0.0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:179
+{0:0.0} m right	右侧 {0:0.0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:179
+{0:0.0} m left	左侧 {0:0.0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:180
+{0:0.0} m up	上方 {0:0.0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:180
+{0:0.0} m down	下方 {0:0.0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:202
+empty	空
+# SignLink/UI/SignLinkWindow.Signs.cs:206
+a picture	图片
+# SignLink/UI/SignLinkWindow.Signs.cs:206
+a sign	标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:207
+{0} signs	{0} 个标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:27
+A sign	标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:277
+1 sign	1 个标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:28
+{0} · {1} · {2} signs	{0} · {1} · {2} 个标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:29
+{0} · {1}	{0} · {1}
+# SignLink/UI/SignLinkWindow.Signs.cs:290
+{0:0} m north	北方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:291
+{0:0} m north-east	东北方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:292
+{0:0} m east	东方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:293
+{0:0} m south-east	东南方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:294
+{0:0} m south	南方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:295
+{0:0} m south-west	西南方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:296
+{0:0} m west	西方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:297
+{0:0} m north-west	西北方 {0:0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:322
+None within {0} m	{0} m 内没有标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:363
+Too far:	太远：
+# SignLink/UI/SignLinkWindow.Signs.cs:430
+selected the sign with {0}.	已选择内容为“{0}”的标牌。
+# SignLink/UI/SignLinkWindow.Signs.cs:430
+selected the sign.	已选择标牌。
+# SignLink/UI/SignLinkWindow.Signs.cs:47
+Select sign	选择标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:56
+Hide list	隐藏列表
+# SignLink/UI/SignLinkWindow.Signs.cs:56
+Signs nearby	附近标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:71
+Clear selection	取消选择
+# SignLink/UI/SignLinkWindow.Signs.cs:75
+no sign selected.	已取消选择标牌。
+# SignLink/UI/SignLinkWindow.Signs.cs:84
+Select a sign to work on	请选择要编辑的标牌
+# SignLink/UI/SignLinkWindow.Signs.cs:98
+Show all SignLink signs	显示所有 SignLink 标牌
+# SignLink/UI/SignLinkWindow.cs:167
+SignLink: {0}	SignLink：{0}
+# SignLink/UI/SignLinkWindow.cs:353
+1 Sign	1 标牌
+# SignLink/UI/SignLinkWindow.cs:357
+3 Place	3 放置
+# SignLink/UI/SignLinkWindow.cs:357
+2 Content	2 内容
+# SignLink/UI/SignLinkWindow.cs:466
+SignLink {0} could not load: see BepInEx/LogOutput.log	SignLink {0} 加载失败：详见 BepInEx/LogOutput.log
+# SignLink/UI/SignLinkWindow.cs:478
+opened ({0} signs).	已打开（{0} 个标牌）。
+# SignLink/UI/SignLinkWindow.cs:478
+opened.	已打开。
+# SignLink/UI/SignLinkWindow.cs:511
+{0} of SignLink signs within {1} m	{1} m 内的 SignLink 标牌共 {0}
+# SignLink/UI/SignLinkWindow.cs:519
+{0} / {1} multiplayer area limit (over: only lighter content)	{0} / {1} 多人区域上限（已超出：只能放更小的内容）
+# SignLink/UI/SignLinkWindow.cs:519
+{0} / {1} multiplayer area limit	{0} / {1} 多人区域上限
+# SignLink/UI/SignLinkWindow.cs:520
+{0} / {1} area limit (over)	{0} / {1} 区域上限（已超出）
+# SignLink/UI/SignLinkWindow.cs:520
+{0} / {1} area limit	{0} / {1} 区域上限
+# SignLink/UI/SignLinkWindow.cs:685
+Highlight off (Settings)	高亮已关闭（见设置）
+# SignLink/UI/SignLinkWindow.cs:735
+Could not: {0}	失败：{0}
+# SignLink/UI/SignLinkWindow.cs:735
+Done: {0}	完成：{0}
+# SignLink/UI/SignLinkWindow.cs:99
+the input blocker did not apply (a game update?)	输入屏蔽未生效（游戏更新了？）
+# SignLink/UI/SignWords.cs:13
+{0:0} m away	相距 {0:0} m
+# SignLink/UI/Sources/ArtSource.cs:143
+{0}: {1} x {2} pixels, {3}, {4} frames at {5:0.#} fps	{0}：{1} x {2} 像素，{3}，{4} 帧，{5:0.#} fps
+# SignLink/UI/Sources/ArtSource.cs:144
+{0}: {1} x {2} pixels on {3} stacked signs, {4}	{0}：{1} x {2} 像素，占 {3} 个叠放的标牌，{4}
+# SignLink/UI/Sources/ArtSource.cs:145
+{0}: {1} x {2} pixels, {3}	{0}：{1} x {2} 像素，{3}
+# SignLink/UI/Sources/ArtSource.cs:151
+{0}: glyph art on {1} stacked signs, {2}	{0}：字符画，占 {1} 个叠放的标牌，{2}
+# SignLink/UI/Sources/ArtSource.cs:152
+{0}: glyph art, {1}	{0}：字符画，{1}
+# SignLink/UI/Sources/ArtSource.cs:153
+{0}: no quick view on {1} stacked signs, {2}	{0}：无快速预览，占 {1} 个叠放的标牌，{2}
+# SignLink/UI/Sources/ArtSource.cs:154
+{0}: no quick view, {1}	{0}：无快速预览，{1}
+# SignLink/UI/Sources/ArtSource.cs:161
+{0}: cannot read it: {1}	{0}：无法读取：{1}
+# SignLink/UI/Sources/ArtSource.cs:215
+{0}: reading ...	{0}：读取中……
+# SignLink/UI/Sources/ArtSource.cs:262
+Art	图案
+# SignLink/UI/Sources/ArtSource.cs:266
+Browse pieces	浏览图案
+# SignLink/UI/Sources/ArtSource.cs:272
+{0}   · on the sign	{0}   · 已在标牌上
+# SignLink/UI/Sources/ArtSource.cs:277
+nothing here yet	这里还没有内容
+# SignLink/UI/Sources/ArtSource.cs:330
+Quick view	快速预览
+# SignLink/UI/Sources/ArtSource.cs:338
+Moving	动态
+# SignLink/UI/Sources/ArtSource.cs:355
+Summary	概要
+# SignLink/UI/Sources/ArtSource.cs:358
+Pixels	像素
+# SignLink/UI/Sources/ArtSource.cs:358
+glyph art	字符画
+# SignLink/UI/Sources/ArtSource.cs:360
+Signs	标牌数
+# SignLink/UI/Sources/ArtSource.cs:360
+{0}, stacked	{0} 个，叠放
+# SignLink/UI/Sources/ArtSource.cs:363
+Frames	帧
+# SignLink/UI/Sources/ArtSource.cs:363
+{0} at {1:0.#} fps, goes on still	{0} 帧，{1:0.#} fps，放上后静止
+# SignLink/UI/Sources/ArtSource.cs:363
+{0} at {1:0.#} fps	{0} 帧，{1:0.#} fps
+# SignLink/UI/Sources/ArtSource.cs:365
+Content size	内容大小
+# SignLink/UI/Sources/ArtSource.cs:417
+{0} (pixel art)	{0}（像素画）
+# SignLink/UI/Sources/ArtSource.cs:417
+{0} (glyph art)	{0}（字符画）
+# SignLink/UI/Sources/ArtSource.cs:419
+animation	动画
+# SignLink/UI/Sources/ArtSource.cs:419
+several signs	多个标牌
+# SignLink/UI/Sources/ArtSource.cs:419
+one sign	单个标牌
+# SignLink/UI/Sources/ArtSource.cs:502
+Pick a piece above	请在上方选择图案
+# SignLink/UI/Sources/ArtSource.cs:502
+Reading the piece ...	正在读取图案……
+# SignLink/UI/Sources/ArtSource.cs:555
+Reading ...	读取中……
+# SignLink/UI/Sources/ArtSource.cs:556
+Fixed size	大小固定
+# SignLink/UI/Sources/ArtSource.cs:560
+Goes on {0:0.##} m wide	放上后宽 {0:0.##} m
+# SignLink/UI/Sources/ArtSource.cs:560
+Goes on at {0:0.#} %	放上后为 {0:0.#}%
+# SignLink/UI/Sources/ArtSource.cs:634
+'{0}' is on the sign{1}, not moving.	“{0}”已放到标牌上{1}，未开启动态。
+# SignLink/UI/Sources/ArtSource.cs:635
+'{0}' is on the sign{1}, moving.	“{0}”已放到标牌上{1}，动态播放中。
+# SignLink/UI/Sources/ArtSource.cs:636
+'{0}' is on the sign{1}, still.	“{0}”已放到标牌上{1}，静止。
+# SignLink/UI/Sources/ArtSource.cs:638
+'{0}' is on the sign{1} ({2} signs, {3}).	“{0}”已放到标牌上{1} ({2} 个标牌，{3})。
+# SignLink/UI/Sources/ArtSource.cs:639
+'{0}' is on the sign{1} ({2}).	“{0}”已放到标牌上{1} ({2})。
+# SignLink/UI/Sources/PictureSource.FromSign.cs:160
+no quick view: {0}	无快速预览：{0}
+# SignLink/UI/Sources/PictureSource.Put.cs:153
+the picture or the sign changed while it was counted: press the button again	计算期间图片或标牌发生了变化：请再按一次按钮
+# SignLink/UI/Sources/PictureSource.Put.cs:156
+counted, it is very large for every player who arrives: press the button again to decide	计算完成，内容对每位新进入的玩家来说都很大：请再按一次按钮做决定
+# SignLink/UI/Sources/PictureSource.Put.cs:179
+the file changed on disk since it was counted; it is read again: press the button once more	计算后文件在磁盘上被修改，正在重新读取：请再按一次按钮
+# SignLink/UI/Sources/PictureSource.Put.cs:227
+the sign's picture changed meanwhile; it is read again: press the button once more	标牌上的图片在此期间已更改，正在重新读取：请再按一次按钮
+# SignLink/UI/Sources/PictureSource.Put.cs:26
+The sign's picture cannot be read back: {0}	无法读回标牌上的图片：{0}
+# SignLink/UI/Sources/PictureSource.Put.cs:27
+Reading the picture from the sign ...	正在从标牌读取图片……
+# SignLink/UI/Sources/PictureSource.Put.cs:28
+Working ...	处理中……
+# SignLink/UI/Sources/PictureSource.Put.cs:29
+These settings do not work: {0}	当前设置不可用：{0}
+# SignLink/UI/Sources/PictureSource.Put.cs:31
+Counting what it costs ...	正在计算占用……
+# SignLink/UI/Sources/PictureSource.Put.cs:34
+Pick a picture above	请在上方选择图片
+# SignLink/UI/Sources/PictureSource.Put.cs:35
+Reading the folder ...	正在读取文件夹……
+# SignLink/UI/Sources/PictureSource.Put.cs:40
+Reading the picture ...	正在读取图片……
+# SignLink/UI/Sources/PictureSource.Put.cs:67
+This picture ({0} x {1} pixels)	此图片（{0} x {1} 像素）
+# SignLink/UI/Sources/PictureSource.Put.cs:81
+Lighter: lower the Resolution	减小体积：降低分辨率
+# SignLink/UI/Sources/PictureSource.Size.cs:184
+Height (same shape)	高度（保持比例）
+# SignLink/UI/Sources/PictureSource.Work.cs:150
+reading a large photo ...	正在读取大尺寸照片……
+# SignLink/UI/Sources/PictureSource.Work.cs:150
+reading {0} ...	正在读取 {0}……
+# SignLink/UI/Sources/PictureSource.Work.cs:167
+cannot read: {0}	无法读取：{0}
+# SignLink/UI/Sources/PictureSource.Work.cs:225
+drawing the quick view ...	正在绘制快速预览……
+# SignLink/UI/Sources/PictureSource.Work.cs:261
+the quick view is not this grid	快速预览与当前网格不符
+# SignLink/UI/Sources/PictureSource.Work.cs:36
+moving	动态
+# SignLink/UI/Sources/PictureSource.cs:23
+cannot read: PNG, JPG or GIF only (convert HEIC or WebP first)	无法读取：仅支持 PNG、JPG 或 GIF（HEIC 或 WebP 请先转换）
+# SignLink/UI/Sources/PictureSource.cs:338
+{0} frames, a long GIF: one frame in {1} moves (the same speed, less smooth).	{0} 帧，GIF 较长：每 {1} 帧只播放一帧（速度不变，流畅度降低）。
+# SignLink/UI/Sources/PictureSource.cs:339
+{0} frames, all of them move.	{0} 帧，全部播放。
+# SignLink/UI/Sources/PictureSource.cs:436
+reading the picture from the sign ...	正在从标牌读取图片……
+# SignLink/UI/Sources/PictureSource.cs:436
+Loading {0} ...	正在加载 {0}……
+# SignLink/UI/Sources/PictureSource.cs:484
+Picture	图片
+# SignLink/UI/Sources/PictureSource.cs:490
+Browse pictures	浏览图片
+# SignLink/UI/Sources/PictureSource.cs:494
+Reload	刷新
+# SignLink/UI/Sources/PictureSource.cs:495
+Open folder	打开文件夹
+# SignLink/UI/Sources/PictureSource.cs:501
+No file here, unreadable: {0}	本机没有此文件，且无法读取：{0}
+# SignLink/UI/Sources/PictureSource.cs:501
+No file here: read from the sign	本机没有此文件：已从标牌读取
+# SignLink/UI/Sources/PictureSource.cs:515
+No pictures in this folder	此文件夹中没有图片
+# SignLink/UI/Sources/PictureSource.cs:515
+Empty: Open folder	空：请点“打开文件夹”
+# SignLink/UI/Sources/PictureSource.cs:538
+up	上级
+# SignLink/UI/Sources/PictureSource.cs:538
+folder	文件夹
+# SignLink/UI/Sources/PictureSource.cs:575
+Resolution	分辨率
+# SignLink/UI/Sources/PictureSource.cs:593
+Multiplayer max: {0}	多人上限：{0}
+# SignLink/UI/Sources/PictureSource.cs:608
+Max for this size	此尺寸最大值
+# SignLink/UI/Sources/PictureSource.cs:622
+px wide	px 宽
+# SignLink/UI/Sources/PictureSource.cs:625
+Multiplayer max: {0} px	多人上限：{0} px
+# SignLink/UI/Sources/PictureSource.cs:656
+Seamless pixels	无缝像素
+# SignLink/UI/Sources/PictureSource.cs:679
+One frame: it does not move.	只有一帧：不会动。
+# SignLink/UI/Sources/PictureSource.cs:683
+Too big to move: {0} MB of frames, at most {1} MB; a lower Resolution helps	太大，无法播放：帧需 {0} MB，上限 {1} MB；降低分辨率可解决
+# SignLink/UI/Sources/PictureSource.cs:685
+Still for now: other GIFs here hold {0} MB of {1} MB; it needs {2} MB	暂时静止：此处其他 GIF 已占用 {0} MB / {1} MB；它需要 {2} MB
+# SignLink/UI/Sources/PictureSource.cs:701
+Native pixels	原始像素
+# SignLink/UI/Sources/PictureSource.cs:702
+Resolution pixels	分辨率像素
+# SignLink/UI/Sources/PictureSource.cs:704
+file is {0} px wide	文件宽 {0} px
+# SignLink/UI/Sources/PictureSource.cs:706
+{0} k pixel limit	上限 {0} k 像素
+# SignLink/UI/Sources/PictureSource.cs:707
+counting ...	计算中……
+# SignLink/UI/Sources/PictureSource.cs:709
+Cost	占用
+# SignLink/UI/Sources/PictureSource.cs:709
+error	错误
+# SignLink/UI/Sources/PictureSource.cs:714
+See-through	透明
+# SignLink/UI/Sources/PictureSource.cs:714
+{0} pixels, free	{0} 像素，不占空间
+# SignLink/UI/Sources/PictureSource.cs:715
+about {0} (counting ...)	约 {0}（计算中……）
+# SignLink/UI/Sources/PictureSource.cs:725
+Made with PNG transparency	制作时使用了 PNG 透明
+# SignLink/UI/Sources/PictureSource.cs:725
+Made without PNG transparency	制作时未使用 PNG 透明
+# SignLink/UI/Sources/Source.cs:104
+This	此内容
+# SignLink/UI/Sources/Source.cs:122
+{0}. {1}	{0}。{1}
+# SignLink/UI/Sources/Source.cs:122
+{0}.	{0}。
+# SignLink/UI/Sources/Source.cs:163
+Select a sign first	请先选择标牌
+# SignLink/UI/Sources/Source.cs:163
+Locked	已锁定
+# SignLink/UI/Sources/Source.cs:187
+{0} is over the {1} SignLink stores on one sign	{0} 超过 SignLink 单个标牌的存储上限 {1}
+# SignLink/UI/Sources/Source.cs:188
+Multiplayer	多人游戏
+# SignLink/UI/Sources/Source.cs:189
+fits the limits	在限制范围内
+# SignLink/UI/Sources/Source.cs:192
+Arriving	玩家进入
+# SignLink/UI/Sources/Source.cs:192
+under 0.1 s download	下载不到 0.1 s
+# SignLink/UI/Sources/Source.cs:192
+{0:0.#} s download	下载 {0:0.#} s
+# SignLink/UI/Sources/TextSource.cs:211
+Insert	插入
+# SignLink/UI/Sources/TextSource.cs:218
+Reset	重置
+# SignLink/UI/Sources/TextSource.cs:229
+Clear	清空
+# SignLink/UI/Sources/TextSource.cs:231
+Undo	撤销
+# SignLink/UI/Sources/TextSource.cs:233
+Redo	重做
+# SignLink/UI/Sources/TextSource.cs:252
+Holds a piece	标牌上已有图案
+# SignLink/UI/Sources/TextSource.cs:252
+Holds a piece (unreadable)	标牌上已有图案（无法读取）
+# SignLink/UI/Sources/TextSource.cs:254
+{0} characters: too long	{0} 个字符：太长
+# SignLink/UI/Sources/TextSource.cs:428
+Type a text above	请在上方输入文字
+# SignLink/UI/Sources/TextSource.cs:430
+This text	此文字
+# SignLink/UI/Sources/TextSource.cs:471
+the text is on the sign{0}.	文字已放到标牌上{0}。
+# SignLink/UI/Tabs/ContentTab.cs:159
+Calculating ...	计算中……
+# SignLink/UI/Tabs/ContentTab.cs:160
+Next ▸	下一步 ▸
+# SignLink/UI/Tabs/ContentTab.cs:168
+Preview: only you	预览：仅你可见
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update sign and content	更新标牌和内容
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update content	更新内容
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update sign	更新标牌
+# SignLink/UI/Tabs/ContentTab.cs:208
+As it is	保持现状
+# SignLink/UI/Tabs/ContentTab.cs:225
+Put it on anyway	仍要放上
+# SignLink/UI/Tabs/ContentTab.cs:295
+The sign cannot take this pose: {0}.	标牌无法摆成这个姿态：{0}。
+# SignLink/UI/Tabs/ContentTab.cs:379
+now {0}.	现在：{0}。
+# SignLink/UI/Tabs/ContentTab.cs:379
+back as made.	已恢复原样。
+# SignLink/UI/Tabs/PlaceTab.cs:109
+Fixed place	位置固定
+# SignLink/UI/Tabs/PlaceTab.cs:110
+Fixed size and place	大小和位置固定
+# SignLink/UI/Tabs/PlaceTab.cs:136
+size	大小
+# SignLink/UI/Tabs/PlaceTab.cs:137
+place	位置
+# SignLink/UI/Tabs/PlaceTab.cs:138
+light	光照
+# SignLink/UI/Tabs/PlaceTab.cs:139
+settings	设置
+# SignLink/UI/Tabs/PlaceTab.cs:151
+{0} changed · only you see it	已更改：{0} · 仅你可见
+# SignLink/UI/Tabs/PlaceTab.cs:151
+apply Sign first	请先应用标牌更改
+# SignLink/UI/Tabs/PlaceTab.cs:152
+new item · the button below puts it on	新内容 · 点下方按钮放上
+# SignLink/UI/Tabs/PlaceTab.cs:160
+Apply content changes	应用内容更改
+# SignLink/UI/Tabs/PlaceTab.cs:174
+to the middle	回到中央
+# SignLink/UI/Tabs/PlaceTab.cs:227
+Undo changes	撤销更改
+# SignLink/UI/Tabs/PlaceTab.cs:71
+Content	内容
+# SignLink/UI/Tabs/PlaceTab.cs:74
+Positioning	位置
+# SignLink/UI/Tabs/PlaceTab.cs:91
+Sign	标牌
+# SignLink/UI/Tabs/PlaceTab.cs:94
+Rotations	旋转
+# SignLink/UI/Tabs/PlaceTab.cs:97
+Positioning fine-tune	位置微调
+# SignLink/UI/Tabs/PlayingTab.cs:108
+the GIF moves again, for every SignLink player who has its file.	GIF 已恢复播放，所有拥有该文件的 SignLink 玩家都能看到。
+# SignLink/UI/Tabs/PlayingTab.cs:113
+the GIF moves no more, for anyone: its sign keeps the still picture, as players without SignLink see it.	GIF 已对所有人停止播放：标牌保留静态图片，与未装 SignLink 的玩家看到的一样。
+# SignLink/UI/Tabs/PlayingTab.cs:139
+warded	受守护石保护
+# SignLink/UI/Tabs/PlayingTab.cs:142
+Play	播放
+# SignLink/UI/Tabs/PlayingTab.cs:142
+Pause	暂停
+# SignLink/UI/Tabs/PlayingTab.cs:170
+here only	仅本机
+# SignLink/UI/Tabs/PlayingTab.cs:187
+Pause all GIFs	暂停所有 GIF
+# SignLink/UI/Tabs/PlayingTab.cs:187
+Play all GIFs	播放所有 GIF
+# SignLink/UI/Tabs/PlayingTab.cs:187
+paused: frozen	已暂停：画面冻结
+# SignLink/UI/Tabs/PlayingTab.cs:19
+Playing	播放
+# SignLink/UI/Tabs/PlayingTab.cs:190
+None nearby	附近没有
+# SignLink/UI/Tabs/PlayingTab.cs:198
+paused the GIF: its still picture shows; Play moves it again.	GIF 已暂停：显示静态图片；点“播放”可恢复。
+# SignLink/UI/Tabs/PlayingTab.cs:198
+the GIF moves again.	GIF 已恢复播放。
+# SignLink/UI/Tabs/PlayingTab.cs:199
+that GIF is gone.	该 GIF 已不在。
+# SignLink/UI/Tabs/PlayingTab.cs:212
+Glyph animations	字符动画
+# SignLink/UI/Tabs/PlayingTab.cs:213
+Pause all glyph animations	暂停所有字符动画
+# SignLink/UI/Tabs/PlayingTab.cs:213
+Play all glyph animations	播放所有字符动画
+# SignLink/UI/Tabs/PlayingTab.cs:213
+paused: first frame	已暂停：显示首帧
+# SignLink/UI/Tabs/PlayingTab.cs:216
+Paused	已暂停
+# SignLink/UI/Tabs/PlayingTab.cs:223
+paused: the sign shows its first frame here; Play moves it again.	已暂停：本机上标牌显示首帧；点“播放”可恢复。
+# SignLink/UI/Tabs/PlayingTab.cs:223
+the animation moves again.	动画已恢复播放。
+# SignLink/UI/Tabs/PlayingTab.cs:23
+its sign is no longer loaded	其标牌已不在加载范围内
+# SignLink/UI/Tabs/PlayingTab.cs:68
+not moving	未开启动态
+# SignLink/UI/Tabs/PlayingTab.cs:68
+paused here (Play all)	本机已暂停（见“播放所有”）
+# SignLink/UI/Tabs/PlayingTab.cs:69
+not playing here	未在本机播放
+# SignLink/UI/Tabs/PlayingTab.cs:83
+not moving here (no room: other GIFs play)	未在本机播放（空间不足：其他 GIF 正在播放）
+# SignLink/UI/Tabs/PlayingTab.cs:84
+not moving here (no file)	未在本机播放（缺少文件）
+# SignLink/UI/Tabs/PlayingTab.cs:85
+not moving here	未在本机播放
+# SignLink/UI/Tabs/PlayingTab.cs:85
+not moving here yet (starting)	尚未在本机播放（启动中）
+# SignLink/UI/Tabs/PlayingTab.cs:99
+that sign holds no GIF picture any more.	该标牌上已没有 GIF 图片。
+# SignLink/UI/Tabs/SettingsTab.cs:118
+Settings	设置
+# SignLink/UI/Tabs/SettingsTab.cs:136
+Window	窗口
+# SignLink/UI/Tabs/SettingsTab.cs:145
+Language	语言
+# SignLink/UI/Tabs/SettingsTab.cs:150
+Theme	主题
+# SignLink/UI/Tabs/SettingsTab.cs:154
+Text size	文字大小
+# SignLink/UI/Tabs/SettingsTab.cs:175
+Window size	窗口大小
+# SignLink/UI/Tabs/SettingsTab.cs:179
+Default size	默认大小
+# SignLink/UI/Tabs/SettingsTab.cs:193
+Hotkey	快捷键
+# SignLink/UI/Tabs/SettingsTab.cs:195
+press a key ...	请按键……
+# SignLink/UI/Tabs/SettingsTab.cs:195
+no key	无
+# SignLink/UI/Tabs/SettingsTab.cs:205
+Unbind	解除绑定
+# SignLink/UI/Tabs/SettingsTab.cs:212
+Press a key · Esc keeps the old	请按一个键 · Esc 保留原按键
+# SignLink/UI/Tabs/SettingsTab.cs:216
+Sign options	标牌选项
+# SignLink/UI/Tabs/SettingsTab.cs:221
+Highlight signs	高亮标牌
+# SignLink/UI/Tabs/SettingsTab.cs:226
+Highlight sign contents	高亮标牌内容
+# SignLink/UI/Tabs/SettingsTab.cs:230
+Pictures	图片
+# SignLink/UI/Tabs/SettingsTab.cs:234
+PNG transparency	PNG 透明
+# SignLink/UI/Tabs/SettingsTab.cs:236
+Fine Width steps: exact sizes, your Resolution kept	精细宽度步进：尺寸精确，保留你设的分辨率
+# SignLink/UI/Tabs/SettingsTab.cs:241
+Playback	播放
+# SignLink/UI/Tabs/SettingsTab.cs:255
+Pause beyond	超出距离暂停
+# SignLink/UI/Tabs/SettingsTab.cs:263
+GIF memory	GIF 内存
+# SignLink/UI/Tabs/SettingsTab.cs:265
+RAM for moving GIFs; 1024 wants 16 GB	动态 GIF 占用的内存；1024 需要 16 GB 内存
+# SignLink/UI/Tabs/SettingsTab.cs:275
+Reset to defaults	全部恢复默认
+# SignLink/UI/Tabs/SettingsTab.cs:275
+Sure? Click again	确定？再点一次
+# SignLink/UI/Tabs/SettingsTab.cs:284
+every setting is at its default already.	所有设置已是默认值。
+# SignLink/UI/Tabs/SettingsTab.cs:285
+1 setting back to the default.	1 项设置已恢复默认。
+# SignLink/UI/Tabs/SettingsTab.cs:285
+{0} settings back to the default.	{0} 项设置已恢复默认。
+# SignLink/UI/Tabs/SettingsTab.cs:290
+About	关于
+# SignLink/UI/Tabs/SettingsTab.cs:296
+Steps	步骤
+# SignLink/UI/Tabs/SettingsTab.cs:299
+Open it	打开方式
+# SignLink/UI/Tabs/SettingsTab.cs:299
+no hotkey	未设快捷键
+# SignLink/UI/Tabs/SettingsTab.cs:300
+/signlink in the chat	在聊天框输入 /signlink
+# SignLink/UI/Tabs/SettingsTab.cs:301
+E on a picture sign	对着图片标牌按 E
+# SignLink/UI/Tabs/SettingsTab.cs:302
+Open in SignLink (sign editor)	标牌编辑界面中的“在 SignLink 中打开”
+# SignLink/UI/Tabs/SettingsTab.cs:304
+Fine-tune	微调
+# SignLink/UI/Tabs/SettingsTab.cs:304
+Shift+wheel on a slider	在滑块上 Shift+滚轮
+# SignLink/UI/Tabs/SettingsTab.cs:305
+arrow keys (3 Place)	方向键（3 放置）
+# SignLink/UI/Tabs/SettingsTab.cs:307
+Look around	环顾四周
+# SignLink/UI/Tabs/SettingsTab.cs:307
+hold the right mouse button	按住鼠标右键
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Graphics tip	画面建议
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Bloom off: sharper pictures	关闭泛光：图片更清晰
+# SignLink/UI/Tabs/SettingsTab.cs:92
+Classic	经典
+# SignLink/UI/Tabs/SettingsTab.cs:92
+Nordic	北欧
+# SignLink/UI/Tabs/SignTab.cs:105
+Actions	操作
+# SignLink/UI/Tabs/SignTab.cs:123
+the sign is empty.	标牌已清空。
+# SignLink/UI/Tabs/SignTab.cs:123
+the sign is empty, and its {0} stacked copies are gone.	标牌已清空，其 {0} 个叠放的副本已移除。
+# SignLink/UI/Tabs/SignTab.cs:127
+Clears the sign's content	清空标牌内容
+# SignLink/UI/Tabs/SignTab.cs:133
+Copy	复制
+# SignLink/UI/Tabs/SignTab.cs:138
+copied the moving piece: Paste puts it on another sign, moving.	已复制动态图案：“粘贴”可将它放到另一个标牌上，保持动态。
+# SignLink/UI/Tabs/SignTab.cs:139
+copied the picture ({0} signs): Paste puts it on another sign.	已复制图片（{0} 个标牌）：“粘贴”可将它放到另一个标牌上。
+# SignLink/UI/Tabs/SignTab.cs:140
+copied the sign's text: Paste puts it on another sign.	已复制标牌文字：“粘贴”可将它放到另一个标牌上。
+# SignLink/UI/Tabs/SignTab.cs:143
+Copies all it holds, moving art and GIFs too	复制全部内容，包括动态图案和 GIF
+# SignLink/UI/Tabs/SignTab.cs:150
+Paste	粘贴
+# SignLink/UI/Tabs/SignTab.cs:156
+the clipboard holds no text (Copy a sign first)	剪贴板中没有文字（请先“复制”一个标牌）
+# SignLink/UI/Tabs/SignTab.cs:159
+the moving piece is on the sign.	动态图案已放到标牌上。
+# SignLink/UI/Tabs/SignTab.cs:160
+the piece is on the sign, not moving (Playing › Moving starts it).	图案已放到标牌上，未开启动态（“播放 › 动态”可开启）。
+# SignLink/UI/Tabs/SignTab.cs:161
+a picture over {0} signs is on the sign.	占 {0} 个标牌的图片已放到标牌上。
+# SignLink/UI/Tabs/SignTab.cs:161
+the text is on the sign.	文字已放到标牌上。
+# SignLink/UI/Tabs/SignTab.cs:164
+Pastes a copied sign's content onto this sign	把复制的标牌内容粘贴到此标牌
+# SignLink/UI/Tabs/SignTab.cs:171
+Delete	删除
+# SignLink/UI/Tabs/SignTab.cs:176
+the sign is gone: select it again	标牌已不在：请重新选择
+# SignLink/UI/Tabs/SignTab.cs:179
+signs here cannot be removed: a place where nothing may be built or removed	此处的标牌无法移除：这里禁止建造或拆除
+# SignLink/UI/Tabs/SignTab.cs:182
+nothing was deleted: a ward you have no access to protects the sign	未删除任何东西：标牌受你无权限的守护石保护
+# SignLink/UI/Tabs/SignTab.cs:183
+deleted the sign and the {0} copies stacked on it (nothing drops).	已删除标牌及其上叠放的 {0} 个副本（不掉落材料）。
+# SignLink/UI/Tabs/SignTab.cs:183
+deleted the sign (nothing drops).	已删除标牌（不掉落材料）。
+# SignLink/UI/Tabs/SignTab.cs:186
+Deletes the sign completely	彻底删除标牌
+# SignLink/UI/Tabs/SignTab.cs:202
+the game hides this sign's content here (a blocked or muted author, or user content off)	游戏在此隐藏了该标牌的内容（作者已被屏蔽或静音，或已关闭用户内容）
+# SignLink/UI/Tabs/SignTab.cs:31
+What the sign holds	标牌内容
+# SignLink/UI/Tabs/SignTab.cs:49
+Holds	内容
+# SignLink/UI/Tabs/SignTab.cs:49
+nothing	无
+# SignLink/UI/Tabs/SignTab.cs:50
+a picture or glyph art	图片或字符画
+# SignLink/UI/Tabs/SignTab.cs:50
+text or a small picture	文字或小图片
+# SignLink/UI/Tabs/SignTab.cs:51
+Made with	制作工具
+# SignLink/UI/Tabs/SignTab.cs:54
+Fit	摆放
+# SignLink/UI/Tabs/SignTab.cs:61
+too big: {0} on a sign	太大：单个标牌 {0}
+# SignLink/UI/Tabs/SignTab.cs:62
+over {0}	超过 {0}
+# SignLink/UI/Tabs/SignTab.cs:62
+fits	符合
+# SignLink/UI/Tabs/SignTab.cs:65
+Animation	动画
+# SignLink/UI/Tabs/SignTab.cs:65
+{0} frames, {1:0.#} fps	{0} 帧，{1:0.#} fps
+# SignLink/UI/Tabs/SignTab.cs:98
+as made	原样
+# SignLink/UI/TemplateRows.cs:107
+Width	宽度
+# SignLink/UI/TemplateRows.cs:108
+Height	高度
+# SignLink/UI/TemplateRows.cs:109
+Colour	颜色
+# SignLink/UI/TemplateRows.cs:114
+Text	文字
+# SignLink/UI/TemplateRows.cs:117
+Letter height	字高
+# SignLink/UI/TemplateRows.cs:125
+Glyph	字符
+# SignLink/UI/TemplateRows.cs:128
+Columns	列数
+# SignLink/UI/TemplateRows.cs:129
+Rows	行数
+# SignLink/UI/TemplateRows.cs:130
+Cell	格子
+# SignLink/UI/TemplateRows.cs:131
+Colour A	颜色 A
+# SignLink/UI/TemplateRows.cs:132
+Colour B	颜色 B
+# SignLink/UI/TemplateRows.cs:133
+Chessboard	棋盘格
+# SignLink/UI/TemplateRows.cs:152
+Pick a template	请选择模板
+# SignLink/UI/TemplateRows.cs:153
+Pick a symbol	请选择符号
+# SignLink/UI/TemplateRows.cs:168
+Too long: {0:0.#} k characters, {1:0.#} k left	太长：{0:0.#} k 字符，剩余 {1:0.#} k
+# SignLink/UI/TemplateRows.cs:17
+Block	色块
+# SignLink/UI/TemplateRows.cs:17
+Label	标签
+# SignLink/UI/TemplateRows.cs:17
+Symbol	符号
+# SignLink/UI/TemplateRows.cs:17
+Pattern	格纹
+# SignLink/UI/TemplateRows.cs:17
+QR	QR
+# SignLink/UI/TemplateRows.cs:178
+Link or text	链接或文字
+# SignLink/UI/TemplateRows.cs:181
+Error correction	纠错级别
+# SignLink/UI/TemplateRows.cs:183
+Size	大小
+# SignLink/UI/TemplateRows.cs:184
+qr colour|Dark	深色
+# SignLink/UI/TemplateRows.cs:185
+qr colour|Light	浅色
+# SignLink/UI/TemplateRows.cs:194
+Making the code ...	正在生成 QR 码……
+# SignLink/UI/TemplateRows.cs:202
+Palette	分类
+# SignLink/UI/TemplateRows.cs:216
+Pick one	请选择一个
+# SignLink/UI/TemplateRows.cs:218
+Rotate	旋转
+# SignLink/UI/TemplateRows.cs:219
+Mirror (flip left to right)	镜像（左右翻转）
+# SignLink/UI/TemplateRows.cs:255
+Opacity	不透明度
+# SignLink/UI/TemplateRows.cs:292
+a {0:0.##} x {1:0.##} m block, {2}{3}, in the sign's middle	{0:0.##} x {1:0.##} m 色块，{2}{3}，位于标牌中央
+# SignLink/UI/TemplateRows.cs:293
+'{0}' with {1:0} cm capitals, {2}{3}, in the middle	“{0}”，字高 {1:0} cm，{2}{3}，居中
+# SignLink/UI/TemplateRows.cs:294
+{0} {1:0} cm tall	{0} 高 {1:0} cm
+# SignLink/UI/TemplateRows.cs:295
+rotated {0:0}°	旋转 {0:0}°
+# SignLink/UI/TemplateRows.cs:295
+mirrored	已镜像
+# SignLink/UI/TemplateRows.cs:297
+{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5} and {6}{7}	{0} x {1} 格，每格 {2:0} cm（{3:0.##} x {4:0.##} m），{5} 和 {6}{7}
+# SignLink/UI/TemplateRows.cs:298
+{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5}{6}	{0} x {1} 格，每格 {2:0} cm（{3:0.##} x {4:0.##} m），{5}{6}
+# SignLink/UI/TemplateRows.cs:68
+Type a link	请输入链接
+# SignLink/UI/TemplateRows.cs:76
+{0} x {0}, version {1}, {2:0.#} k characters	{0} x {0}，版本 {1}，{2:0.#} k 字符
+# SignLink/UI/TemplateRows.cs:90
+Templates	模板
+# SignLink/UI/Thumb.cs:52
+no quick view: {0} x {1} pixels is too big to show	无快速预览：{0} x {1} 像素，太大无法显示

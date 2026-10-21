@@ -88,18 +88,6 @@ namespace SignLink.Animation
         /// pause holds while the stack unloads and comes back.</summary>
         readonly Dictionary<ZDOID, string> paused = new Dictionary<ZDOID, string>();
 
-        /// <summary>A tool stops this screen, or every screen (null): not again this session unless the sign's content
-        /// changes. Called before the screen stops.</summary>
-        public void Stopped(Sign only)
-        {
-            if (only)
-            {
-                Skip(only, "stopped by a tool");
-                return;
-            }
-            foreach (ScreenPlayer.Row sc in Plugin.Screens.Describe(Time.unscaledTime)) Skip(sc.Sign, "stopped by a tool");
-        }
-
         /// <summary>The player pauses this stack's screen or plays it on: remembered for a screen restored on it later.</summary>
         public void Pause(Sign s, bool on)
         {
@@ -251,7 +239,7 @@ namespace SignLink.Animation
                 try
                 {
                     var sw = Stopwatch.StartNew();
-                    byte[] bytes = File.ReadAllBytes(file);                 // on the worker (0.20.132, review)
+                    byte[] bytes = PictureImporter.ReadFile(file);          // on the worker (0.20.132, review)
                     // the budget from the blocks, before any frame is decoded: frames that cannot play are not made
                     if (GifDecoder.Inspect(bytes, out int gw, out int gh, out int count))
                     {
@@ -304,13 +292,13 @@ namespace SignLink.Animation
             o.TurnDeg = (float)fit.Turn;
             o.EdgePivot = fit.Edge;
             o.Origin(plan, out double cx, out double bottom);
-            bool played = PictureImporter.PlayOver(s, frames, plan, cx, bottom, !o.Glow, out string why);
-            if (!played && why != null && why.StartsWith("too big to play", StringComparison.Ordinal) &&
+            bool played = PictureImporter.PlayOver(s, frames, plan, cx, bottom, !o.Glow, out string why, out bool full);
+            if (!played && full &&
                 Plugin.Screens.MakeRoom(frames.Bytes, s, Time.unscaledTime))                     // another GIF took the room meanwhile:
-                played = PictureImporter.PlayOver(s, frames, plan, cx, bottom, !o.Glow, out why);   // screens idle far away park (1.0.2)
+                played = PictureImporter.PlayOver(s, frames, plan, cx, bottom, !o.Glow, out why, out full);   // screens idle far away park (1.0.2)
             if (!played)
             {
-                if (why != null && why.StartsWith("too big to play", StringComparison.Ordinal))
+                if (full)
                 {                                                           // the budget: kept parked, tried again later
                     Plugin.Screens.Park(frames, Time.unscaledTime);
                     if (frames.Key != null) decoded.Remove(frames.Key);     // no minute's gate: parked, or read again once room comes

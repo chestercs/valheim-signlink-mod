@@ -121,10 +121,11 @@ namespace PetyusPolisz.Kit
         /// row scrolled out of view is not under the mouse, though the mouse lies inside its rect (Number's Shift + wheel).</summary>
         public static Rect? BodyView;
 
-        /// <summary>A vertical-only scroll view (no horizontal bar, ever) of this logical height, as a scope.</summary>
-        public static Scope Scroll(ref Vector2 pos, float height)
+        /// <summary>A vertical-only scroll view (no horizontal bar, ever) of this logical height, as a scope; background: its
+        /// box (a section, or the text editor's frame: Theme.AreaBox).</summary>
+        public static Scope Scroll(ref Vector2 pos, float height, GUIStyle background = null)
         {
-            pos = GUILayout.BeginScrollView(pos, false, false, GUIStyle.none, GUI.skin.verticalScrollbar, Theme.Section, H(Tall(height)));
+            pos = GUILayout.BeginScrollView(pos, false, false, GUIStyle.none, GUI.skin.verticalScrollbar, background ?? Theme.Section, H(Tall(height)));
             return new Scope(2);
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PetyusPolisz.Kit;
 using UnityEngine;
 
 namespace SignLink.Signs
@@ -76,7 +77,7 @@ namespace SignLink.Signs
         public static void Turn(List<Sign> stack, float degrees, Sign any = null)
         {
             Sign root = stack.Count > 0 ? stack[0] : any;
-            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             if (Mathf.Abs(degrees) < 1e-4f) return;
             if (pending != null && !Same(pending, stack)) Write();       // another stack, or it changed: those moves first
             SignText.RequireEdit(root);
@@ -153,18 +154,29 @@ namespace SignLink.Signs
             }
             catch (Exception e)
             {
-                unheld = "it could not be weighed: " + e.Message;            // refused rather than let through unweighed (review)
+                unheld = Lang.F("it could not be weighed: {0}", e.Message);      // refused rather than let through unweighed (review)
             }
         }
 
         static string Weak(float after, float least) =>
-            after <= 0f ? "nothing holds it there"
-                        : $"too weak there ({after:0} of {least:0})";
+            after <= 0f ? Lang.T("nothing holds it there")
+                        : Lang.F("too weak there ({0:0} of {1:0})", after, least);
 
         /// <summary>Is this reason (Holds, Unheld) the sign's support, and not a ward or a spot taken? The frame turns red for
         /// that alone (ContentTab.PoseProblem).</summary>
         public static bool WeakReason(string why) =>
-            why != null && (why.StartsWith("nothing holds it", StringComparison.Ordinal) || why.StartsWith("too weak there", StringComparison.Ordinal));
+            why != null && (why.StartsWith(Lang.T("nothing holds it there"), StringComparison.Ordinal) || FromFormat(why, Lang.T("too weak there ({0:0} of {1:0})")));
+
+        /// <summary>Was text made from this format (in the language in use): its words before the first place and after the
+        /// last are there (none: never).</summary>
+        static bool FromFormat(string text, string format)
+        {
+            int a = format.IndexOf('{'), b = format.LastIndexOf('}');
+            if (a < 0 || b < a) return text == format;
+            string head = format.Substring(0, a), tail = format.Substring(b + 1);
+            return head.Length + tail.Length > 0 && text.Length >= head.Length + tail.Length &&
+                   text.StartsWith(head, StringComparison.Ordinal) && text.EndsWith(tail, StringComparison.Ordinal);
+        }
 
         /// <summary>The stack whose moves and turns are gathered until the player applies or undoes them.</summary>
         static void Begin(List<Sign> stack)
@@ -184,7 +196,7 @@ namespace SignLink.Signs
         public static void Nudge(List<Sign> stack, Vector3 delta, Sign any = null)
         {
             Sign root = stack.Count > 0 ? stack[0] : any;
-            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             if (pending != null && !Same(pending, stack)) Write();       // another stack, or it changed: those moves first
             SignText.RequireEdit(root);
             SignBuilder.Guard();
@@ -193,10 +205,10 @@ namespace SignLink.Signs
             // a limit stops only a step that takes the sign further past it (0.20.70, review): one back towards where it
             // was built always goes
             if (total.magnitude > MaxM + 0.0001f && total.magnitude > moved.magnitude + 0.0001f)
-                throw new InvalidOperationException($"at most {MaxM:0} m from where it was built");
+                throw new InvalidOperationException(Lang.F("at most {0:0} m from where it was built", MaxM));
             if (!Paces && !Holds(root, stack, delta, Quaternion.identity, out string why)) throw new InvalidOperationException(why);
             if (!PrivateArea.CheckAccess(root.transform.position + delta, 0f, false))
-                throw new InvalidOperationException("a ward you have no access to protects that spot");
+                throw new InvalidOperationException(Lang.T("a ward you have no access to protects that spot"));
             RequireSpot(stack, root.transform.position + delta, root.transform.rotation);
             foreach (Sign s in stack)
             {
@@ -215,9 +227,9 @@ namespace SignLink.Signs
         /// overwrite or remove it; 0.20.130, review).</summary>
         internal static void RequireSpot(List<Sign> stack, Vector3 pos, Quaternion rot)
         {
-            if (Location.IsInsideNoBuildLocation(pos)) throw new InvalidOperationException("the game allows no building there");
+            if (Location.IsInsideNoBuildLocation(pos)) throw new InvalidOperationException(Lang.T("the game allows no building there"));
             Sign other = SignFinder.Intruder(stack, pos, rot);
-            if (other) throw new InvalidOperationException("another sign stands there: it would join this sign's copies (move it a little further)");
+            if (other) throw new InvalidOperationException(Lang.T("another sign stands there: it would join this sign's copies (move it a little further)"));
         }
 
         static int supportMask;
@@ -251,8 +263,8 @@ namespace SignLink.Signs
                 float nowSeen = SupportAt(root, wear, own, Vector3.zero, Quaternion.identity, true), afterSeen = SupportAt(root, wear, own, delta, q, true);
                 if (SupportMath.Refuse(nowSeen, afterSeen, least))
                 {
-                    why = $"too weakly held there until the move is applied ({afterSeen:0} of the {least:0} it needs, as the game counts it): " +
-                          "apply the steps so far first";
+                    why = Lang.F("too weakly held there until the move is applied ({0:0} of the {1:0} it needs, as the game counts it): apply the steps so far first",
+                                 afterSeen, least);
                     return false;
                 }
             }
@@ -374,7 +386,7 @@ namespace SignLink.Signs
         {
             if (pending == null) return;
             if (Paces && pending.Count > 0 && pending[0]) Weigh(pending[0], pending);   // as it stands now, not up to half a second ago (review)
-            if (unheld != null) throw new InvalidOperationException("no support: " + unheld);
+            if (unheld != null) throw new InvalidOperationException(Lang.F("no support: {0}", unheld));
             List<Sign> stack = pending;
             Vector3 d = pendingDelta;
             float turn = pendingTurn;

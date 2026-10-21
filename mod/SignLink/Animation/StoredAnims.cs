@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using PetyusPolisz.Kit;
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;
@@ -101,40 +102,24 @@ namespace SignLink.Animation
         /// <summary>Saves the frames on the sign (its text becomes the first frame, for vanilla players). Like any sign
         /// edit it needs ward access; the blob and the text together must stay under MaxBytes, and the frames under
         /// AnimBlob.MaxChars characters in all (what a game reads back plays, 0.20.132).</summary>
-        public string Store(Sign s, IList<string> frames, float fps, string name = null)
+        public void Store(Sign s, IList<string> frames, float fps, string name = null)
         {
-            if (frames.Count == 0) throw new ArgumentException("no frames");
-            if (fps <= 0 || fps > 60) throw new ArgumentException("fps must be in (0, 60]");
+            if (frames.Count == 0) throw new ArgumentException(Lang.T("no frames"));
+            if (fps <= 0 || fps > 60) throw new ArgumentException(Lang.T("fps must be in (0, 60]"));
             if (!AnimBlob.Fits(frames, out long chars))
-                throw new ArgumentException($"{chars} characters in all: over the {AnimBlob.MaxChars} a saved animation holds (no game would play it)");
+                throw new ArgumentException(Lang.F("{0} characters in all: over the {1} a saved animation holds (no game would play it)", chars, AnimBlob.MaxChars));
             SignText.RequireEdit(s);
             byte[] blob = AnimBlob.Pack(frames, fps);
             int total = blob.Length + Encoding.UTF8.GetByteCount(frames[0]);
             if (total > MaxBytes)
-                throw new ArgumentException($"{total / 1024} KB with the first frame as text: over {MaxBytes / 1024} KB, too big to send in multiplayer");
-            SignText.RequireRoom(s, Pictures.SaveCost.Bytes(new[] { frames[0] }, blob.Length), "this animation");   // the multiplayer limits
+                throw new ArgumentException(Lang.F("{0} KB with the first frame as text: over {1} KB, too big to send in multiplayer", total / 1024, MaxBytes / 1024));
+            SignText.RequireRoom(s, Pictures.SaveCost.Bytes(new[] { frames[0] }, blob.Length), Lang.T("this animation"));   // the multiplayer limits
             Sign root = SignBuilder.SetContent(s, new[] { frames[0] }, name)[0];   // an animation lives on one sign
             ZDO rootZdo = SignFinder.Zdo(root);
             rootZdo.Set(Key, blob);
             if (rootZdo.GetInt(StillKey) != 0) rootZdo.Set(StillKey, 0);    // new frames move, for everyone
             paused.Remove(rootZdo.m_uid);                                   // new frames play (0.20.189, review)
             nextScan = 0;
-            return "{\"ok\":true,\"frames\":" + frames.Count + ",\"kb\":" + blob.Length / 1024 + "}";
-        }
-
-        /// <summary>Removes the stored animation; the sign keeps the frame its text holds.</summary>
-        public bool Remove(Sign s)
-        {
-            ZDO zdo = SignFinder.Zdo(s);
-            byte[] blob = Blob(s);
-            if (zdo == null || blob == null || blob.Length == 0) return false;
-            SignText.RequireEdit(s);
-            s.m_nview.ClaimOwnership();
-            zdo.Set(Key, new byte[0]);
-            if (zdo.GetInt(StillKey) != 0) zdo.Set(StillKey, 0);
-            SignMarks.SetSource(s, "");                                      // not the piece it was any more
-            Forget(s);
-            return true;
         }
 
         /// <summary>Does this sign carry frames (moving or not)?</summary>
@@ -175,8 +160,8 @@ namespace SignLink.Animation
         public string SetMoving(Sign s, bool on)
         {
             ZDO zdo = s ? SignFinder.Zdo(s) : null;
-            if (zdo == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
-            if (!HasFrames(zdo)) return "that sign has no saved animation any more.";
+            if (zdo == null) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
+            if (!HasFrames(zdo)) return Lang.T("that sign has no saved animation any more.");
             SignText.RequireEdit(s);
             s.m_nview.ClaimOwnership();
             zdo.Set(StillKey, on ? 0 : Mark(zdo.GetByteArray(Key)));     // these frames, not any later ones (Still)
@@ -237,7 +222,7 @@ namespace SignLink.Animation
             {
                 if (spentMs >= BudgetMsPerSecond || thisStep >= StepMs) break;   // the rest wait: a later frame or second
                 ZDO az = a.Sign ? SignFinder.Zdo(a.Sign) : null;
-                if (az == null || Plugin.Text.Drives(a.Sign) || paused.Contains(az.m_uid)) continue;
+                if (az == null || paused.Contains(az.m_uid)) continue;
                 if (!a.Sign.m_isViewable) continue;               // a muted or blocked author: vanilla shows a notice
                 if (p && Vector3.Distance(p.transform.position, a.Sign.transform.position) > far) continue;
                 int index = (int)((long)Math.Floor(t * a.Fps) % a.Frames.Length);
@@ -484,7 +469,7 @@ namespace SignLink.Animation
             var list = new List<KeyValuePair<string, Sign>>();
             foreach (Playing a in playing.Values)
                 if (a.Sign)
-                    list.Add(new KeyValuePair<string, Sign>($"{a.Frames.Length} frames at {a.Fps:0.#} fps", a.Sign));
+                    list.Add(new KeyValuePair<string, Sign>(Lang.F("{0} frames at {1:0.#} fps", a.Frames.Length, a.Fps), a.Sign));
             return list;
         }
 

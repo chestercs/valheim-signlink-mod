@@ -1,4 +1,5 @@
 using System;
+using PetyusPolisz.Kit;
 
 namespace SignLink.Pictures
 {
@@ -30,7 +31,7 @@ namespace SignLink.Pictures
 
         /// <summary>The bounds of a fit read from a sign's data, which any player's game can write (0.20.132, review): a
         /// size from a thousandth to a thousand times as made, offsets within 1 km (40000 wu), past all the rows (25-400 %,
-        /// 300 m typed) and the API (300 m) make.</summary>
+        /// 300 m typed) make.</summary>
         public const double MinScale = 1e-3, MaxScale = 1e3, MaxOffset = 40000;
 
         /// <summary>A fit's numbers as kept on a sign (scale, right, up, towards you; wu): sane (finite, within the bounds)
@@ -190,25 +191,31 @@ namespace SignLink.Pictures
         }
 
         /// <summary>"lying face up", "tilted back 30°", "lying face down", "tilted forward 15°", or "" (standing).</summary>
-        public static string TiltWords(double tilt) =>
-            Math.Abs(tilt) < 0.05 ? "" : tilt >= 89.95 ? "lying face up" : tilt <= -89.95 ? "lying face down"
-            : tilt > 0 ? $"tilted back {tilt:0.#}°" : $"tilted forward {-tilt:0.#}°";
+        public static string TiltWords(double tilt) => TiltWords(tilt, false);
+
+        /// <summary>The same, "... over its edge" when edge (one whole phrase each, for the translations).</summary>
+        public static string TiltWords(double tilt, bool edge) =>
+            Math.Abs(tilt) < 0.05 ? ""
+            : tilt >= 89.95 ? (edge ? Lang.T("lying face up over its edge") : Lang.T("lying face up"))
+            : tilt <= -89.95 ? (edge ? Lang.T("lying face down over its edge") : Lang.T("lying face down"))
+            : tilt > 0 ? (edge ? Lang.F("tilted back {0:0.#}° over its edge", tilt) : Lang.F("tilted back {0:0.#}°", tilt))
+            : edge ? Lang.F("tilted forward {0:0.#}° over its edge", -tilt) : Lang.F("tilted forward {0:0.#}°", -tilt);
 
         /// <summary>", at 150 %, 1 m right, lying face up, turned 30°, glowing": what differs from as made, and the light
         /// (empty: nothing). For status lines.</summary>
         public string Describe(GlowMode light = GlowMode.AsMade)
         {
             var parts = new System.Collections.Generic.List<string>();
-            if (Math.Abs(Scale - 1) > 1e-4) parts.Add($"at {Scale * 100:0.#} %");
-            if (Math.Abs(Right) > 0.01) parts.Add(Right > 0 ? $"{Right / 40:0.##} m right" : $"{-Right / 40:0.##} m left");
-            if (Math.Abs(Up) > 0.01) parts.Add(Up > 0 ? $"{Up / 40:0.##} m up" : $"{-Up / 40:0.##} m down");
-            if (Math.Abs(Out) > 0.01) parts.Add(Out > 0 ? $"{Out / 40:0.##} m towards you" : $"{-Out / 40:0.##} m away");
-            string tilt = TiltWords(Tilt);
-            if (tilt.Length > 0) parts.Add(Edge ? tilt + " over its edge" : tilt);
-            if (Math.Abs(Angle(Turn)) > 0.05) parts.Add($"rotated {Angle(Turn):0.#}°");     // the Rotate row (0.20.149: "turned" is Turn's)
-            if (light == GlowMode.Glowing) parts.Add("glowing");
-            if (light == GlowMode.Lit) parts.Add("lit by the scene");
-            return parts.Count == 0 ? "" : ", " + string.Join(", ", parts.ToArray());
+            if (Math.Abs(Scale - 1) > 1e-4) parts.Add(Lang.F("at {0:0.#} %", Scale * 100));
+            if (Math.Abs(Right) > 0.01) parts.Add(Right > 0 ? Lang.F("{0:0.##} m right", Right / 40) : Lang.F("{0:0.##} m left", -Right / 40));
+            if (Math.Abs(Up) > 0.01) parts.Add(Up > 0 ? Lang.F("{0:0.##} m up", Up / 40) : Lang.F("{0:0.##} m down", -Up / 40));
+            if (Math.Abs(Out) > 0.01) parts.Add(Out > 0 ? Lang.F("{0:0.##} m towards you", Out / 40) : Lang.F("{0:0.##} m away", -Out / 40));
+            string tilt = TiltWords(Tilt, Edge);
+            if (tilt.Length > 0) parts.Add(tilt);
+            if (Math.Abs(Angle(Turn)) > 0.05) parts.Add(Lang.F("rotated {0:0.#}°", Angle(Turn)));     // the Rotate row (0.20.149: "turned" is Turn's)
+            if (light == GlowMode.Glowing) parts.Add(Lang.T("glowing"));
+            if (light == GlowMode.Lit) parts.Add(Lang.T("lit by the scene"));
+            return parts.Count == 0 ? "" : Lang.Comma + string.Join(Lang.Comma, parts.ToArray());
         }
 
         /// <summary>From texts that `from` put on a sign to the texts `to` puts there: scale by k, then move by dx, dy

@@ -16,7 +16,7 @@ namespace PetyusPolisz.Kit
         public static bool Button(IDeferred w, string key, string label, string sure, GUIStyle style, params GUILayoutOption[] opts)
         {
             bool isArmed = armed == key && Time.unscaledTime - at < Seconds;
-            if (!Widgets.Button(isArmed ? sure : label, style, opts)) return false;
+            if (!Widgets.Button(isArmed ? sure : label, isArmed ? Theme.Armed(style) : style, opts)) return false;   // armed: red
             if (isArmed)
             {
                 armed = null;

@@ -34,7 +34,7 @@ namespace SignLink.UI
             move = new MovePanel(w);
         }
 
-        public override string Title => "3 Place";
+        public override string Title => Lang.T("3 Place");
         public override bool UsesTarget => true;
         public override void OnClose()
         {
@@ -68,34 +68,36 @@ namespace SignLink.UI
             // titled separators may part things; four groups 0.20.59-0.20.179)
             bool movable = picked ? src.Movable(s) : s.Held.Movable;
             bool contentRows = can && holds && movable;                // nothing usable in them: closed (0.20.77)
-            if (Widgets.Foldout("place.content", "Content", usable: contentRows))
+            if (Widgets.Foldout("place.content", Lang.T("Content"), usable: contentRows))
             {
                 GUI.enabled = can && holds;
-                Widgets.SubHeader("Positioning", true, Widgets.WheelKey);
+                Widgets.SubHeader(Lang.T("Positioning"), true, Widgets.WheelKey);
                 panel.DrawContent(movable);
-                Widgets.SubHeader("Size", false, Widgets.WheelKey);
+                Widgets.SubHeader(Lang.T("Size"), false, Widgets.WheelKey);
                 if (picked) src.DrawSize(s, Window);                        // a piece's or a text's scale, a picture's metres
                 else panel.DrawSize(movable);                               // what the sign holds
                 GUI.enabled = true;
+                // the group's Changes inside it (1.1.0, the author: the buttons under Content and Sign belong to their groups);
+                // closed, the footer's button still puts the changes on
+                DrawContentChanges(s, src, can, holds, movable, picked);
             }
             if (Event.current.type == EventType.Layout && picked)
                 panel.SizePct = (float)(s.Chosen.Fit.Scale * 100);          // the source's rows set the scale: the panel keeps it
-            DrawContentChanges(s, src, can, holds, movable, picked);
 
             Widgets.Space(6);
             Widgets.Rule();                                                 // the content above, the sign below
             Widgets.Space(4);
             // how the sign turns, then where it stands; Changes under the group covers moves, turns and the pose
-            if (Widgets.Foldout("place.signs", "Sign"))
+            if (Widgets.Foldout("place.signs", Lang.T("Sign")))
             {
                 GUI.enabled = can;
-                Widgets.SubHeader("Rotations", true, Widgets.WheelKey);
+                Widgets.SubHeader(Lang.T("Rotations"), true, Widgets.WheelKey);
                 panel.DrawRotations(Window, () => move.DrawTurn(s, can));   // poses, Tilt, Turn, Rotate
                 GUI.enabled = true;
-                Widgets.SubHeader("Positioning fine-tune", false, "← → ↑ ↓", "Shift+↑ ↓");   // 0.20.85, the author
+                Widgets.SubHeader(Lang.T("Positioning fine-tune"), false, "← → ↑ ↓", "Shift+↑ ↓");   // 0.20.85, the author
                 move.Draw(s, can);
+                move.DrawChanges(s, can);                                   // inside its group (1.1.0)
             }
-            move.DrawChanges(s, can);
             if (Event.current.type == EventType.Layout)                     // ... and the choice takes the rows
             {
                 s.Chosen.Fit = panel.Fit;
@@ -103,9 +105,9 @@ namespace SignLink.UI
                 seen = panel.Fit;
             }
             // only what stops a row, in a word or two (1.0.2, the author: no long texts in the window)
-            string hint = !has ? "No sign"
-                : picked ? (src.Movable(s) ? null : "Fixed place")
-                : !s.Held.Empty && !s.Held.Movable ? "Fixed size and place" : null;
+            string hint = !has ? Lang.T("Select a sign first")
+                : picked ? (src.Movable(s) ? null : Lang.T("Fixed place"))
+                : !s.Held.Empty && !s.Held.Movable ? Lang.T("Fixed size and place") : null;
             if (hint != null) Widgets.Hint(hint);
         }
 
@@ -131,10 +133,10 @@ namespace SignLink.UI
             // put the whole choice on, the pose too)
             bool posed = !Change.SamePose(h, c);
             var what = new System.Collections.Generic.List<string>();
-            if (size) what.Add("size");
-            if (place) what.Add("place");
-            if (light) what.Add("light");
-            if (settings && what.Count == 0) what.Add("settings");         // 2 Content's: a resolution, a text
+            if (size) what.Add(Lang.T("size"));
+            if (place) what.Add(Lang.T("place"));
+            if (light) what.Add(Lang.T("light"));
+            if (settings && what.Count == 0) what.Add(Lang.T("settings")); // 2 Content's: a resolution, a text
             string problem = v == Verb.Update ? src.Problem(s) ?? src.Limit(s) : null;
             bool busy = Window.Busy || ContentTab.SourcesBusy || src.Busy;
             bool was = GUI.enabled;
@@ -144,30 +146,32 @@ namespace SignLink.UI
             {
                 using (Widgets.Horizontal())
                 {
-                    GUILayout.Label("Changes", Theme.Label, Widgets.W(Widgets.LabelW));
+                    GUILayout.Label(Lang.T("Changes"), Theme.Label, Widgets.W(Widgets.LabelW));
                     GUILayout.Label(!s.HasTarget || !holds ? ""
-                                    : pending ? string.Join(", ", what.ToArray()) + " changed · only you see it" + (posed ? " · apply Sign first" : "")
-                                    : v == Verb.Place || v == Verb.Put ? "new item"
-                                    : "none",
+                                    : pending ? Lang.F("{0} changed · only you see it", string.Join(Lang.Comma, what.ToArray())) + (posed ? " · " + Lang.T("apply Sign first") : "")
+                                    : v == Verb.Place || v == Verb.Put ? Lang.T("new item · the button below puts it on")   // its place too (1.1.0, the author: Apply stayed grey)
+                                    : Lang.T("none"),
                                     pending ? Theme.Notice : Theme.Label, Widgets.W(Widgets.RestW));
                 }
                 using (Widgets.Horizontal())
                 {
-                    float wide = (Widgets.ContentWidth - 30) * 0.62f, rest = Widgets.ContentWidth - 30 - wide - 8f;
+                    float wide = (Widgets.ContentWidth - 30) * 0.62f, rest = Widgets.ContentWidth - 30 - wide - 14f;
                     GUI.enabled = was && pending && !posed && problem == null && !busy;
-                    apply = Widgets.NextButton(busy && pending ? "Working ..." : "Apply content changes", 26f, wide, less: true);
+                    apply = Widgets.NextButton(busy && pending ? Lang.T("Working ...") : Lang.T("Apply content changes"), 26f, wide, less: true);
                     GUI.enabled = was && pending;                           // what waits here, not a new pick (0.20.189, review)
-                    undo = Widgets.Button("Undo", Theme.ButtonLess, Widgets.W(rest), Widgets.H(26));
+                    Widgets.Space(6);                                       // air between the two (1.1.0, the author)
+                    undo = Widgets.Button(Lang.T("Undo"), Theme.ButtonLess, Widgets.W(rest), Widgets.H(26));
                 }
+                Widgets.Space(4);
                 using (Widgets.Horizontal())
                 {
                     // back to the middle, what the positioning group holds (0.20.71, the author: the "original size, middle"
                     // button is a lie, it only puts it in the middle and does not change the size): the size is Content size's
                     bool off = Math.Abs(c.Right) > 0.01 || Math.Abs(c.Up) > 0.01 || Math.Abs(c.Out) > 0.01;
                     GUI.enabled = was && can && holds && movable && off;
-                    reset = Widgets.Button("Reset to default", Theme.ButtonLess, Widgets.W(180), Widgets.H(26));
+                    reset = Widgets.Button(Lang.T("Reset to default"), Theme.ButtonLess, Widgets.W(180), Widgets.H(26));
                     GUI.enabled = was;
-                    GUILayout.Label("to the middle", Theme.SideNote, Widgets.H(26));
+                    GUILayout.Label(Lang.T("to the middle"), Theme.SideNote, Widgets.H(26));
                 }
                 if (pending && problem != null && !busy) Widgets.Hint(problem);
             }
@@ -175,8 +179,8 @@ namespace SignLink.UI
             if (apply)
             {
                 Window.KeepOpen();                                          // not a put: its message keeps the window
-                if (v == Verb.Update && src.Heavy(s, out double load, out long save, out long largest))   // as the footer's button asks
-                    confirm.Arm(Window, s.Chosen.Recipe.ToString() + "|" + s.Chosen.Fit.Describe(s.Chosen.Light), src.What(s), load, save,
+                if (v == Verb.Update && src.Heavy(s, out long save, out long largest))   // as the footer's button asks
+                    confirm.Arm(Window, s.Chosen.Recipe.ToString() + "|" + s.Chosen.Fit.Describe(s.Chosen.Light), src.What(s), save,
                                 largest, src.Lighter(s), keepOpen: true);
                 else ContentTab.Perform(Window, src, v);
             }
@@ -202,6 +206,8 @@ namespace SignLink.UI
                 });
         }
 
+        public override bool HasFooter => true;
+
         /// <summary>The footer, in view whatever the scroll: Undo changes for the whole menu (0.20.59, the author: an Undo
         /// changes for the whole menu ... sticky like the footer button: the fit, the light, and what the source holds otherwise,
         /// a size, a resolution, another pick, a typed text) beside the verb button.</summary>
@@ -218,7 +224,7 @@ namespace SignLink.UI
                 // the sign holds and how it stands now, the steps not applied dropped too
                 GUI.enabled = can && (!s.Chosen.Fit.Same(s.Held.Fit) || s.Chosen.Light != Change.LightOf(s.Held) || src.Reverts(s) ||
                                       move.Pending);
-                if (Widgets.Button("Undo changes", Theme.Button, Widgets.W(150), Widgets.H(36)))
+                if (Widgets.Button(Lang.T("Undo changes"), Theme.Button, Widgets.W(150), Widgets.H(36)))
                     Window.Later(() =>
                     {
                         move.DropPending(s);

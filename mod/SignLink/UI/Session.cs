@@ -6,6 +6,7 @@ using SignLink.Pictures;
 using SignLink.Presets;
 using SignLink.Signs;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
@@ -22,10 +23,10 @@ namespace SignLink.UI
         /// the preview and Move the sign work on.</summary>
         public Sign First => Stack.Count > 0 ? Stack[0] : SignFinder.Root(Target);
         public string Name = "", Version = "", MadeWith = "";
-        public int Bytes, Largest, Gifs, Tools, Frames;
+        public int Bytes, Largest, Gifs, Frames;
         public long SaveBytes;
-        /// <summary>What SignLink's other signs within SaveCost.AreaRadiusM of the stack hold (SignArea; 0 in single
-        /// player), and how many they are (a stack once): the multiplayer area limit's part beside this stack.</summary>
+        /// <summary>What SignLink's other signs within SaveCost.AreaRadiusM of the stack hold (SignArea; in single
+        /// player too, for the title's line), and how many they are (a stack once): the multiplayer area limit's part beside this stack.</summary>
         public long AreaOthers;
         public int AreaSigns;
         /// <summary>SignLink made what the stack holds (its marks): then it counts in the area too (0.20.67).</summary>
@@ -41,13 +42,13 @@ namespace SignLink.UI
         /// nothing loaded into the editor (0.20.132, review).</summary>
         public bool Hidden;
         /// <summary>What shows instead of such a sign's words.</summary>
-        public const string HiddenWords = "[hidden by the game's content settings]";
+        public static string HiddenWords => Lang.T("[hidden by the game's content settings]");
 
         /// <summary>The name SignLink gave a sign's content, or HiddenWords when the game hides the sign here (its author
         /// chose the name: 0.20.151, review, it showed for hidden signs in the window and the lists).</summary>
         public static string ShownName(Sign s) =>
             !s ? "" : !s.m_isViewable ? HiddenWords : SignRecipe.Clean(SignMarks.Name(s));
-        const string HiddenMissing = "Hidden by the game's content settings";
+        static string HiddenMissing => Lang.T("Hidden by the game's content settings");
         /// <summary>Why the actions on the sign are disabled (a ward you have no access to), or null.</summary>
         public string Reason;
         /// <summary>Why what the sign holds could not be loaded into the choice (made from another player's picture
@@ -203,7 +204,7 @@ namespace SignLink.UI
         void ReadStack(float now, bool other)
         {
             Stack = Target ? SignFinder.Stack(Target) : new List<Sign>();
-            Bytes = Largest = Gifs = Tools = 0;
+            Bytes = Largest = Gifs = 0;
             var key = new StringBuilder();
             foreach (Sign s in Stack)
             {
@@ -212,13 +213,12 @@ namespace SignLink.UI
                 Largest = Math.Max(Largest, b);
                 key.Append(SignFinder.Id(s)).Append('@').Append(SignFinder.Zdo(s)?.DataRevision).Append(' ');
                 if (Plugin.Screens.Plays(s)) Gifs++;
-                if (Plugin.Text.Drives(s)) Tools++;
             }
             Sign root = Stack.Count > 0 ? Stack[0] : null;
             Name = root ? ShownName(root) : "";
             Version = root ? SignRecipe.Clean(SignMarks.MadeWith(root)) : "";
             SignLinks = root && (Version.Length > 0 || SignMarks.IsSignLinks(Stack));
-            MadeWith = !root ? "" : Version.Length > 0 ? $"SignLink {Version}" : SignLinks ? "SignLink (older version)" : "not SignLink";
+            MadeWith = !root ? "" : Version.Length > 0 ? Lang.F("SignLink {0}", Version) : SignLinks ? Lang.T("SignLink (older version)") : Lang.T("not SignLink");
             byte[] blob = root ? StoredAnims.Blob(root) : null;
             SaveBytes = Bytes + (long)SaveCost.PerSign * Stack.Count + (blob != null && blob.Length > 0 ? blob.Length + 8 : 0);
             if (!root)                                                      // single player too: its meter informs (1.0.2)
@@ -249,7 +249,7 @@ namespace SignLink.UI
                 loadedFor = Loaded ? stackKey : null;
             }
             Hidden = root && !root.m_isViewable;
-            Reason = root && !CanEdit ? "a ward you have no access to protects this sign" : null;
+            Reason = root && !CanEdit ? Lang.T("a ward you have no access to protects this sign") : null;
             Held.HasSign = HasTarget;
             Held.Empty = Bytes == 0;
             Held.Bytes = Bytes;
@@ -310,7 +310,7 @@ namespace SignLink.UI
             Missing = null;
             // a text the game hides here goes into no editor: a slot with nothing picked, as for a file not here (0.20.132,
             // review); hidden or shown again, the slot is made again
-            bool hideText = Hidden && Held.Recipe.Kind == SignRecipe.Kinds.Text, wasHidden = ReferenceEquals(loadedMissing, HiddenMissing);
+            bool hideText = Hidden && Held.Recipe.Kind == SignRecipe.Kinds.Text, wasHidden = loadedMissing != null && loadedMissing == HiddenMissing;
             if (root && Held.Recipe.Kind != SignRecipe.Kinds.None && LoadInto != null)
             {
                 if (loaded != null && !other && raw == loadedRaw && wasHidden == hideText)         // the same mark read again (the slot may
@@ -333,8 +333,8 @@ namespace SignLink.UI
                     else
                     {
                         Missing = hideText ? HiddenMissing : Held.Recipe.Kind == SignRecipe.Kinds.Text
-                            ? "Text too long to edit"
-                            : $"{SignRecipe.Clean(Held.Recipe.Kind == SignRecipe.Kinds.Picture ? Held.Recipe.File : Held.Recipe.Path)}: not on this computer";
+                            ? Lang.T("Text too long to edit")
+                            : Lang.F("{0}: not on this computer", SignRecipe.Clean(Held.Recipe.Kind == SignRecipe.Kinds.Picture ? Held.Recipe.File : Held.Recipe.Path));
                         Blank(raw, Missing);                                // not here: nothing picked for it (0.20.89)
                     }
                 }
@@ -436,13 +436,17 @@ namespace SignLink.UI
             if (Hidden)                                                     // the game hides it: no words, no picture (0.20.132)
             {
                 if (View.Has) View.Clear();
-                ViewInfo = "Hidden by the game's content settings.";
+                ViewInfo = Lang.T("Hidden by the game's content settings.");
                 NaturalM = Vector2.zero;
                 glyphsFor = null;                                           // nor a preview of it moved (ContentPreview)
                 if (viewJob.Busy || viewJob.Done != null) viewJob.Abandon();   // shown again: read again
                 return;
             }
-            Sign root = Stack[0];
+            if (viewJob.Wants(stackKey, now, 0f)) StartView(Stack[0], now);   // the delegates only when work starts
+        }
+
+        void StartView(Sign root, float now)
+        {
             viewJob.Want(stackKey, now, 0f,
                 () =>
                 {

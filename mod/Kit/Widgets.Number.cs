@@ -30,18 +30,18 @@ namespace PetyusPolisz.Kit
         {
             if (!(naturalM.x > 0 && naturalM.y > 0))
             {
-                float size = Number(key + ".size", "Size", pct, 25f, 400f, 5f, "%", "0.#", snap: scale == null ? null : (Func<float, float>)(p => (float)(scale(p / 100.0) * 100)));
+                float size = Number(key + ".size", Lang.T("Size"), pct, 25f, 400f, 5f, "%", "0.#", snap: scale == null ? null : (Func<float, float>)(p => (float)(scale(p / 100.0) * 100)));
                 dragged = Slid != 0;
                 return size;
             }
             float stepW = Mathf.Clamp(naturalM.x / 20f, 0.01f, 0.05f), stepH = Mathf.Clamp(naturalM.y / 20f, 0.01f, 0.05f);   // about 5 % a step (0.20.149)
             float w0 = pct / 100f * naturalM.x;
-            float wide = Number(key + ".width", "Width", w0, naturalM.x / 4, naturalM.x * 4, stepW, "m",
+            float wide = Number(key + ".width", Lang.T("Width"), w0, naturalM.x / 4, naturalM.x * 4, stepW, "m",
                                 snap: scale == null ? null : (Func<float, float>)(w => (float)(scale(w / naturalM.x) * naturalM.x)));
             dragged = Slid != 0;
             if (Math.Abs(wide - w0) > 1e-4f) pct = Mathf.Clamp(wide / naturalM.x * 100f, 25f, 400f);
             float h0 = pct / 100f * naturalM.y;
-            float h = Number(key + ".height", "Height (same shape)", h0, naturalM.y / 4, naturalM.y * 4, stepH, "m",
+            float h = Number(key + ".height", Lang.T("Height (same shape)"), h0, naturalM.y / 4, naturalM.y * 4, stepH, "m",
                              snap: scale == null ? null : (Func<float, float>)(v => (float)(scale(v / naturalM.y) * naturalM.y)));
             dragged |= Slid != 0;
             if (Math.Abs(h - h0) > 1e-4f) pct = Mathf.Clamp(h / naturalM.y * 100f, 25f, 400f);

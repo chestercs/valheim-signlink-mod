@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PetyusPolisz.Kit;
 
 namespace SignLink.Pictures
 {
@@ -92,7 +93,7 @@ namespace SignLink.Pictures
             while (r0 < h)
             {
                 int rows = Math.Min(h - r0, maxPixels / w);
-                if (rows < 1) throw new ArgumentException($"a row of {w} pixels does not fit one sign");
+                if (rows < 1) throw new ArgumentException(Lang.F("a row of {0} pixels does not fit one sign", w));
                 string text = null;
                 int bytes = 0;
                 while (AnyPixel(px, w, r0, r0 + rows))                          // transparent rows get no sign
@@ -112,7 +113,7 @@ namespace SignLink.Pictures
                 if (text != null) bands.Add(new Band { Row0 = r0, Row1 = r0 + rows, Text = text, Bytes = bytes });
                 r0 += rows;
             }
-            if (bands.Count == 0) throw new ArgumentException("the picture is fully transparent: nothing to put on a sign");
+            if (bands.Count == 0) throw new ArgumentException(Lang.T("the picture is fully transparent: nothing to put on a sign"));
             return bands;
         }
 
@@ -218,8 +219,7 @@ namespace SignLink.Pictures
                 maxAbs = Math.Max(maxAbs, Math.Max(Math.Abs(voff[i]), Math.Abs(pos[i])));
             }
             if (maxAbs > 32000)
-                throw new ArgumentException("the picture is too large for the column encoding (tag numbers past 32 767): " +
-                                            "use fewer pixels or a smaller pixel size");
+                throw new ArgumentException(Lang.T("the picture is too large for the column encoding (tag numbers past 32 767): use fewer pixels or a smaller pixel size"));
 
             // engine.encode_lines: only changed tags are written again
             var sb = new StringBuilder(n * 9 + 64);

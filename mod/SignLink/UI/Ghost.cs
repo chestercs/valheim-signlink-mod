@@ -37,7 +37,7 @@ namespace SignLink.UI
                                                                                     // yellow; a neon yellow 0.20.114-0.20.115)
         /// <summary>The content seen from behind (Ghost.Side): the soft warm grey the board's outline was before 0.20.114.</summary>
         static readonly Color Neutral = new Color(0.89f, 0.88f, 0.85f, 1f);
-        /// <summary>The hover frame's colour (Pick in view, a row of Signs nearby under the cursor): the content as the
+        /// <summary>The hover frame's colour (Select sign, a row of Signs nearby under the cursor): the content as the
         /// selection's, and the sign's board a light cool white instead of the soft grey, so the two frames read alike and
         /// the board's colour alone says "under the cursor" against "selected".</summary>
         public static readonly Color HoverBoard = new Color(0.95f, 0.97f, 1f, 0.85f);
@@ -103,7 +103,7 @@ namespace SignLink.UI
         /// finer than the key writes it, a fraction of a centimetre, makes nothing again; KeyDiff still reads its parts).</summary>
         struct Inputs
         {
-            public bool Stack, HasTarget, HasHost, HasRevision, Edge, Sized, Content, Lit, Screen;
+            public bool Stack, HasTarget, HasHost, HasRevision, Edge, Sized, Content, Lit, Screen, Board;
             public ZDOID Target, Host;
             public double Scale, Right, Up, Out, Tilt, Turn, Wwu, Hwu, C0x, C0y;
             public Vector3 Position, Pending;
@@ -114,7 +114,7 @@ namespace SignLink.UI
             /// <summary>Exactly the same (Unity's == on vectors and rotations is approximate: Equals is not).</summary>
             public bool Same(Inputs o) =>
                 Stack == o.Stack && HasTarget == o.HasTarget && HasHost == o.HasHost && HasRevision == o.HasRevision && Edge == o.Edge &&
-                Sized == o.Sized && Content == o.Content && Lit == o.Lit && Screen == o.Screen && Target == o.Target && Host == o.Host &&
+                Sized == o.Sized && Content == o.Content && Lit == o.Lit && Screen == o.Screen && Board == o.Board && Target == o.Target && Host == o.Host &&
                 Scale == o.Scale && Right == o.Right && Up == o.Up && Out == o.Out && Tilt == o.Tilt && Turn == o.Turn && Wwu == o.Wwu &&
                 Hwu == o.Hwu && C0x == o.C0x && C0y == o.C0y && Position.Equals(o.Position) && Pending.Equals(o.Pending) &&
                 Rotation.Equals(o.Rotation) && Count == o.Count && Revision == o.Revision;
@@ -146,7 +146,7 @@ namespace SignLink.UI
         /// <summary>The selection's frame.</summary>
         public Ghost() : this(Fill, Line, Board) { }
 
-        /// <summary>A frame in these colours (Pick in view's hover frame).</summary>
+        /// <summary>A frame in these colours (Select sign's hover frame).</summary>
         public Ghost(Color fill, Color line, Color board)
         {
             fillColor = fill;
@@ -160,9 +160,12 @@ namespace SignLink.UI
         /// where its steps or the pose to come put it (the board's bars in Unheld's colour).</summary>
         public void Update(Session s, Source src, bool unheld = false)
         {
-            if (!PluginConfig.Highlight.Value || !s.HasTarget || src == null)
+            // two switches, each its own part (1.1.0, the author: Highlight signs the board's frame, Highlight sign contents the
+            // content's; one no longer switches the other off)
+            bool boardOn = PluginConfig.Highlight.Value, contentOn = PluginConfig.HighlightContent.Value;
+            if (!boardOn && !contentOn || !s.HasTarget || src == null)
             {
-                if (!PluginConfig.Highlight.Value && s.HasTarget) Note("hidden: disabled (Settings › Sign options › Highlight signs)");
+                if (!boardOn && !contentOn && s.HasTarget) Note("hidden: disabled (Settings › Sign options: both highlights off)");
                 Hide();
                 return;
             }
@@ -236,13 +239,13 @@ namespace SignLink.UI
             {
                 fit.Centre(hx, hy, out c0x, out c0y);
             }
-            bool content = sized && PluginConfig.HighlightContent.Value;    // Settings › Sign options › Highlight sign contents
+            bool content = sized && contentOn;                              // Settings › Sign options › Highlight sign contents
             bool litPreview = Plugin.Preview != null && Plugin.Preview.LitPicture;
             var inputs = new Inputs
             {
                 Scale = fit.Scale, Right = fit.Right, Up = fit.Up, Out = fit.Out, Tilt = fit.Tilt, Turn = fit.Turn, Edge = fit.Edge,
                 Wwu = wWu, Hwu = hWu, C0x = c0x, C0y = c0y, Position = target.transform.position, Rotation = target.transform.rotation,
-                Pending = SignMove.Pending(target), Sized = sized, Content = content, Lit = litPreview,
+                Pending = SignMove.Pending(target), Sized = sized, Content = content, Lit = litPreview, Board = boardOn,
             };
             inputs.Target = Uid(target, out inputs.HasTarget);
             inputs.Host = Uid(host, out inputs.HasHost);
@@ -254,7 +257,7 @@ namespace SignLink.UI
                 return;
             }
             string key = $"{SignFinder.Id(target)}|{SignFinder.Id(host)}|{fit.Scale}|{fit.Right}|{fit.Up}|{fit.Out}|{fit.Tilt}|{fit.Turn}|{fit.Edge}|{wWu}|{hWu}|{c0x}|{c0y}|" +
-                         $"{target.transform.position}|{target.transform.rotation}|{SignMove.Pending(target)}|{sized}|{content}|{litPreview}";
+                         $"{target.transform.position}|{target.transform.rotation}|{SignMove.Pending(target)}|{sized}|{content}|{litPreview}|{boardOn}";
             shownInputs = inputs;                                           // what the key below is made of
             if (key == shownKey && root && ReferenceEquals(sign, target))
             {
@@ -305,7 +308,7 @@ namespace SignLink.UI
             Place(edge[2], centre - xAxis * (w / 2) + ahead, yAxis, Thick, h, content);             // left
             Place(edge[3], centre + xAxis * (w / 2) + ahead, yAxis, Thick, h, content);             // right
             Place(mark, centre + yAxis * (h / 2 + 0.03f) + ahead, yAxis, 0.12f, 0.02f, content);    // "top", as the viewer reads it
-            PlaceBoard(target);
+            PlaceBoard(target, boardOn);                                    // Settings › Sign options › Highlight signs
             root.SetActive(true);
             Hold(unheld);
             Side();
@@ -334,7 +337,7 @@ namespace SignLink.UI
         int rebuilds, alternations;
         string keyBefore;
         static readonly string[] KeyParts = { "sign", "host", "scale", "right", "up", "out", "tilt", "turn", "edge", "width", "height",
-                                              "c0x", "c0y", "position", "rotation", "pending", "sized", "content" };
+                                              "c0x", "c0y", "position", "rotation", "pending", "sized", "content", "lit", "board" };
 
         void CountRebuild(string was, string now)
         {

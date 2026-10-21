@@ -86,7 +86,12 @@ namespace PetyusPolisz.Kit
                 h = Mathf.Max(h, sz.y);
             }
             gap = Mathf.Max(style.margin.left, style.margin.right);         // as GUILayout.Toolbar: the widest button times the count
-            Rect r = GUILayoutUtility.GetRect(most * texts.Length + gap * Math.Max(0, texts.Length - 1), h, style, options);
+            RectOffset pad = Theme.InTrack(style) ? Theme.Track.padding : null;   // a look: the strip sits in a track
+            // never wider than the window's body: a longer language's labels shrink to their share (Fitted below) instead of
+            // widening the window (1.1.0: Russian tab names pushed it 100 px wider)
+            float want = most * texts.Length + gap * Math.Max(0, texts.Length - 1) + (pad?.horizontal ?? 0);
+            Rect r = GUILayoutUtility.GetRect(Mathf.Min(want, ContentWidth), h + (pad?.vertical ?? 0), style, options);
+            if (pad != null) r = InTrack(r, pad);
             each = texts.Length == 0 ? 0 : (r.width - gap * (texts.Length - 1)) / texts.Length;
             fitted = texts.Length == 0 ? style : Theme.Fitted(style, cs[widest], each);
             return r;
@@ -106,7 +111,19 @@ namespace PetyusPolisz.Kit
             }
         }
 
-        static readonly string[] OnOffNames = { "On", "Off" };
+        static string[] onOffNames;
+        static string onOffFor;
+
+        /// <summary>On and Off in the language in use, made again when it changes.</summary>
+        static string[] OnOffNames
+        {
+            get
+            {
+                string lang = Lang.Current;
+                if (onOffNames == null || onOffFor != lang) { onOffNames = new[] { Lang.T("On"), Lang.T("Off") }; onOffFor = lang; }
+                return onOffNames;
+            }
+        }
 
         /// <summary>A settings row with On and Off; returns the value clicked (else the one given).</summary>
         public static bool OnOff(string rowLabel, bool on, GUIStyle style = null) =>
@@ -116,8 +133,26 @@ namespace PetyusPolisz.Kit
         public static bool Toggle(bool value, string text, GUIStyle style, params GUILayoutOption[] options)
         {
             label.text = text;
-            Rect r = GUILayoutUtility.GetRect(label, style, options);
+            Rect r;
+            if (Theme.InTrack(style))                                       // a look: in a track of its own, as a strip's tabs
+            {
+                RectOffset pad = Theme.Track.padding;
+                Vector2 size = style.CalcSize(label);
+                r = InTrack(GUILayoutUtility.GetRect(size.x + pad.horizontal, size.y + pad.vertical, style, options), pad);
+            }
+            else r = GUILayoutUtility.GetRect(label, style, options);
             return GUI.Toggle(r, value, label, Theme.Fitted(style, label, r.width));
+        }
+
+        /// <summary>A button in the tabs' look (Theme.Tab; on a painted look in a track of its own, as Toggle draws it): true
+        /// when clicked (1.1.0, the author: Clear selection at the sign bar's right, as Signs nearby looked).</summary>
+        public static bool TabButton(string text, params GUILayoutOption[] options) => Toggle(false, text, Theme.Tab, options);
+
+        /// <summary>Draws the track (Theme.Track) over r and gives the part inside its padding, where the buttons go.</summary>
+        static Rect InTrack(Rect r, RectOffset pad)
+        {
+            if (Event.current.type == EventType.Repaint) Theme.Track.Draw(r, false, false, false, false);
+            return pad.Remove(r);
         }
 
         /// <summary>A button that leads on (2 Content ▸, 3 Place ▸, the verb that puts it on): bright amber with a slow
@@ -170,19 +205,65 @@ namespace PetyusPolisz.Kit
             if (Event.current.type == EventType.Layout && flips.Remove(key)) folds[key] = open = !open;
             bool shown = open && usable, was = GUI.enabled;
             GUI.enabled = was && usable;
-            if (Button((shown ? "▾  " : "▸  ") + title, Theme.Fold)) flips.Add(key);
+            if (FoldHead(key, title, shown, Theme.Fold)) flips.Add(key);
             GUI.enabled = was;
             return shown;
         }
 
-        /// <summary>A thin amber line across the row (a separation, like the one under the window's title).</summary>
+        static readonly Dictionary<string, float> turns = new Dictionary<string, float>();   // each heading's arrow, degrees
+        static readonly HashSet<string> clickedOver = new HashSet<string>();  // clicked: no hover turn until the mouse leaves
+
+        /// <summary>A group's heading that opens and closes it; true when clicked. A painted look draws its arrow (Theme.FoldArrow)
+        /// in the style's left padding, turned: right while closed, down while open, and while the mouse is over it turned to
+        /// the other way, what a click would do; it turns back when the mouse leaves (1.1.0, the author: the arrows should turn
+        /// as the mouse hovers, animated). After a click it waits for the mouse to leave, or it would turn back under it. The
+        /// flat look writes ▾ / ▸ before the words.</summary>
+        public static bool FoldHead(string key, string title, bool open, GUIStyle style)
+        {
+            Texture2D arrow = Theme.FoldArrow;
+            if (arrow == null) return Button((open ? "▾  " : "▸  ") + title, style);
+            bool hit = Button(title, style);
+            if (hit) clickedOver.Add(key);
+            if (Event.current.type == EventType.Repaint) TurnArrow(key, GUILayoutUtility.GetLastRect(), open, style, arrow);
+            return hit;
+        }
+
+        /// <summary>The arrow at its angle now, a step nearer the one it turns to (90 degrees in 0.15 s).</summary>
+        static void TurnArrow(string key, Rect r, bool open, GUIStyle style, Texture2D arrow)
+        {
+            bool over = GUI.enabled && r.Contains(Event.current.mousePosition);
+            if (!over) clickedOver.Remove(key);
+            bool other = over && !clickedOver.Contains(key);
+            float target = open != other ? 90f : 0f;
+            float angle = turns.TryGetValue(key, out float a) ? Mathf.MoveTowards(a, target, Time.unscaledDeltaTime * 600f) : target;
+            turns[key] = angle;
+            float x = r.x + (style.padding.left - arrow.width) / 2f;       // in the middle of the room left for it
+            float y = r.y + style.padding.top + (r.height - style.padding.vertical - arrow.height) / 2f;   // level with the words
+            DrawArrow(arrow, x, y, angle, over ? style.hover.textColor : style.normal.textColor);   // the words' colour: amber hovered
+        }
+
+        /// <summary>The look's arrow (pointing right) at x, y (its top left, pixels), turned by angle degrees about its middle,
+        /// tinted (half seen while greyed). Repaint only.</summary>
+        static void DrawArrow(Texture2D arrow, float x, float y, float angle, Color tint)
+        {
+            var at = new Rect(Mathf.Round(x), Mathf.Round(y), arrow.width, arrow.height);
+            Matrix4x4 matrix = GUI.matrix;
+            Color was = GUI.color;
+            GUI.color = new Color(tint.r * was.r, tint.g * was.g, tint.b * was.b, tint.a * was.a * (GUI.enabled ? 1f : 0.5f));
+            if (angle != 0f) GUIUtility.RotateAroundPivot(angle, at.center);
+            GUI.DrawTexture(at, arrow);
+            GUI.matrix = matrix;
+            GUI.color = was;
+        }
+
+        /// <summary>A thin line across the row (a separation, like the one under the window's title), in the look's colour.</summary>
         public static void Rule()
         {
-            float t = Mathf.Max(1f, U(1.5f));
+            float t = Theme.Painted ? Mathf.Max(1f, Mathf.Round(U(1))) : Mathf.Max(1f, U(1.5f));
             Rect r = GUILayoutUtility.GetRect(U(10), t, GUILayout.ExpandWidth(true), GUILayout.Height(t));
             if (Event.current.type != EventType.Repaint) return;
             Color was = GUI.color;
-            GUI.color = new Color(0.98f, 0.76f, 0.36f, 0.45f);
+            GUI.color = Theme.RuleColor;
             GUI.DrawTexture(r, Texture2D.whiteTexture);
             GUI.color = was;
         }
@@ -194,9 +275,28 @@ namespace PetyusPolisz.Kit
             bool v = value;
             using (Horizontal())
             {
-                if (GUILayout.Toggle(value, GUIContent.none, Theme.Toggle, W(30)) != value) v = !value;
+                if (CheckBox(value, W(30)) != value) v = !value;
                 if (GUILayout.Button(text, Theme.CheckText)) v = !value;
             }
+            return v;
+        }
+
+        /// <summary>A check box alone (Theme.Toggle), the value as clicked. A painted look's box and tick are drawn here at their
+        /// own size, in the middle of the row's height (Theme.CheckOff, CheckOn, Tick): the box nine-sliced into the
+        /// toggle's texture stretched with the row, and the tick drawn over it sat off its middle (the author).</summary>
+        public static bool CheckBox(bool value, params GUILayoutOption[] options)
+        {
+            bool v = GUILayout.Toggle(value, GUIContent.none, Theme.Toggle, options);
+            if (Theme.CheckOn == null || Event.current.type != EventType.Repaint) return v;
+            Rect r = GUILayoutUtility.GetLastRect();
+            bool hover = GUI.enabled && r.Contains(Event.current.mousePosition);
+            Texture2D box = value ? (hover ? Theme.CheckOnHover : Theme.CheckOn) : (hover ? Theme.CheckOffHover : Theme.CheckOff);
+            var at = new Rect(Mathf.Round(r.x), Mathf.Round(r.center.y - box.height / 2f), box.width, box.height);
+            Color was = GUI.color;
+            if (!GUI.enabled) GUI.color = new Color(was.r, was.g, was.b, was.a * 0.5f);
+            GUI.DrawTexture(at, box);
+            if (value && Theme.Tick) GUI.DrawTexture(at, Theme.Tick);
+            GUI.color = was;
             return v;
         }
 

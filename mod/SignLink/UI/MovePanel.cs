@@ -18,14 +18,15 @@ namespace SignLink.UI
         // up to a metre a step, now that a sign goes as far as the game holds it (0.20.109)
         static readonly float[] MoveSteps = { 0.001f, 0.005f, 0.01f, 0.05f, 0.1f, 0.5f, 1f };
         static readonly string[] MoveStepNames = { "1 mm", "5 mm", "1 cm", "5 cm", "10 cm", "50 cm", "1 m" };
-        static readonly string[] MoveWords = { "left", "right", "down", "up", "towards you", "away" };
+        /// <summary>A step's length and its way, each a whole phrase ({0}: the length) for the messages and the Changes row.</summary>
+        static readonly string[] MoveWords = { "{0} left", "{0} right", "{0} down", "{0} up", "{0} towards you", "{0} away" };   // lang:keys
         static readonly KeyCode[] Arrows = { KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.UpArrow, KeyCode.DownArrow };
 
         readonly SignLinkWindow window;
         int moveStep = 3;                                                   // 5 cm (0.20.55, the author: 5 cm as the default)
         KeyCode held = KeyCode.None;
         float repeatAt;
-        string movedText = "where it was built";
+        string movedText = Lang.T("where it was built");
         bool moved, posed;                                                  // moved or turned; tilted or rotated
         float turned;                                                      // the Turn row's value, on the Moved row's clock
         Sign movedOf;
@@ -108,7 +109,7 @@ namespace SignLink.UI
             // -180 and 180 are one turn, read back as 180: the row keeps the end the player chose (dragged to -180 the
             // slider jumped to the right end and let go of the mouse; typed -180 came back as 180)
             float shown = !float.IsNaN(chosenTurn) && Mathf.Abs(Mathf.DeltaAngle(turned, chosenTurn)) < 0.01f ? chosenTurn : turned;
-            float want = Widgets.Number("move.turn", "Turn (clockwise)", shown, -180f, 180f, 5f, "°", "0.#");
+            float want = Widgets.Number("move.turn", Lang.T("Turn (clockwise)"), shown, -180f, 180f, 5f, "°", "0.#");
             GUI.enabled = was;
             if (has && Mathf.Abs(want - shown) > 0.001f)
             {
@@ -128,7 +129,7 @@ namespace SignLink.UI
 
             using (Widgets.Vertical(Theme.Section))
             {
-                int pick = Widgets.Choice("Move by", moveStep, MoveStepNames, 440f);   // small (0.20.78)
+                int pick = Widgets.Choice(Lang.T("Move by"), moveStep, MoveStepNames, 440f);   // small (0.20.78)
                 if (pick != moveStep) window.Later(() => moveStep = pick);
                 Widgets.Space(4);
                 // the steps laid out as the arrow keys lie (0.20.78, the author: place them a bit smarter and
@@ -142,7 +143,7 @@ namespace SignLink.UI
                     if (Widgets.Button("▲", KeyStyle(3), Widgets.W(k), Widgets.H(kh))) dir = 3;
                     GUILayout.Label("", Theme.ButtonGap, Widgets.W(k), Widgets.H(kh));
                     Widgets.Space(20);
-                    if (Widgets.Button("Away", KeyStyle(5), Widgets.W(side), Widgets.H(kh))) dir = 5;
+                    if (Widgets.Button(Lang.T("Away"), KeyStyle(5), Widgets.W(side), Widgets.H(kh))) dir = 5;
                     GUILayout.FlexibleSpace();
                 }
                 using (Widgets.Horizontal())
@@ -152,7 +153,7 @@ namespace SignLink.UI
                     if (Widgets.Button("▼", KeyStyle(2), Widgets.W(k), Widgets.H(kh))) dir = 2;
                     if (Widgets.Button("►", KeyStyle(1), Widgets.W(k), Widgets.H(kh))) dir = 1;
                     Widgets.Space(20);
-                    if (Widgets.Button("Towards you", KeyStyle(4), Widgets.W(side), Widgets.H(kh))) dir = 4;
+                    if (Widgets.Button(Lang.T("Towards you"), KeyStyle(4), Widgets.W(side), Widgets.H(kh))) dir = 4;
                     GUILayout.FlexibleSpace();
                 }
                 // the keyboard moves it too (0.20.56): its keys at the part's title (PlaceTab, 1.0.2)
@@ -188,10 +189,8 @@ namespace SignLink.UI
             {
                 using (Widgets.Horizontal())
                 {
-                    GUILayout.Label("Changes", Theme.Label, Widgets.W(Widgets.LabelW));
-                    GUILayout.Label(!has ? "" : !moved && !posed && !waiting ? "none"
-                                    : stepsText + (has && posePending ? (stepsText.Length > 0 ? " → " : "") + poseText : "") +
-                                      (waiting ? " · only you see it" : ""),
+                    GUILayout.Label(Lang.T("Changes"), Theme.Label, Widgets.W(Widgets.LabelW));
+                    GUILayout.Label(!has ? "" : !moved && !posed && !waiting ? Lang.T("none") : ChangesLine(stepsText, waiting),
                                     waiting ? Theme.Notice : Theme.Label, Widgets.W(Widgets.RestW));
                 }
                 float half = (Widgets.ContentWidth - 30) / 2f - 4f;
@@ -199,22 +198,24 @@ namespace SignLink.UI
                 {
                     // steps, turns and a pose wait for one of these; refused where the game would not hold the sign up
                     GUI.enabled = has && waiting && unheldNow == null && poseWhy == null;
-                    float wide = (Widgets.ContentWidth - 30) * 0.62f, rest = Widgets.ContentWidth - 30 - wide - 8f;
-                    apply = Widgets.NextButton("Apply sign coord changes", 26f, wide, less: true);   // 0.20.77, the author: the apply button to read "Apply sign coord changes"
+                    float wide = (Widgets.ContentWidth - 30) * 0.62f, rest = Widgets.ContentWidth - 30 - wide - 14f;
+                    apply = Widgets.NextButton(Lang.T("Apply sign coord changes"), 26f, wide, less: true);   // 0.20.77, the author: the apply button to read "Apply sign coord changes"
                     GUI.enabled = has && (waiting || beforeReset != null);   // steps and a pose not applied, else the reset
-                    undo = Widgets.Button("Undo steps", Theme.ButtonLess, Widgets.W(rest), Widgets.H(26));
+                    Widgets.Space(6);                                       // air between the two (1.1.0, the author)
+                    undo = Widgets.Button(Lang.T("Undo steps"), Theme.ButtonLess, Widgets.W(rest), Widgets.H(26));
                 }
+                Widgets.Space(4);
                 using (Widgets.Horizontal())
                 {
                     GUI.enabled = has && (moved || posed || pendingNow);    // moved, turned, tilted or rotated
-                    reset = Widgets.Button("Reset to default", Theme.ButtonLess, Widgets.W(180), Widgets.H(26));   // a size under Content positioning's (190 wide)
+                    reset = Widgets.Button(Lang.T("Reset to default"), Theme.ButtonLess, Widgets.W(180), Widgets.H(26));   // a size under Content positioning's (190 wide)
                     GUI.enabled = was;
-                    GUILayout.Label("as built", Theme.SideNote, Widgets.H(26));
+                    GUILayout.Label(Lang.T("as built"), Theme.SideNote, Widgets.H(26));
                 }
                 // the steps go there, only the apply is refused (1.0.2, the author: allow it, just do not let it apply, with
                 // the red text that it has no support)
                 if (has && unheldNow != null)
-                    GUILayout.Label("No support: " + unheldNow, Theme.Warn);
+                    GUILayout.Label(Lang.F("No support: {0}", unheldNow), Theme.Warn);
                 else if (has && poseWhy != null) GUILayout.Label(poseWhy, Theme.Warn);
             }
             GUI.enabled = was;
@@ -243,7 +244,7 @@ namespace SignLink.UI
                         window.Select(made[0], sameContent: true);
                         UpdateMoved(made[0]);
                     }
-                    return $"applied: every player sees it {SignPose.Describe((float)got.Tilt, (float)got.Turn)} now.";
+                    return Lang.F("applied: every player sees it {0} now.", SignPose.Describe((float)got.Tilt, (float)got.Turn));
                 });
             else if (apply)
                 window.Act(() =>
@@ -258,14 +259,14 @@ namespace SignLink.UI
                     catch (InvalidOperationException e)
                     {
                         UpdateMoved(root);
-                        return $"applied for SignLink players; players without SignLink see it when they come back (the signs could not be made again: {e.Message}).";
+                        return Lang.F("applied for SignLink players; players without SignLink see it when they come back (the signs could not be made again: {0}).", e.Message);
                     }
                     if (made.Count > 0)
                     {
                         window.Select(made[0], sameContent: true);
                         UpdateMoved(made[0]);
                     }
-                    return "applied: every player sees the sign there now.";
+                    return Lang.T("applied: every player sees the sign there now.");
                 });
             BeforeReset back = undo && !waiting ? beforeReset : null;       // steps not applied go first, the reset after them
             if (back != null)
@@ -282,7 +283,7 @@ namespace SignLink.UI
                     Fit back = s.Chosen.Fit.Laid(s.Held.Fit.Tilt, s.Held.Fit.Edge);   // the tilt and the rotation back too, the
                     back.Turn = s.Held.Fit.Turn;                            // place along the face as the rows had it (review)
                     s.Chosen.Fit = back.Same(s.Held.Fit) ? s.Held.Fit : back;
-                    return "undone: the sign is back as it was last applied.";
+                    return Lang.T("undone: the sign is back as it was last applied.");
                 });
         }
 
@@ -293,20 +294,20 @@ namespace SignLink.UI
         /// The rows take what they held before the reset.</summary>
         string UndoReset(Session s, BeforeReset b, Sign root, int part)
         {
-            if (!root || SignFinder.Zdo(root) == null) return "the reset stays: the sign is gone (unloaded or removed).";
+            if (!root || SignFinder.Zdo(root) == null) return Lang.T("the reset stays: the sign is gone (unloaded or removed).");
             s.Chosen.Fit = b.Chosen;
             if (part == 0 && b.Remade && b.Tipped)
             {
                 string recipe = SignMarks.Source(root);
                 Fit on = SignFit.Read(root, out _, out _, out _);
                 List<Sign> posed = SignFit.Refit(root, on.Posed(b.Rotated, b.Tilt, b.Edge), GlowMode.AsMade, out _);
-                if (posed.Count == 0) return "the sign is gone.";
+                if (posed.Count == 0) return Lang.T("the sign is gone.");
                 if (recipe.Length > 0) SignMarks.SetSource(posed[0], recipe);
                 window.Select(posed[0], sameContent: true);
                 root = posed[0];
                 Sign next = root;
                 window.Act(() => UndoReset(s, b, next, 1));
-                return "undoing the reset ...";
+                return Lang.T("undoing the reset ...");
             }
             if (part <= 1 && b.Remade && (b.Applied.sqrMagnitude > 1e-8f || Mathf.Abs(b.AppliedTurn) > 0.05f))
             {
@@ -314,16 +315,16 @@ namespace SignLink.UI
                 if (b.Applied.sqrMagnitude > 1e-8f) SignMove.Nudge(stack, b.Applied, root);
                 if (Mathf.Abs(b.AppliedTurn) > 0.05f) SignMove.Turn(stack, b.AppliedTurn, root);
                 List<Sign> made = SignPose.Remake(root);                    // where it stood, for every player at once
-                if (made.Count == 0) return "the sign is gone.";
+                if (made.Count == 0) return Lang.T("the sign is gone.");
                 window.Select(made[0], sameContent: true);
                 if (b.Pending.sqrMagnitude > 1e-8f || Mathf.Abs(b.PendingTurn) > 1e-4f)
                 {
                     Sign next = made[0];
                     window.Act(() => UndoReset(s, b, next, 2));
-                    return "undoing the reset ...";
+                    return Lang.T("undoing the reset ...");
                 }
                 UpdateMoved(made[0]);
-                return "the reset is undone: the sign stands where and as it stood before, for everyone.";
+                return Lang.T("the reset is undone: the sign stands where and as it stood before, for everyone.");
             }
             bool steps = b.Pending.sqrMagnitude > 1e-8f || Mathf.Abs(b.PendingTurn) > 1e-4f;
             if (steps)
@@ -333,8 +334,9 @@ namespace SignLink.UI
                 if (Mathf.Abs(b.PendingTurn) > 1e-4f) SignMove.Turn(stack, b.PendingTurn, root);
             }
             UpdateMoved(root);
-            return b.Remade ? "the reset is undone: the sign stands where and as it stood before" + (steps ? "; the steps not applied are back (only you see them)." : ".")
-                            : "the reset is undone: the steps not applied are back (only you see them).";
+            return b.Remade ? (steps ? Lang.T("the reset is undone: the sign stands where and as it stood before; the steps not applied are back (only you see them).")
+                                     : Lang.T("the reset is undone: the sign stands where and as it stood before."))
+                            : Lang.T("the reset is undone: the steps not applied are back (only you see them).");
         }
 
         /// <summary>Reset to default: the sign back where and as it was built, at once, for everyone. Steps never applied
@@ -359,7 +361,7 @@ namespace SignLink.UI
                 SignMove.Revert();                                          // only steps not applied: dropping them is the way back
                 UpdateMoved(root);
                 beforeReset = before;
-                return "the sign is back where it was built (Undo brings the steps back).";
+                return Lang.T("the sign is back where it was built (Undo brings the steps back).");
             }
             // the way back as steps first; refused (another sign there, a place nothing is built, nothing would hold it
             // there now), the sign goes back to where it stood a moment ago, its steps not applied with it (1.0.2, review:
@@ -393,7 +395,7 @@ namespace SignLink.UI
             if (unheld != null)
             {
                 Undo();
-                throw new InvalidOperationException("no support where it was built: " + unheld);
+                throw new InvalidOperationException(Lang.F("no support where it was built: {0}", unheld));
             }
             List<Sign> made;
             try
@@ -415,13 +417,13 @@ namespace SignLink.UI
                 Undo();                                                     // refused at the last step too (review: a sign over a
                 throw;                                                      // server's limit, a ward, copies loading): the steps come back
             }
-            if (made.Count == 0) return "the sign is gone.";
+            if (made.Count == 0) return Lang.T("the sign is gone.");
             window.Select(made[0], sameContent: true);
             UpdateMoved(made[0]);
             before.Root = made[0];
             before.Remade = true;
             beforeReset = before;
-            return "the sign stands where and as it was built: its signs were made again, every player sees it so now (Undo brings it back).";
+            return Lang.T("the sign stands where and as it was built: its signs were made again, every player sees it so now (Undo brings it back).");
         }
 
         /// <summary>A turn (the Turn row) to a total since it was built: the stack the session knows, about its first sign,
@@ -443,7 +445,8 @@ namespace SignLink.UI
                     if (Mathf.Abs(degrees) < 0.01f) return;
                     SignMove.Turn(stack ?? SignFinder.Stack(root), degrees, root);
                     UpdateMoved(root);
-                    window.Say($"turned the sign {Mathf.Abs(degrees):0.#}° {(degrees > 0 ? "clockwise" : "anticlockwise")} ({movedText})." + NoSupport(root));
+                    window.Say(Lang.F(degrees > 0 ? "turned the sign {0:0.#}° clockwise ({1})." : "turned the sign {0:0.#}° anticlockwise ({1}).",
+                                      Mathf.Abs(degrees), movedText) + NoSupport(root));
                 }
                 catch (Exception e)
                 {
@@ -472,8 +475,9 @@ namespace SignLink.UI
                     if (stack != null) SignMove.Nudge(stack, d * step);
                     else SignMove.Nudge(at, d * step);
                     UpdateMoved(root);
-                    window.Say($"moved the sign {Length(step)} {MoveWords[dir]} (" +
-                               (moved ? $"{movedText} from where it was built)." : "back where it was built).") + NoSupport(root));
+                    string way = Lang.F(MoveWords[dir], Length(step));
+                    window.Say((moved ? Lang.F("moved the sign {0} ({1} from where it was built).", way, movedText)
+                                      : Lang.F("moved the sign {0} (back where it was built).", way)) + NoSupport(root));
                 }
                 catch (Exception e)
                 {
@@ -529,7 +533,15 @@ namespace SignLink.UI
 
         /// <summary>What a step adds to its message where the game would not hold the sign up: it went, but it cannot be applied.</summary>
         static string NoSupport(Sign root) =>
-            SignMove.Unheld(root) != null ? " No support." : "";
+            SignMove.Unheld(root) != null ? " " + Lang.T("No support.") : "";
+
+        /// <summary>The Changes row: the moves and the pose to come (a tilt or a rotation waiting), and whether only this player
+        /// sees them yet.</summary>
+        string ChangesLine(string stepsText, bool waiting)
+        {
+            string line = stepsText + (posePending ? (stepsText.Length > 0 ? " → " : "") + poseText : "");
+            return waiting ? Lang.F("{0} · only you see it", line) : line;
+        }
 
         void UpdateMoved(Sign root)
         {
@@ -541,27 +553,28 @@ namespace SignLink.UI
             posed = Mathf.Abs(tilt) >= 0.05f || Mathf.Abs(rotated) >= 0.05f;   // the pose the signs were made in (Sign rotations)
             if (!moved && !posed)
             {
-                movedText = "where it was built";
+                movedText = Lang.T("where it was built");
                 return;
             }
             var parts = new List<string>();
             if (m.sqrMagnitude > 1e-8f)
             {
                 SignPose.Frame(root, out Vector3 right, out Vector3 towards);
-                Part(parts, Vector3.Dot(m, right), "right", "left");
-                Part(parts, m.y, "up", "down");
-                Part(parts, Vector3.Dot(m, towards), "towards you", "away");
+                Part(parts, Vector3.Dot(m, right), MoveWords[1], MoveWords[0]);
+                Part(parts, m.y, MoveWords[3], MoveWords[2]);
+                Part(parts, Vector3.Dot(m, towards), MoveWords[4], MoveWords[5]);
             }
-            if (Mathf.Abs(turned) > 0.05f) parts.Add($"turned {Mathf.Abs(turned):0.#}° {(turned > 0 ? "clockwise" : "anticlockwise")}");
+            if (Mathf.Abs(turned) > 0.05f) parts.Add(Lang.F(turned > 0 ? "turned {0:0.#}° clockwise" : "turned {0:0.#}° anticlockwise", Mathf.Abs(turned)));
             string tipped = Fit.TiltWords(tilt);
             if (tipped.Length > 0) parts.Add(tipped);
-            if (Mathf.Abs(rotated) >= 0.05f) parts.Add($"rotated {Mathf.Abs(rotated):0.#}° {(rotated > 0 ? "clockwise" : "anticlockwise")}");
-            movedText = parts.Count > 0 ? string.Join(", ", parts.ToArray()) : "where it was built";
+            if (Mathf.Abs(rotated) >= 0.05f) parts.Add(Lang.F(rotated > 0 ? "rotated {0:0.#}° clockwise" : "rotated {0:0.#}° anticlockwise", Mathf.Abs(rotated)));
+            movedText = parts.Count > 0 ? string.Join(Lang.Comma, parts.ToArray()) : Lang.T("where it was built");
         }
 
+        /// <summary>plus, minus: the way's phrase (MoveWords, {0}: the length).</summary>
         static void Part(List<string> parts, float v, string plus, string minus)
         {
-            if (Mathf.Abs(v) >= 0.0005f) parts.Add($"{Length(Mathf.Abs(v))} {(v > 0 ? plus : minus)}");
+            if (Mathf.Abs(v) >= 0.0005f) parts.Add(Lang.F(v > 0 ? plus : minus, Length(Mathf.Abs(v))));
         }
 
         static string Length(float m) => m < 0.0095f ? $"{m * 1000:0} mm" : $"{m * 100:0.#} cm";

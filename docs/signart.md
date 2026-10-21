@@ -6,7 +6,7 @@ in a small grid compose one large piece.
 
 This repo is the design desk for that: a model of how the game lays out sign text, the game's own
 glyph outlines, a renderer and checker, a browser simulator, and the art concepts made with them. It
-also has SignLink, a BepInEx plugin, so programs can write and animate sign texts in the running game.
+also has SignLink, a BepInEx plugin whose in-game window puts pictures, art and animations on signs.
 
 ## Quick start
 
@@ -29,30 +29,18 @@ switch to the cell view, click a shape to nudge it, and copy each sign's command
 
 Concepts say which one they are (`Art(mode=...)`); the simulator marks every card.
 
-Detailed texts reach the game in two ways: written into a copy of a world save (below), or live through
-SignLink (next section), which can also animate them.
+Detailed texts reach the game in two ways: written into a copy of a world save (below), or through SignLink
+(next section).
 
 ## Live in the game (SignLink)
 
-`mod/SignLink` is a client-side BepInEx plugin with an HTTP API on `127.0.0.1:8417` (`mod/README.md`);
-`signart/live.py` is its client. Install it once into a Thunderstore Mod Manager profile, start the game
-modded, turn the developer API on (its Settings tab; off by default), then:
-
-```sh
-./sign.sh live signs --radius 30                                   # ids of the signs around you
-./sign.sh live write <id> --file text.txt --mode zdo               # any length; zdo = saved, everyone sees it
-./sign.sh live image <id> images/a.jpg                            # a picture for vanilla players (0.4+)
-./sign.sh live anim <id> --frames concepts.anim2:cat --fps 4 --mode zdo     # the pixel cat
-./sign.sh live anim-block 4 --frames concepts.anim1:fjord_bands    # one clock over three signs of block 4
-./sign.sh live stop
-./sign.sh live clear                                               # empty every sign of the gallery row
-```
-
-Frames come from `pixels.py` (scene function -> 12-bit colours -> column-encoded text) and are uploaded
-once; the plugin flips them itself. Pictures need no script any more: the plugin's own encoder (the
-window's Picture source on 2 Content, `POST /image`) writes the texts `vanilla_hq.py` would, over stacked sign copies that
-every player sees. Vanilla clients re-read a sign every 2 s, SignLink clients every
-0.1 s. Writing on the live server needs the server owner's go-ahead each time.
+`mod/SignLink` is a client-side BepInEx plugin (`mod/README.md`): its window writes pictures, art pieces and texts on
+signs in the running game. Pictures need no script: the plugin's own encoder (the window's Picture source on 2 Content)
+writes the texts `vanilla_hq.py` would, over stacked sign copies that every player sees. Its art pieces, animations
+included, come from the concept rounds and the art library (`./sign.sh art`, [art-library.md](art-library.md)). The
+toolkit's own texts reach the game by a save edit (below); `vanilla_hq.py` and `image_import.py` write theirs to files
+(`signart/out/vanilla_hq/`, `signart/out/import/`). Every client re-reads a changed sign every 2 s, the game's own pace.
+Writing on a shared server needs the server owner's go-ahead each time.
 
 ## How a piece is built in game
 
@@ -70,16 +58,16 @@ layer, 1 = rearmost). `rig.py scan` reads their exact positions from a world sav
 `signart/rigs/<name>.json` (on the computer that scanned it: a rig holds real base coordinates, so `.gitignore`
 keeps it out of the repository); `rig.py apply` builds a concept on that measured grid and writes
 every sign's text into a copy of the world under a new name. Saves have no 50-character input limit:
-full `<font>` paths, glowing mirrored glyphs and long commands work there (`save_only` concepts).
+full `<font>` paths, glowing mirrored glyphs and long commands work there (the detailed mode).
 
 ```sh
 ./sign.sh rig apply rigs/my-rig.json /work/worlds/rig-template-save1487 /wl MyWorld_art --concept small_dragon_crest --force
 ```
 
 **A row of blocks.** `row.py build` takes the whole block (the rig's 45 signs plus the six marble cubes
-they hang on), turns it 90° and copies it into a row, a different piece on each block
-(`concepts/row1.py`), checks that nothing is in the way and that every bottom cube stands on a floor
-tile, and writes the world; `signart/rigs/<name>-row.json` maps every sign of every block.
+they hang on), turns it 90° and copies it into a row, a different piece on each block (the `PIECES` of a
+`concepts/row*.py` module: `--pieces row2` by default), checks that nothing is in the way and that every bottom cube
+stands on a floor tile, and writes the world; `signart/rigs/<rig name>-row.json` maps every sign of every block.
 
 ```sh
 ./sign.sh row build rigs/my-rig.json /work/worlds/rig-template-save1487 /wl MyWorld_gallery --force
@@ -94,12 +82,15 @@ save is a separate, server-owner-approved step (stop, edit, upload).
 | Path | What |
 |---|---|
 | `docs/sign-rendering.md` | everything known about sign rendering: layout math, tags, fonts, draw order, limits, review of the first session |
-| `docs/prior-art.md` | what others did with sign pictures before, compared with this engine; lessons; the mod, MCP and moving-picture plan |
-| `mod/SignLink/`, `signart/live.py` | SignLink: BepInEx plugin with a localhost HTTP API and a window to read, write, animate signs and import pictures live; its CLI client (`mod/README.md`, `mod/CHANGELOG.md`) |
+| `docs/limits.md` | what one sign can show and how fast it can change: pixels, bytes, network, frame cost, GIF limits |
+| `docs/prior-art.md` | what others did with sign pictures before, compared with this engine; lessons; the mod survey and the moving-picture options |
+| `docs/art-library.md` | the art that comes with SignLink, and how to make more |
+| `mod/SignLink/` | SignLink: BepInEx plugin with a window to read, write, animate signs and import pictures live (`mod/README.md`, `mod/CHANGELOG.md`) |
 | `mod/SignLink.Tests/`, `signart/encoder_vectors.py` | the plugin's C# picture encoder against the Python pipeline (`./sign.sh modtest`) |
-| `signart/presets.py` | art presets for SignLink's Art source (the cat, the fjord, stacked pictures) |
-| `signart/image_import.py`, `vanilla_hq.py`, `gif_import.py` | a picture on one sign; a picture over stacked signs for vanilla players (`--screen` plays a GIF over it); a GIF as text frames |
-| `signart/engine.py` | TMP layout model, command codec, renderer, overlap check, cell assignment, `Art` authoring API |
+| `signart/presets.py` | the art built into SignLink's Art source, from the concept rounds and the art library (`./sign.sh art`) |
+| `signart/artlib.py`, `signart/concepts/lib_*.py` | the art library: building blocks and one file per theme |
+| `signart/image_import.py`, `vanilla_hq.py` | a picture on one sign; a picture over stacked signs for vanilla players (the band texts, as SignLink writes them); both write text files under `signart/out/` |
+| `signart/engine.py` | TMP layout model, command codec, renderer, overlap check, cell assignment, `Art` authoring class |
 | `signart/pixels.py` | pixel pictures: scene sampling, 12-bit dithering, ■ size per pitch, column-encoded sign texts |
 | `signart/concepts/round*.py` | the art, round by round; `common.py` has the palette and helpers |
 | `signart/build.py` | build every concept; `make_sim.py` + `sim_template.html` produce the simulator |

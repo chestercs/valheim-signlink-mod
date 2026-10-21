@@ -1,6 +1,7 @@
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;
+using PetyusPolisz.Kit;
 
 namespace SignLink.UI.Sources
 {
@@ -100,13 +101,13 @@ namespace SignLink.UI.Sources
         public abstract string Problem(Session s);
 
         /// <summary>The picked item for the red-level question: "This picture (800 x 600 pixels)".</summary>
-        public virtual string What(Session s) => "This";
+        public virtual string What(Session s) => Lang.T("This");
 
         /// <summary>How to make it lighter, under the red-level question, or null.</summary>
         public virtual string Lighter(Session s) => null;
 
         /// <summary>The red level (SaveCost.Heavy): what everyone near it pays; saveBytes -1 when not counted yet.</summary>
-        public abstract bool Heavy(Session s, out double loadSeconds, out long saveBytes, out long largest);
+        public abstract bool Heavy(Session s, out long saveBytes, out long largest);
 
         /// <summary>Why the picked item may not go on in a multiplayer world (SaveCost.Allowed: over the sign limit, or
         /// over the area limit with what the signs around hold; with how to make it lighter), or null: single player,
@@ -114,16 +115,17 @@ namespace SignLink.UI.Sources
         public string Limit(Session s)
         {
             if (!SignText.Shared() || !s.HasTarget) return null;
-            Heavy(s, out _, out long save, out _);
+            Heavy(s, out long save, out _);
             if (save < 0 || SaveCost.Allowed(save, s.SaveBytes, s.AreaOthers, true, out string why)) return null;
             string lighter = Lighter(s);
-            return char.ToUpper(why[0]) + why.Substring(1) + (lighter != null ? ". " + lighter : ".");
+            string first = char.ToUpper(why[0]) + why.Substring(1);
+            return lighter != null ? Lang.F("{0}. {1}", first, lighter) : Lang.F("{0}.", first);   // the sentences' joints a translator's
         }
 
         /// <summary>The bytes the picked item would store (SaveCost.Bytes), or -1 while not counted.</summary>
         public long Bytes(Session s)
         {
-            Heavy(s, out _, out long save, out _);
+            Heavy(s, out long save, out _);
             return save;
         }
 
@@ -158,6 +160,45 @@ namespace SignLink.UI.Sources
 
         /// <summary>The line under greyed rows: why they are grey.</summary>
         public static string NotReady(Session s) =>
-            !s.HasTarget ? "No sign" : s.Reason ?? "Locked";
+            !s.HasTarget ? Lang.T("Select a sign first") : s.Reason ?? Lang.T("Locked");   // 1.1.0, the author: ask for a sign
+
+        protected static readonly string[] AllArrows = { "↑ ↓ ← →" }, UpDown = { "↑ ↓" };   // the title row's keys (KeysHere)
+
+        /// <summary>The title row's list button, for a source with a list (Art, Picture: the same parts in the same places,
+        /// 1.1.0): lit while the list shows, grey while nothing is picked and the list is all there is (0.20.69); true when
+        /// it was clicked (the caller flips its list at a later Layout).</summary>
+        protected static bool ListButton(bool browsing, bool picked, string browseText)
+        {
+            GUI.enabled = picked || !browsing;
+            bool want = Widgets.Toggle(browsing, browsing ? Lang.T("Hide list") : browseText, Theme.Tab, Widgets.W(170));
+            GUI.enabled = true;
+            return want != browsing;
+        }
+
+        /// <summary>The Summary's last rows, on what the content costs a server, alike on Art and Picture (1.1.0, review:
+        /// written twice), under the source's own Content size row: the multiplayer limits, then the download of a player who
+        /// arrives. Only in multiplayer (1.1.0, the author: neither means anything in single player; the build on the
+        /// player's computer is not shown, a number of this computer's).</summary>
+        protected void CostRows(Session s, long bytes)
+        {
+            if (!SignText.Shared()) return;
+            string limit = Limit(s);                                        // the sign and area limits, no asking
+            // no sign selected: the area is not known, the sign limit is (1.1.0, review: a 1 MB pick read "fits")
+            if (limit == null && !s.HasTarget && bytes > SaveCost.SignLimit) limit = Lang.F("{0} is over the {1} SignLink stores on one sign", SaveCost.Label(bytes), SaveCost.Label(SaveCost.SignLimit));
+            if (limit != null) Row(Lang.T("Multiplayer"), limit, Theme.Warn);
+            else Row(Lang.T("Multiplayer"), Lang.T("fits the limits"), Theme.Good);
+            double down = SaveCost.DownloadSeconds(bytes);
+            int level = SaveCost.Level(down);
+            Row(Lang.T("Arriving"), down < 0.05 ? Lang.T("under 0.1 s download") : Lang.F("{0:0.#} s download", down),   // a small piece: not "0 s"
+                level == 2 ? Theme.Warn : level == 1 ? Theme.Notice : Theme.Good);
+        }
+
+        /// <summary>The Summary's label column, wider than a Field's (1.1.0: "Resolution pixels" on one line, room for
+        /// longer words in other languages).</summary>
+        const float SummaryLabelW = 140;
+
+        /// <summary>A row of the Summary, alike on Art and Picture: its label in the Summary's column, the value beside it.</summary>
+        protected static void Row(string label, string value, GUIStyle style = null) =>
+            Widgets.Field(label, value, style, Widgets.ContentWidth - 150 - (SummaryLabelW - 110), SummaryLabelW);
     }
 }

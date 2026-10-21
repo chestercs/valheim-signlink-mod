@@ -33,7 +33,10 @@ namespace SignLink.Pictures
             foreach (string t in texts)
             {
                 if (string.IsNullOrEmpty(t) || sb.Length >= max) continue;
-                string words = Spaces.Replace(Tags.Replace(t.Length > 4000 ? t.Substring(0, 4000) : t, ""), " ").Trim();
+                string head = t.Length > 4000 ? t.Substring(0, 4000) : t;
+                int open = head.LastIndexOf('<');                       // a tag the cut split: dropped, not shown as words (1.1.0)
+                if (open >= 0 && head.IndexOf('>', open) < 0) head = head.Substring(0, open);
+                string words = Spaces.Replace(Tags.Replace(head, ""), " ").Trim();
                 if (words.Length == 0) continue;
                 if (sb.Length > 0) sb.Append(" / ");
                 sb.Append(words);

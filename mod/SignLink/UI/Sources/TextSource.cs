@@ -40,7 +40,7 @@ namespace SignLink.UI.Sources
         int previewSerial;
         float changedAt;
 
-        public override string Title => "Text";
+        public override string Title => "Text";                         // lang:keys (the source strip shows it through T)
         public override SignRecipe.Kinds Kind => SignRecipe.Kinds.Text;
 
         /// <summary>A text the editor cannot take (over MaxChars) is not loaded: the bar says so (Session.Missing).</summary>
@@ -189,7 +189,7 @@ namespace SignLink.UI.Sources
                 bool empty = shown.Length == 0;
                 int at = empty ? -1 : SignGlow.IsGlowing(shown) ? 0 : 1;
                 GUI.enabled = can && !empty;
-                int pick = Widgets.Choice("Light", at, LightRow.PictureNames, 320f);
+                int pick = Widgets.Choice(Lang.T("Light"), at, LightRow.PictureNames, 320f);
                 if (pick >= 0 && pick != at)
                 {
                     GlowMode m = pick == 0 ? GlowMode.Glowing : GlowMode.Lit;
@@ -208,14 +208,14 @@ namespace SignLink.UI.Sources
             using (Widgets.Horizontal())
             {
                 GUI.enabled = can && templates.Problem(room) == null;       // a template picked and ready: Insert lights up
-                if (Widgets.SmallGoButton("Insert", Widgets.W(100)))        // the picked template's lines at the caret
+                if (Widgets.SmallGoButton(Lang.T("Insert"), Widgets.W(100)))        // the picked template's lines at the caret
                 {
                     List<Snippets.Line> lines = templates.Lines();
                     int caret = Caret();
                     if (lines != null && lines.Count > 0) w.Later(() => SetText(Snippets.Insert(text, lines, caret)));
                 }
                 GUI.enabled = can && !s.Held.Empty && (aText ? !tooLong : known && s.Missing == null);
-                if (Widgets.Button("Reset", Theme.SmallButton, Widgets.W(80)))   // the sign's text as made (0.20.71: Reset instead of "load from the sign")
+                if (Widgets.Button(Lang.T("Reset"), Theme.SmallButton, Widgets.W(80)))   // the sign's text as made (0.20.71: Reset instead of "load from the sign")
                     w.Later(() =>
                     {
                         if (aText) SetText(s.Held.Made);
@@ -226,27 +226,32 @@ namespace SignLink.UI.Sources
                         }
                     });
                 GUI.enabled = can && shown.Length > 0;
-                if (Widgets.Button("Clear", Theme.SmallButton, Widgets.W(80))) w.Later(() => SetText(""));
+                if (Widgets.Button(Lang.T("Clear"), Theme.SmallButton, Widgets.W(80))) w.Later(() => SetText(""));
                 GUI.enabled = can && history.CanUndo;
-                if (Widgets.Button("Undo", Theme.SmallButton, Widgets.W(70))) w.Later(() => Step(history.Undo()));
+                if (Widgets.Button(Lang.T("Undo"), Theme.SmallButton, Widgets.W(70))) w.Later(() => Step(history.Undo()));
                 GUI.enabled = can && history.CanRedo;
-                if (Widgets.Button("Redo", Theme.SmallButton, Widgets.W(70))) w.Later(() => Step(history.Redo()));
+                if (Widgets.Button(Lang.T("Redo"), Theme.SmallButton, Widgets.W(70))) w.Later(() => Step(history.Redo()));
                 GUI.enabled = true;
                 GUILayout.Label("Ctrl+Z", Theme.KeyHint, GUILayout.ExpandWidth(false));   // Keys (1.0.2: keys shown)
                 GUILayout.Label("Ctrl+Y", Theme.KeyHint, GUILayout.ExpandWidth(false));
             }
             Keys(w);                                                        // Ctrl+Z, Ctrl+Y: before the box takes the keys
             GUI.enabled = can;
-            GUI.SetNextControlName(AreaName);
-            using (Widgets.Scroll(ref scroll, 220))
-                text = GUILayout.TextArea(text, MaxChars, Theme.Area, GUILayout.ExpandHeight(true));   // the verb follows at the next Layout (Tick)
+            // the editor's frame around its scroll, the bar inside it (1.1.0, the author: the scroll is the text editor's, not
+            // its wrapper's); amber while the text has the keys, as a field
+            bool typing = GUI.GetNameOfFocusedControl() == AreaName;
+            using (Widgets.Scroll(ref scroll, 220, typing ? Theme.AreaBoxOn : Theme.AreaBox))
+            {
+                GUI.SetNextControlName(AreaName);
+                text = GUILayout.TextArea(text, MaxChars, Theme.AreaText, GUILayout.ExpandHeight(true));   // the verb follows at the next Layout (Tick)
+            }
             GUI.enabled = true;
             // what holds the editor back, under the box
             if (!can) Widgets.Hint(Source.NotReady(s));
             else if (s.HasTarget && !s.Held.Empty && !aText)                // a picture or a piece first: its length is no text's
-                GUILayout.Label(known && s.Missing == null ? "Holds a piece" : "Holds a piece (unreadable)", Theme.SideNote);
+                GUILayout.Label(known && s.Missing == null ? Lang.T("Holds a piece") : Lang.T("Holds a piece (unreadable)"), Theme.SideNote);
             else if (tooLong)
-                GUILayout.Label($"{s.Held.Text.Length} characters: too long", Theme.Warn);
+                GUILayout.Label(Lang.F("{0} characters: too long", s.Held.Text.Length), Theme.Warn);
         }
 
         public override void DrawSize(Session s, SignLinkWindow w)
@@ -254,7 +259,7 @@ namespace SignLink.UI.Sources
             bool empty = shown.Length == 0, movable = !empty && Movable(s), was = GUI.enabled;
             GUI.enabled = was && Source.Ready(s);
             size.Draw(s, Size(s, out Vector2 shownM) ? shownM : Vector2.zero, movable, empty ? null
-                : movable ? null : "Fixed size",
+                : movable ? null : Lang.T("Fixed size"),
                 SnapScale);                                                 // its exact sizes for Shift + wheel (0.20.98)
             GUI.enabled = was;
         }
@@ -420,30 +425,28 @@ namespace SignLink.UI.Sources
             return movable;
         }
 
-        public override string Problem(Session s) => shown.Length == 0 ? "Type a text above" : null;
+        public override string Problem(Session s) => shown.Length == 0 ? Lang.T("Type a text above") : null;
 
-        public override string What(Session s) => "This text";
+        public override string What(Session s) => Lang.T("This text");
 
         /// <summary>The red level of the text shown (the same in every event of a frame), counted once per text (0.20.132,
         /// review: the footer, the area meter and the tabs asked up to four times an event, each a pass over 50 000
         /// characters), as Movable and SnapScale keep theirs.</summary>
-        public override bool Heavy(Session s, out double loadSeconds, out long saveBytes, out long largest)
+        public override bool Heavy(Session s, out long saveBytes, out long largest)
         {
             if (!ReferenceEquals(heavyFor, shown))
             {
                 heavyFor = shown;
-                heavyGlyphs = SaveCost.Glyphs(new[] { shown });
                 heavyBytes = SaveCost.Bytes(new[] { shown });
                 heavyLargest = Encoding.UTF8.GetByteCount(shown);
             }
-            loadSeconds = SaveCost.LoadSeconds(heavyGlyphs);
             saveBytes = heavyBytes;
             largest = heavyLargest;
-            return SaveCost.Heavy(loadSeconds, saveBytes, largest);
+            return SaveCost.Heavy(saveBytes, largest);
         }
 
         string heavyFor;
-        long heavyGlyphs, heavyBytes, heavyLargest;
+        long heavyBytes, heavyLargest;
 
         /// <summary>Writes the text as the stack's only sign, as typed (its tags are its light), sized, placed and posed
         /// as chosen (SignFit.Put; a text SignLink cannot resize goes on as it is), and marks it as this source's.</summary>
@@ -465,7 +468,7 @@ namespace SignLink.UI.Sources
                 s.Chosen.Fit = put;                                         // as put (a snapped size): nothing left to apply (0.20.148)
                 w.Select(made[0]);
                 string how = put.Describe();
-                return $"the text is on the sign{how}.";
+                return Lang.F("the text is on the sign{0}.", how);
             });
         }
     }

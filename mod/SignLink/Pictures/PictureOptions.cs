@@ -20,19 +20,16 @@ namespace SignLink.Pictures
         public long Pixels => (long)W * H;
         public float WidthM => W * Pitch / 40f;
         public float HeightM => H * Pitch / 40f;
-        /// <summary>The time a client spends building the text meshes when the picture loads (~13.5 µs per pixel,
-        /// docs/limits.md).</summary>
-        public float LoadSeconds => (float)(Pixels * SaveCost.GlyphSeconds);
     }
 
     /// <summary>How a picture goes on a sign. In the window its detail is chosen as pixels across (Detail: that sets the
     /// data) and its size in metres (width; the height follows the picture's shape), which sets how big a pixel is; with
-    /// Fine Width (on by default) a size also moves the pixels a few percent (at most FineSpread) for the exact size. The
-    /// API can still give a width and a pixel size (Pitch), the pixel count following from both. Its position is its
+    /// Fine Width (on by default) a size also moves the pixels a few percent (at most FineSpread) for the exact size. A
+    /// width and a pixel size (Pitch) still work too (the tests, an older recipe), the pixel count following from both. Its position is its
     /// centre relative to the sign's centre, seen from the front.</summary>
     internal sealed class PictureOptions
     {
-        /// <summary>The pixel sizes of the width-and-pitch model (the window before 0.20.35, the API's pitch=), in wu
+        /// <summary>The pixel sizes of the width-and-pitch model (the window before 0.20.35; the developer API's pitch= until 1.1.0), in wu
         /// (2.5 cm) whose half is a line height TMP reads and adds up exactly in float32; still the ladder a coarsened
         /// older recipe climbs. The Detail model takes any such pixel on the PitchStep grid (PitchFor).</summary>
         public static readonly float[] Pitches = { 0.125f, 0.25f, 0.5f, 0.75f, 1f, 1.5f, 2f };
@@ -49,12 +46,12 @@ namespace SignLink.Pictures
         /// 220-280 KB of sign text, under SaveCost.SignLimit for most pictures.</summary>
         public const int SharedPixels = 22000;
 
-        /// <summary>The picture's width in metres; 0: size by Pixels instead (the API's pixels=).</summary>
+        /// <summary>The picture's width in metres; 0: size by Pixels instead (the developer API's pixels= until 1.1.0; the tests).</summary>
         public float WidthM = 6f;
         /// <summary>The Detail model (the window, 0.20.35): the picture's pixels across. It sets the data; WidthM sets how
         /// big each pixel is (PitchFor), so a bigger picture costs nothing more, except that with Fine the exact size takes
-        /// the pixels nearest Detail (at most FineSpread away). 0: the width-and-Pitch model (the API's width= and
-        /// pitch=).</summary>
+        /// the pixels nearest Detail (at most FineSpread away). 0: the width-and-Pitch model (the tests; the developer
+        /// API's width= and pitch= until 1.1.0).</summary>
         public int Detail;
         /// <summary>The window picks Detail itself (AutoDetail) until the player moves the row or a sign's own recipe is
         /// loaded.</summary>
@@ -83,9 +80,7 @@ namespace SignLink.Pictures
         public float UpM;
         /// <summary>The picture's centre, metres towards someone who faced the sign (negative: away; Fit.Out).</summary>
         public float OutM;
-        /// <summary>The API's older above=: the bottom edge this many metres above the sign (overrides Place).</summary>
-        public float? BottomM;
-        /// <summary>Bytes of text per sign, in KB: 400 (the window, always since 0.20.39), 16..400 from the API; a sign
+        /// <summary>Bytes of text per sign, in KB: 400 (the window, always since 0.20.39), less in the tests; a sign
         /// stays under the 512 KiB a player can receive. 0, no cap, is left to the tests.</summary>
         public float MaxKb = (float)PixelText.NetworkKb;
         /// <summary>For a GIF: also play it over the still, as a texture screen (only players with SignLink see it move;
@@ -100,7 +95,7 @@ namespace SignLink.Pictures
         /// <summary>The sign's pose when the picture is placed (SignPose), in degrees: tipped (+ face up) and turned
         /// clockwise. The picture turns with the sign around its own centre (Origin).</summary>
         public float TiltDeg, TurnDeg;
-        /// <summary>The tilt tips the sign over its bottom edge (true: the API's way, every pose before 0.20.30) or about
+        /// <summary>The tilt tips the sign over its bottom edge (true: every pose before 0.20.30) or about
         /// its middle (the window's default since: it follows the choice on 3 Place).</summary>
         public bool EdgePivot = true;
 
@@ -111,7 +106,6 @@ namespace SignLink.Pictures
         /// (the board's edges are a quarter metre from its centre).</summary>
         public float UpFor(float heightM)
         {
-            if (BottomM.HasValue) return BottomM.Value + heightM / 2;
             switch (Place)
             {
                 case Placement.Above: return 1f + heightM / 2;

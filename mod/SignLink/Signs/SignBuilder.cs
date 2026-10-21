@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PetyusPolisz.Kit;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -24,11 +25,11 @@ namespace SignLink.Signs
         public static List<Sign> Clone(Sign src, IList<string> texts, float stepM = 0f, bool checkedFirst = false)
         {
             if (stepM <= 0f) stepM = SignPose.Tipped(src) ? (float)FloorPlan.Step : DefaultStep;
-            ZDO srcZdo = SignFinder.Zdo(src) ?? throw new InvalidOperationException("the sign has no ZDO");
+            ZDO srcZdo = SignFinder.Zdo(src) ?? throw new InvalidOperationException(Lang.T("the sign has no ZDO"));
             GameObject prefab = ZNetScene.instance.GetPrefab(srcZdo.GetPrefab())
-                                ?? throw new InvalidOperationException("prefab not found");
+                                ?? throw new InvalidOperationException(Lang.T("prefab not found"));
             if (Location.IsInsideNoBuildLocation(src.transform.position))   // as the hammer (1.0.2, review)
-                throw new InvalidOperationException("the game allows no building there");
+                throw new InvalidOperationException(Lang.T("the game allows no building there"));
             if (!checkedFirst)                                              // SetContent checked before writing anything
             {
                 SignText.RequireEdit(src);
@@ -41,7 +42,7 @@ namespace SignLink.Signs
             foreach (Sign o in SignFinder.Stack(src))
                 front = Mathf.Max(front, Vector3.Dot(o.transform.position - t.position, t.forward));
             if (front + stepM * texts.Count >= SignFinder.StackDepth)       // past it the copies would not read as one stack
-                throw new ArgumentException($"too many copies for one sign ({texts.Count} more in front of {front * 1000:0.#} mm)");
+                throw new ArgumentException(Lang.F("too many copies for one sign ({0} more in front of {1:0.#} mm)", texts.Count, front * 1000));
             var made = new List<Sign>();
             for (int k = 0; k < texts.Count; k++)
             {
@@ -66,7 +67,7 @@ namespace SignLink.Signs
         public static void RequireDepth(Sign root, int n)
         {
             float step = SignPose.Tipped(root) ? (float)FloorPlan.Step : DefaultStep;
-            if (n * step >= SignFinder.StackDepth) throw new ArgumentException($"too many copies for one sign ({n})");
+            if (n * step >= SignFinder.StackDepth) throw new ArgumentException(Lang.F("too many copies for one sign ({0})", n));
         }
 
         /// <summary>Removes signs for good (ZDO destroyed after an ownership claim; nothing drops). Signs under a ward
@@ -79,7 +80,6 @@ namespace SignLink.Signs
             foreach (Sign s in all)
             {
                 if (!s || SignFinder.Zdo(s) == null || !SignText.CanEdit(s)) continue;
-                Plugin.Text.StopFor(s);
                 Plugin.Screens.Stop(s);
                 s.m_nview.ClaimOwnership();
                 ZNetScene.instance.Destroy(s.gameObject);
@@ -97,13 +97,13 @@ namespace SignLink.Signs
         public static List<Sign> SetContent(Sign sign, IList<string> texts, string name = null)
         {
             if (texts == null || texts.Count == 0) texts = new[] { "" };
-            if (!sign || SignFinder.Zdo(sign) == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!sign || SignFinder.Zdo(sign) == null) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             List<Sign> stack = SignFinder.Stack(sign);
             Sign root = stack.Count > 0 ? stack[0] : sign;
             SignText.RequireEdit(root);
             SignFinder.RequireLoaded(root);                                   // before anything is written: no copy missed
             foreach (string t in texts) SignText.RequireSendable(t);       // all of them, before anything is written
-            SignText.RequireRoom(root, Pictures.SaveCost.Bytes(texts), "this content");   // the multiplayer limits
+            SignText.RequireRoom(root, Pictures.SaveCost.Bytes(texts), Lang.T("this content"));   // the multiplayer limits
             RequireDepth(root, texts.Count);
             // more signs or fewer is building or removing, which the game allows nowhere near a trader or a boss (as the
             // hammer: 1.0.2, review); the same number of signs only takes new texts, as vanilla's own editing does
@@ -116,17 +116,13 @@ namespace SignLink.Signs
                 texts = kept;
             }
             if (texts.Count != stack.Count && Location.IsInsideNoBuildLocation(root.transform.position))
-                throw new InvalidOperationException($"the game allows no building or removing there, so the sign keeps its {stack.Count} " +
-                                                    $"sign(s) and this content needs {texts.Count}");
+                throw new InvalidOperationException(Lang.F("the game allows no building or removing there, so the sign keeps its {0} sign(s) and this content needs {1}",
+                                                           stack.Count, texts.Count));
             List<Sign> copies = stack.FindAll(o => o != root);
             int need = texts.Count - 1;
             SignMove.WriteFor(root);                                        // allowed: moves not applied yet are kept, and copies
                                                                             // go in front of where the signs are
-            foreach (Sign s in stack)
-            {
-                Plugin.Text.StopFor(s);
-                Plugin.Screens.Stop(s);
-            }
+            foreach (Sign s in stack) Plugin.Screens.Stop(s);
             SignText.Apply(root, texts[0], local: false);
             bool empty = true;
             foreach (string t in texts) empty &= string.IsNullOrEmpty(t);
@@ -173,7 +169,7 @@ namespace SignLink.Signs
         /// (0.20.44: the multiplayer limits keep the content small, a ward still protects its signs).</summary>
         public static void Guard()
         {
-            if (!ZNet.instance || !Player.m_localPlayer) throw new InvalidOperationException("not in a world");
+            if (!ZNet.instance || !Player.m_localPlayer) throw new InvalidOperationException(Lang.T("not in a world"));
         }
     }
 }

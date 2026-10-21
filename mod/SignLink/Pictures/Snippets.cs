@@ -11,7 +11,7 @@ namespace SignLink.Pictures
     /// only, docs/sign-rendering.md 7c) and a line lands where asked:
     ///   X = P + 2*sx*S*((xMin+xMax)/2 - adv/2),   Y = 2*V + S*(yMin+yMax) - K     (wu; engine.layout_lines)
     /// A glyph's drawn height is 2*S*(yMax-yMin) + 4*bold*S (faux bold grows it); its metrics come from GlyphData.
-    /// No Unity here (mod/SignLink.Tests)..</summary>
+    /// No Unity here (mod/SignLink.Tests).</summary>
     internal static class Snippets
     {
         public const double WuPerM = 40;

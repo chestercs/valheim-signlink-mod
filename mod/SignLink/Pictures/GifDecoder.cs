@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PetyusPolisz.Kit;
 
 namespace SignLink.Pictures
 {
@@ -82,16 +83,15 @@ namespace SignLink.Pictures
         public static GifImage Decode(byte[] d, long maxBytes = MaxBytes, int maxFrames = int.MaxValue, Func<bool> cancelled = null,
                                       Func<byte[], int, int, byte[]> frame = null, Func<int, int, long> frameBytes = null)
         {
-            if (!IsGif(d)) throw new ArgumentException("not a GIF");
-            if (d.Length < 13) throw new ArgumentException("the GIF is cut short");
+            if (!IsGif(d)) throw new ArgumentException(Lang.T("not a GIF"));
+            if (d.Length < 13) throw new ArgumentException(Lang.T("the GIF is cut short"));
             int w = d[6] | (d[7] << 8), h = d[8] | (d[9] << 8);
-            if (w <= 0 || h <= 0 || (long)w * h > 16_000_000) throw new ArgumentException($"the GIF is {w} x {h} pixels: at most 16 million pixels a frame (4000 x 4000)");
+            if (w <= 0 || h <= 0 || (long)w * h > 16_000_000) throw new ArgumentException(Lang.F("the GIF is {0} x {1} pixels: at most 16 million pixels a frame (4000 x 4000)", w, h));
             int count = CountFrames(d, out long framePixels);
-            if (count == 0) throw new ArgumentException("the GIF has no frames");
+            if (count == 0) throw new ArgumentException(Lang.T("the GIF has no frames"));
             if (count > MaxFrames || framePixels > MaxFramePixels)
-                throw new ArgumentException($"the GIF is too long or too large to read: {count} frames, {framePixels / 1000000} million pixels in all " +
-                                            $"(at most {MaxFrames} frames and {MaxFramePixels / 1000000} million pixels: about {MaxFramePixels / (1920L * 1080)} frames of 1920 x 1080). " +
-                                            "Make it shorter or smaller");
+                throw new ArgumentException(Lang.F("the GIF is too long or too large to read: {0} frames, {1} million pixels in all (at most {2} frames and {3} million pixels: about {4} frames of 1920 x 1080). Make it shorter or smaller",
+                                                   count, framePixels / 1000000, MaxFrames, MaxFramePixels / 1000000, MaxFramePixels / (1920L * 1080)));
             int stride = Stride(count, frameBytes != null ? frameBytes(w, h) : (long)w * h * 3, maxBytes);
             var lzw = new LzwBuffers();                                         // one set for every frame
 
@@ -138,7 +138,7 @@ namespace SignLink.Pictures
                 int fw = d[pos + 4] | (d[pos + 5] << 8), fh = d[pos + 6] | (d[pos + 7] << 8);
                 int fp = d[pos + 8];
                 pos += 9;
-                if ((long)fw * fh > 16_000_000) throw new ArgumentException($"a GIF frame of {fw} x {fh} pixels is too large");
+                if ((long)fw * fh > 16_000_000) throw new ArgumentException(Lang.F("a GIF frame of {0} x {1} pixels is too large", fw, fh));
                 byte[] palette = global;
                 if ((fp & 0x80) != 0)
                 {
@@ -146,10 +146,10 @@ namespace SignLink.Pictures
                     palette = Slice(d, pos, n);
                     pos += n;
                 }
-                if (palette == null) throw new ArgumentException("a GIF frame without a palette");
+                if (palette == null) throw new ArgumentException(Lang.T("a GIF frame without a palette"));
                 if (pos >= d.Length) break;
                 int minCode = d[pos++];
-                if (minCode < 1 || minCode > 11) throw new ArgumentException($"a GIF frame with LZW code size {minCode}");
+                if (minCode < 1 || minCode > 11) throw new ArgumentException(Lang.F("a GIF frame with LZW code size {0}", minCode));
                 byte[] data = Gather(d, ref pos);
                 int cw = Math.Min(fw, w - left), ch = Math.Min(fh, h - top);    // the part of the frame on the canvas
                 bool empty = cw <= 0 || ch <= 0;                                 // off the canvas: its delay counts, nothing to decode
@@ -224,7 +224,7 @@ namespace SignLink.Pictures
                 delay = 0;
                 transparent = -1;
             }
-            if (gif.Frames.Count == 0) throw new ArgumentException("the GIF has no frames");
+            if (gif.Frames.Count == 0) throw new ArgumentException(Lang.T("the GIF has no frames"));
             return gif;
         }
 
@@ -346,6 +346,7 @@ namespace SignLink.Pictures
                     if (code == end || code > avail) break;
                     if (old == -1)
                     {
+                        if (code >= clear) break;                            // a first code must be a colour (giflib): else it could name itself
                         stack[top++] = suffix[code];
                         old = first = code;
                         continue;

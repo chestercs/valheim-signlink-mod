@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using PetyusPolisz.Kit;
 using SignLink.Pictures;
 using SignLink.Signs;
 using UnityEngine;
@@ -268,52 +269,22 @@ namespace SignLink.Animation
             Plugin.Log.LogInfo($"parked frames of {key.Split('|')[0]} dropped {why} ({p.Frames.Bytes >> 20} MB); {parked.Count} set(s) parked, {Held >> 20} MB held");
         }
 
-        /// <summary>rgb: n frames of w x h x 3 bytes, rows top-down, at a fixed rate. (cx, cy): the picture's centre
-        /// relative to the sign, in wu (2.5 cm); pitch: wu per pixel. hideText: hide the sign's own text while the
-        /// screen shows. lit: shaded by the scene like the sign's text; otherwise it glows.</summary>
-        public string Start(string id, int w, int h, float fps, float cx, float cy, float pitch, bool loop, bool hideText,
-                            bool point, bool lit, byte[] rgb, float now)
+        /// <summary>StartTimed's refusal when the screens' budget has no room: the caller may make room and try again, or
+        /// park the frames (told by its type, not its words: they are in the player's language, 1.1.0).</summary>
+        internal sealed class NoRoomException : ArgumentException
         {
-            if (w <= 0 || h <= 0 || w > 4096 || h > 4096) throw new ArgumentException("w and h must be 1..4096");
-            if (fps <= 0 || fps > 60) throw new ArgumentException("fps must be in (0, 60]");
-            CheckPlace(cx, cy, pitch, 0f);
-            int frameBytes = w * h * 3;
-            if (rgb.Length == 0 || rgb.Length % frameBytes != 0)
-                throw new ArgumentException($"body is {rgb.Length} bytes, not a whole number of {w} x {h} RGB frames");
-            Sign s = SignFinder.Find(id);
-            if (!Fits(s, rgb.Length))                                        // before the body is copied (0.20.132, review)
-                throw new ArgumentException($"too big to play: the screens hold {Held >> 20} MB of frames already (at most {Budget >> 20} MB)");
-            int n = rgb.Length / frameBytes, row = w * 3;
-            var frames = new byte[n][];
-            for (int f = 0; f < n; f++)
-            {
-                var fr = new byte[frameBytes];
-                for (int r = 0; r < h; r++)
-                    Buffer.BlockCopy(rgb, f * frameBytes + r * row, fr, (h - 1 - r) * row, row);
-                frames[f] = fr;
-            }
-            return StartFrames(s, w, h, fps, cx, cy, pitch, loop, hideText, point, lit, frames, now);
-        }
-
-        /// <summary>The same from frames already in Unity's row order (bottom-up), w x h x 3 bytes each, at a fixed
-        /// rate: the uniform case of StartTimed.</summary>
-        public string StartFrames(Sign s, int w, int h, float fps, float cx, float cy, float pitch, bool loop, bool hideText,
-                                  bool point, bool lit, byte[][] frames, float now)
-        {
-            if (fps <= 0 || fps > 60) throw new ArgumentException("fps must be in (0, 60]");
-            var delays = new int[frames.Length];
-            for (int i = 0; i < delays.Length; i++) delays[i] = Math.Max(11, (int)Math.Round(1000f / fps));
-            return StartTimed(s, w, h, delays, cx, cy, pitch, loop, hideText, point, lit, frames, now);
+            public NoRoomException(string message) : base(message) { }
         }
 
         /// <summary>Frames in Unity's row order, each with its own delay (a GIF's; 10 ms or less counts as 100, as
         /// browsers time it); a frame may appear several times (the same array) to stay longer. Throws when the
-        /// screens' budget has no room. key (and the GIF's own size): the frames are parked under it when the screen's
+        /// screens' budget has no room (NoRoomException). key (and the GIF's own size): the frames are parked under it when the screen's
         /// sign goes, to play again without the file; null: dropped then.</summary>
-        public string StartTimed(Sign s, int w, int h, int[] delaysMs, float cx, float cy, float pitch, bool loop, bool hideText,
+        public void StartTimed(Sign s, int w, int h, int[] delaysMs, float cx, float cy, float pitch, bool loop, bool hideText,
                                  bool point, bool lit, byte[][] frames, float now, string key = null, int sourceW = 0, int sourceH = 0,
                                  float pitchY = 0f)
         {
+            if (!s || !s.m_textWidget) throw new ArgumentException(Lang.T("the sign is gone"));   // before a texture is made (1.1.0, review)
             if (w <= 0 || h <= 0 || w > 4096 || h > 4096) throw new ArgumentException("w and h must be 1..4096");
             CheckPlace(cx, cy, pitch, pitchY);                               // before anything reaches the screen's rect
             if (frames.Length == 0) throw new ArgumentException("no frames");
@@ -326,7 +297,6 @@ namespace SignLink.Animation
                 if (distinct.Add(f)) bytes += f.Length;
             }
             Stop(s, keep: false);                                            // the same sign again: the old frames go
-            Plugin.Text.Stop(s);                                             // a tool's local frame goes: the saved text shows under the screen
             Parked wasParked = null;                                         // the same frames parked: they play now
             if (key != null && parked.TryGetValue(key, out wasParked)) TakeParked(key, out _);
             long added = 0;                                                  // only frames no screen shows yet take room
@@ -339,7 +309,7 @@ namespace SignLink.Animation
                     parked[key] = wasParked;
                     parkedBytes += wasParked.Frames.Bytes;
                 }
-                throw new ArgumentException($"too big to play: the screens hold {Held >> 20} MB of frames already (at most {Budget >> 20} MB)");
+                throw new NoRoomException(Lang.F("too big to play: the screens hold {0} MB of frames already (at most {1} MB)", Held >> 20, Budget >> 20));
             }
             long[] ends = FrameTimes.Ends(delaysMs);
             long total = ends[ends.Length - 1];
@@ -379,12 +349,9 @@ namespace SignLink.Animation
             Plugin.Log.LogInfo($"screen on {SignFinder.Id(s)}: {w}x{h}, {frames.Length} frames at {fps:0.#} fps ({bytes >> 20} MB), " +
                                $"{(shaded != null ? "lit by the scene" : "glowing")}, hides the text of {hidden.Count} sign(s); " +
                                $"{screens.Count} screen(s) playing, {parked.Count} parked, {Held >> 20} MB held");
-            return "{\"ok\":true,\"frames\":" + frames.Length + ",\"w\":" + w + ",\"h\":" + h + ",\"mb\":" + Json.F(bytes / 1048576.0) +
-                   ",\"lit\":" + (shaded != null ? "true" : "false") + "}";
         }
 
-        /// <summary>A screen's place and pixel size, in wu (from a sign's recipe and fit: another player's numbers, or the
-        /// API's), must be finite and in range before they reach the RectTransform (0.20.132, review): 1 km from the sign,
+        /// <summary>A screen's place and pixel size, in wu (from a sign's recipe and fit: another player's numbers), must be finite and in range before they reach the RectTransform (0.20.132, review): 1 km from the sign,
         /// a pixel up to 4096 wu.</summary>
         static void CheckPlace(float cx, float cy, float pitch, float pitchY)
         {
@@ -607,7 +574,7 @@ namespace SignLink.Animation
         }
 
         /// <summary>Stops the screen over this sign (null: every screen). keep: its frames are parked, to play again
-        /// without the file (a stack rewritten or made again); false: dropped (the player's Stop, the API's).</summary>
+        /// without the file (a stack rewritten or made again); false: dropped (the player's Stop).</summary>
         public int Stop(Sign only, bool keep = true)
         {
             int n = 0;
@@ -724,40 +691,17 @@ namespace SignLink.Animation
             ordered.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));      // you walked: Step sorts the screens by distance)
             foreach (Screen sc in ordered)
             {
-                string state = sc.Paused ? "paused" : !play ? "frozen (Play all GIFs)" : $"{sc.Rate:0.#} shown/s";
+                string state = sc.Paused ? Lang.T("paused") : !play ? Lang.T("frozen (Play all GIFs)") : Lang.F("{0:0.#} shown/s", sc.Rate);
                 list.Add(new Row
                 {
-                    Text = $"{sc.W}x{sc.H}, {sc.Frames.Length} frames at {sc.Fps:0.#} fps ({state})" +
-                           (sc.Lit ? ", lit by the scene" : ", glowing") + (sc.Hidden.Count > 1 ? $", covers {sc.Hidden.Count} signs" : ""),
+                    Text = Lang.F("{0}x{1}, {2} frames at {3:0.#} fps ({4})", sc.W, sc.H, sc.Frames.Length, sc.Fps, state) +
+                           Lang.Comma + (sc.Lit ? Lang.T("lit by the scene") : Lang.T("glowing")) +
+                           (sc.Hidden.Count > 1 ? Lang.Comma + Lang.F("covers {0} signs", sc.Hidden.Count) : ""),
                     Sign = sc.Sign,
                     Paused = sc.Paused,
                 });
             }
             return list;
-        }
-
-        public string Stats(float now)
-        {
-            var sb = new StringBuilder("[");
-            for (int i = 0; i < screens.Count; i++)
-            {
-                Screen sc = screens[i];
-                if (i > 0) sb.Append(',');
-                sb.Append("{\"id\":").Append(Json.Str(sc.Id))
-                  .Append(",\"w\":").Append(sc.W).Append(",\"h\":").Append(sc.H)
-                  .Append(",\"frames\":").Append(sc.Frames.Length)
-                  .Append(",\"fps\":").Append(Json.F(sc.Fps))
-                  .Append(",\"shown\":").Append(sc.Shown)
-                  .Append(",\"realFps\":").Append(Json.F(sc.Rate))
-                  .Append(",\"paused\":").Append(sc.Paused ? "true" : "false")
-                  .Append(",\"skipped\":").Append(sc.Skipped)
-                  .Append(",\"avgMs\":").Append(Json.F(sc.Shown > 0 ? sc.SumMs / sc.Shown : 0))
-                  .Append(",\"maxMs\":").Append(Json.F(sc.MaxMs))
-                  .Append(",\"mb\":").Append(Json.F(sc.Bytes / 1048576.0))
-                  .Append(",\"lit\":").Append(sc.Lit ? "true" : "false")
-                  .Append('}');
-            }
-            return sb.Append(']').ToString();
         }
     }
 }

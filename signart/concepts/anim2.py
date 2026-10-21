@@ -91,7 +91,7 @@ def colours(g):
 
 
 def cat(n=8, pitch=7.0, above=60.0):
-    """Frames for live.py anim: the cat, 30 x 26 pixels of `pitch` wu (7 = 17.5 cm: 5.25 m wide), centred
+    """Frames for a SignLink animation: the cat, 30 x 26 pixels of `pitch` wu (7 = 17.5 cm: 5.25 m wide), centred
     over the sign, its bottom `above` wu (40 = 1 m) higher."""
     return P.sign_frames([colours(g) for g in frames(n)], pitch, above)
 
@@ -103,5 +103,5 @@ def cat_slow(pitch=7.0, above=60.0):
 
 
 def cat_slow_block(grid, sign="B2-1"):
-    """cat_slow on one sign of a gallery block, for live.py anim-block."""
+    """cat_slow on one sign of a gallery block."""
     return {sign: cat_slow()}

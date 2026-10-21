@@ -19,7 +19,8 @@ namespace SignLink.UI.Sources
     /// its pixels read back stand in for the decoded file; Resolution goes down only, Width is free.</summary>
     internal sealed partial class PictureSource : Source
     {
-        const string Unreadable = "cannot read: PNG, JPG or GIF only (convert HEIC or WebP first)";
+        /// <summary>A header's Error (set on a worker: English, a marker); said through Lang.T where it shows.</summary>
+        const string Unreadable = "cannot read: PNG, JPG or GIF only (convert HEIC or WebP first)";   // lang:keys
         /// <summary>Above this the quick view says a large photo is being read before the game stops for its decode.</summary>
         const long LargePhoto = 12000000;
 
@@ -130,9 +131,9 @@ namespace SignLink.UI.Sources
             public string File, Stamp;
             public byte[] Rgba;
             public int W, H, SrcW, SrcH;
-            /// <summary>A GIF of one frame: it does not move (the Moving row); a longer one's words come from RoomForGif, as its
-            /// frames' stride follows the sign's size.</summary>
-            public string Motion;
+            /// <summary>A GIF of one frame: it does not move (the Moving row says so); a longer one's words come from RoomForGif,
+            /// as its frames' stride follows the sign's size.</summary>
+            public bool OneFrame;
             /// <summary>A GIF: its size and frames, for what its screen takes at the sign's size (0: not known).</summary>
             public int MW, MH, Count;
         }
@@ -156,6 +157,8 @@ namespace SignLink.UI.Sources
         /// drop-down too): open while nothing is picked, closed on a pick and while a sign's own picture is edited, so the quick
         /// view and the Size rows come first.</summary>
         bool browsing = true;
+        Action showList, hideList;                                          // the list button's work, made once: a value, not a flip
+                                                                            // (two events of one click must not undo each other)
         int[] gridPx;
         string gridKey, thumbFile;
 
@@ -206,10 +209,15 @@ namespace SignLink.UI.Sources
         Header header;
         bool known, decoded, counted;
         PicturePlan plan;
-        bool showCoarsened, showCapped, showCostError, fineLimited;
-        int fineShift;
+        int maxForSizeW;                                                    // the pixels across Max for this size would give
 
-        public override string Title => "Picture";
+        /// <summary>How many of the file's pixels go into one across: "8", "1.4", "1.02" (a hair under every one is not
+        /// rounded to 1), "1" for every one.</summary>
+        static string Ratio(int fileW, int planW) =>
+            planW <= 0 || planW >= fileW ? "1" : (fileW / (double)planW).ToString(fileW < planW * 1.1 ? "0.0##" : "0.#", System.Globalization.CultureInfo.InvariantCulture);
+        bool showCoarsened, showCapped, showCostError;
+
+        public override string Title => "Picture";                      // lang:keys (the source strip shows it through T)
         public override SignRecipe.Kinds Kind => SignRecipe.Kinds.Picture;
         public override bool Resizable => false;
         public override bool Busy => job.Busy || pendingAct != null;
@@ -235,6 +243,8 @@ namespace SignLink.UI.Sources
             costJob.Abandon();
             costFor = null;
             cost = null;
+            thumb.Clear();                                                  // the quick view too: drawn again at the next open
+            thumbFile = null;
         }
 
         /// <summary>Another source: the photo's buffer goes, a placement running goes on (its done handler copes with
@@ -303,7 +313,8 @@ namespace SignLink.UI.Sources
         long gifNeed, gifRoom, gifOwn;
         bool gifHeld;
         int gifStride, gifCount;
-        string gifMotion;                                                   // "N frames, one in k moves": made when they change
+        string gifMotion, gifMotionLang;                                    // "N frames, one in k moves": made when they change
+                                                                            // (or the language)
         int roomFrame = -1;                                                 // the frame RoomForGif last ran in
 
         /// <summary>What the picked GIF's frames take at the size its sign shows (0: not a GIF, not known), whether frames
@@ -318,12 +329,14 @@ namespace SignLink.UI.Sources
             int kept = gif ? PictureImporter.ScreenKept(source.MW, source.MH, source.Count, planW) : 0;
             gifNeed = gif ? PictureImporter.ScreenBytes(source.MW, source.MH, kept, planW) : 0;
             int stride = gif ? GifDecoder.Stride(source.Count, PictureImporter.ScreenFrameBytes(source.MW, source.MH, planW), Animation.ScreenPlayer.FrameCap) : 0;
-            if (stride != gifStride || (gif ? source.Count : 0) != gifCount)
+            string lang = Lang.Current;
+            if (stride != gifStride || (gif ? source.Count : 0) != gifCount || lang != gifMotionLang)
             {
                 gifStride = stride;
                 gifCount = gif ? source.Count : 0;
-                gifMotion = !gif ? null : stride > 1 ? $"{gifCount} frames, a long GIF: one frame in {stride} moves (the same speed, less smooth)."
-                                                     : $"{gifCount} frames, all of them move.";
+                gifMotionLang = lang;
+                gifMotion = !gif ? null : stride > 1 ? Lang.F("{0} frames, a long GIF: one frame in {1} moves (the same speed, less smooth).", gifCount, stride)
+                                                     : Lang.F("{0} frames, all of them move.", gifCount);
             }
             // playing now: nothing more to hold; parked only: starting them takes their room (review: parked frames were
             // taken as free); the screens idle far away or paused give theirs up for it (ScreenPlayer.MakeRoom, Parkable)
@@ -411,7 +424,7 @@ namespace SignLink.UI.Sources
                 PicturePlan grid = made.PlanFor(header.W, header.H), asked = o.PlanFor(header.W, header.H);
                 if (asked.W != grid.W || Math.Abs(asked.Pitch - grid.Pitch) > 1e-5f) o.Detail = Math.Max(1, grid.W);
             }
-            Plan();                                                         // plan, fineShift, fineLimited: made again on change only
+            Plan();                                                         // the plan: made again on change only
             decoded = known && source != null && source.File == file && source.Stamp == header.Stamp;
             Keys();                                                         // decodeKey, wantKey, optionsKey: the same
             costKey = wantKey != null && wantKey == gridKey ? optionsKey : null;
@@ -420,7 +433,12 @@ namespace SignLink.UI.Sources
             {
                 thumbFile = file;
                 thumb.Clear();                                              // the old picture goes at once
-                thumb.Info = file == null ? "" : fromSign ? "reading the picture from the sign ..." : $"Loading {name} ...";
+                thumb.Info = file == null ? "" : fromSign ? Lang.T("reading the picture from the sign ...") : Lang.F("Loading {0} ...", name);
+                // the view is drawn again even for a grid or a decode delivered before (1.1.0, the author: Starry Night stayed
+                // "Loading" when picked again before the picture between had decoded: the grid's key was the same, so no job
+                // started); a read that failed is tried again
+                gridJob.Forget();
+                if (!decoded) decodeJob.Forget();
             }
             if (!fromSign) Decode(now);                                     // the sign's own: ReadSign is its decode
             MakeGrid(now);
@@ -452,6 +470,7 @@ namespace SignLink.UI.Sources
         readonly ListRows rows = new ListRows();
         List<string> rowFiles;                                              // the files the words were made for
         int rowHeaders = -1, headersChanged;                                // headersChanged: counts changes of headers
+        string rowLang;                                                     // the language the words were made in
         string[] rowWords, rowKey, rowBox;
         bool[] rowBad;
 
@@ -462,39 +481,38 @@ namespace SignLink.UI.Sources
             if (!picked && !browsing && Event.current.type == EventType.Layout) browsing = true;   // nothing to show: the list
             using (Widgets.Horizontal())
             {
-                Widgets.Header("Picture");
+                Widgets.Header(Lang.T("Picture"));
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(Up > 0 || folders.Count > 0 ? "↑ ↓ ← →" : "↑ ↓", Theme.KeyHint, GUILayout.ExpandWidth(false));   // ContentTab steps the list (1.0.2: keys shown); ← → the folders
+                Widgets.KeysHere(Theme.Tab, Up > 0 || folders.Count > 0 ? AllArrows : UpDown);   // ContentTab steps the list (1.0.2: keys
+                                                                            // shown); ← → the folders; level with the list button (1.1.0)
                 // nothing picked yet: the list is all there is, Hide list grey (0.20.69, the author: until I have chosen a
                 // picture, the Hide list button should be grey)
-                GUI.enabled = picked || !browsing;
-                bool open = Widgets.Toggle(browsing, browsing ? "Hide list" : "Browse pictures", Theme.Tab, Widgets.W(170));   // lit while it shows
-                GUI.enabled = true;
-                if (open != browsing) w.Later(() => browsing = open);
+                if (ListButton(browsing, picked, Lang.T("Browse pictures")))
+                    w.Later(browsing ? hideList ?? (hideList = () => browsing = false) : showList ?? (showList = () => browsing = true));
                 if (browsing)                                               // with the list only (0.20.89)
                 {
-                    if (Widgets.Button("Reload", Theme.Button, Widgets.W(80))) w.Later(Reload);
-                    if (Widgets.Button("Open folder", Theme.Button, Widgets.W(110))) PictureImporter.OpenFolder(inFolder);
+                    if (Widgets.Button(Lang.T("Reload"), Theme.Button, Widgets.W(80))) w.Later(Reload);
+                    if (Widgets.Button(Lang.T("Open folder"), Theme.Button, Widgets.W(110))) PictureImporter.OpenFolder(inFolder);
                 }
             }
             if (fromSign && !browsing)                                      // the sign's own picture, its file not here
             {
-                GUILayout.Label($"{SignRecipe.Clean(signHeld.File)}{(known ? $"   {header.W} x {header.H}" : "")}   · on the sign", Theme.Label);
-                Widgets.Hint(signError != null ? "No file here, unreadable: " + signError : "No file here: read from the sign");
+                GUILayout.Label(Lang.F("{0}   · on the sign", $"{SignRecipe.Clean(signHeld.File)}{(known ? $"   {header.W} x {header.H}" : "")}"), Theme.Label);
+                Widgets.Hint(signError != null ? Lang.F("No file here, unreadable: {0}", signError) : Lang.T("No file here: read from the sign"));
             }
             else if (picked && !browsing)                                   // the pick in one line; the quick view shows it
             {
                 string f = files[selected];
                 Header ph = headers.TryGetValue(f, out Header got) ? got : null;
                 bool own = s.Editing && s.Chosen.Recipe.Kind == SignRecipe.Kinds.Picture;
-                GUILayout.Label($"{PictureImporter.Relative(f)}{(ph != null && ph.Error == null ? $"   {ph.W} x {ph.H}" : "")}" +
-                                (own ? "   · on the sign" : ""), Theme.Label);
+                string line = $"{PictureImporter.Relative(f)}{(ph != null && ph.Error == null ? $"   {ph.W} x {ph.H}" : "")}";
+                GUILayout.Label(own ? Lang.F("{0}   · on the sign", line) : line, Theme.Label);
             }
             bool layout = Event.current.type == EventType.Layout, repaint = Event.current.type == EventType.Repaint;
             if (browsing)
             using (Widgets.Scroll(ref listScroll, 160))
             {
-                if (files.Count == 0 && folders.Count == 0) Widgets.Hint(Up > 0 ? "No pictures in this folder" : "Empty: Open folder");
+                if (files.Count == 0 && folders.Count == 0) Widgets.Hint(Up > 0 ? Lang.T("No pictures in this folder") : Lang.T("Empty: Open folder"));
                 int head = Up + folders.Count;                              // the up row and the folders come before the files (1.0.2)
                 int at = cursor >= 0 ? cursor : selected >= 0 ? FileRow(selected) : -1;   // the one row highlighted: where the arrows
                                                                             // stand, else the pick (the owner: the highlight stayed on
@@ -517,7 +535,7 @@ namespace SignLink.UI.Sources
                         bool up = i < Up;
                         int row = i;
                         string into = up ? PictureImporter.DirOf(inFolder) : PictureImporter.Relative(folders[i - Up]);
-                        string box = i == at ? (up ? "←" : "→") : up ? "up" : "folder";   // the key that opens it
+                        string box = i == at ? (up ? "←" : "→") : up ? Lang.T("up") : Lang.T("folder");   // the key that opens it
                         if (Widgets.PictureItem(i == at, null, up ? ".." : Path.GetFileName(folders[i - Up]) + "/", Widgets.ContentWidth - 30, box, openWhenSelected: true))
                             w.Later(() =>
                             {
@@ -549,10 +567,12 @@ namespace SignLink.UI.Sources
                 }
                 if (rows.Below > 0f) GUILayout.Space(rows.Below);
             }
-            if (Widgets.Foldout("picture.view", "Quick view")) thumb.Draw(Widgets.ContentWidth - 30, 220);   // folds (0.20.171)
+            // folds (0.20.171); closed while no picture is picked, open again once one is (1.1.0, the author); no line under it:
+            // the Summary has the pixels (1.1.0, the author: as on Art)
+            if (Widgets.Foldout("picture.view", Lang.T("Quick view"), usable: file != null)) thumb.Draw(Widgets.ContentWidth - 30, 220);
             GUI.enabled = can;
 
-            Widgets.Header("Resolution", Widgets.WheelKey);                                   // its size in metres: 3 Place › Content size (0.20.59)
+            Widgets.Header(Lang.T("Resolution"), Widgets.WheelKey);                                  // its size in metres: 3 Place › Content size (0.20.59)
             using (Widgets.Vertical(Theme.Section))
             {
                 // the Detail model (0.20.35, the author: only the density should affect the amount of data):
@@ -570,7 +590,7 @@ namespace SignLink.UI.Sources
                     float bw = Widgets.RestW / 2f - 4f;
                     long target = MaxTarget(s);
                     GUI.enabled = can && known && target > 0;
-                    if (Widgets.Button($"Max (multiplayer): {SaveCost.Label(target)}", Theme.SmallButton, Widgets.W(bw)))
+                    if (Widgets.Button(Lang.F("Multiplayer max: {0}", SaveCost.Label(target)), Theme.SmallButton, Widgets.W(bw)))   // 1.1.0, the author: was Max (multiplayer)
                         w.Later(() =>
                         {
                             maxTarget = target;
@@ -580,8 +600,12 @@ namespace SignLink.UI.Sources
                             maxNothing = false;
                             o.DetailAuto = false;
                         });
-                    GUI.enabled = can && known && Math.Min(o.Detail, most) < most;   // the Resolution set (0.20.189, review)
-                    if (Widgets.Button(!known || most >= header.W ? $"Native: {most} px" : $"Most: {most} px", Theme.SmallButton, Widgets.W(bw)))   // a million pixels at most (0.20.149)   // every pixel the file has
+                    // only while it would give more pixels (1.1.0, review: lit whenever the Resolution was under the file's, it
+                    // often changed nothing the size let through)
+                    GUI.enabled = can && known && maxForSizeW > plan.W;
+                    // the file's every pixel (a million at most, 0.20.149) asked; the size takes what fits (1.1.0, the author: name it for
+                    // what it does, it was "Native: N px" / "Most: N px")
+                    if (Widgets.Button(Lang.T("Max for this size"), Theme.SmallButton, Widgets.W(bw)))
                         w.Later(() =>
                         {
                             o.Detail = most;
@@ -595,10 +619,10 @@ namespace SignLink.UI.Sources
                 // and Shift + wheel go to the pixels a Resolution really makes at this size (PictureOptions.Achievable)
                 if (snapDetail == null) snapDetail = v => known ? o.Achievable(Mathf.RoundToInt(v), header.W, header.H) : v;
                 GUI.enabled = can && known;                                 // nothing picked: no Resolution to set (0.20.193, test)
-                float d = Widgets.Number("pic.detail", "Resolution", detailNow, 8f, Math.Max(8, most), 4f, "px wide", "0", snap: snapDetail);   // the author: "Detail (pixel across)" ... I do not understand it
+                float d = Widgets.Number("pic.detail", Lang.T("Resolution"), detailNow, 8f, Math.Max(8, most), 4f, Lang.T("px wide"), "0", snap: snapDetail);   // the author: "Detail (pixel across)" ... I do not understand it
                 GUI.enabled = can;
                 if (maxNothing && known && plan.W == maxNothingW)
-                    Widgets.Hint($"Max: {plan.W} px");
+                    Widgets.Hint(Lang.F("Multiplayer max: {0} px", plan.W));   // the button's name (1.1.0)
                 int want = Mathf.Clamp(Mathf.RoundToInt(d), 1, Math.Max(1, most));
                 if (want != detailNow && known)
                 {
@@ -629,7 +653,7 @@ namespace SignLink.UI.Sources
                     maxSteps = 0;                                           // the player's own: Max stops
                 }
                 // cover 2: every pixel's glyph is drawn two pixels wide, so no gaps show between pixels from a distance
-                o.Cover = Widgets.Check(o.Cover >= 2f, "Seamless pixels") ? 2f : 0f;
+                o.Cover = Widgets.Check(o.Cover >= 2f, Lang.T("Seamless pixels")) ? 2f : 0f;
             }
             GUI.enabled = true;
             if (!can) Widgets.Hint(Source.NotReady(s));
@@ -640,7 +664,7 @@ namespace SignLink.UI.Sources
             // author: okay, let it be so); the sign's own picture whose file is not here stays as it was made
             if (!fromSign && file != null && file.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
             {
-                bool moving = Widgets.Check(o.Animate, "Moving");
+                bool moving = Widgets.Check(o.Animate, Lang.T("Moving"));
                 if (moving != o.Animate)
                     w.Later(() =>
                     {
@@ -652,14 +676,14 @@ namespace SignLink.UI.Sources
                 // at the Layout before any row reads it (review: the hint below came at the Repaint alone, and the layout
                 // threw on every GIF pick)
                 if (Event.current.type == EventType.Layout) RoomForGif(s);   // once a frame: a file stat, the screens walked
-                string motion = source != null && source.File == file ? source.Motion ?? gifMotion : null;   // read: what moving does (gifMotion: RoomForGif)
+                string motion = source != null && source.File == file ? (source.OneFrame ? Lang.T("One frame: it does not move.") : gifMotion) : null;   // read: what moving does (gifMotion: RoomForGif)
                 if (o.Animate && motion != null) Widgets.Hint(motion);
                 long budget = SignLink.Animation.ScreenPlayer.Budget;
                 if (o.Animate && gifNeed > budget)
-                    GUILayout.Label($"Too big to move: {gifNeed >> 20} MB of frames, at most {budget >> 20} MB; a lower Resolution helps", Theme.Warn);
+                    GUILayout.Label(Lang.F("Too big to move: {0} MB of frames, at most {1} MB; a lower Resolution helps", gifNeed >> 20, budget >> 20), Theme.Warn);
                 else if (o.Animate && gifNeed > 0 && !gifHeld && gifNeed > gifRoom + gifOwn)
-                    GUILayout.Label($"Still for now: other GIFs here hold {(budget - gifRoom - gifOwn) >> 20} MB " +
-                                    $"of {budget >> 20} MB; it needs {gifNeed >> 20} MB", Theme.Warn);
+                    GUILayout.Label(Lang.F("Still for now: other GIFs here hold {0} MB of {1} MB; it needs {2} MB",
+                                           (budget - gifRoom - gifOwn) >> 20, budget >> 20, gifNeed >> 20), Theme.Warn);
                 if (o.Animate && gifNeed > 0)                               // the moving GIFs' memory with this one (1.0.2)
                     AreaMeter.Gifs(gifHeld ? 0 : Math.Max(0, gifNeed - gifOwn));
             }
@@ -667,42 +691,29 @@ namespace SignLink.UI.Sources
             if (known)
             {
                 // what it makes, one fact a row (author, 2026-10-11: break it into rows or a table ... unreadable),
-                // under a title of its own (0.20.48)
-                Widgets.Header("Summary");
+                // under a title of its own (0.20.48). The pixels first, the file's and the Resolution's with how many of the
+                // file's go into one; the size on the sign, then in multiplayer the limits and the download (1.1.0, the
+                // author's order; no Size: 3 Place sets it and its slider shows it, a pixel's cm said nothing)
+                Widgets.Header(Lang.T("Summary"));
                 using (Widgets.Vertical(Theme.Section))
                 {
-                    float fw = Widgets.ContentWidth - 150;
-                    double pxMm = plan.Pitch * 25;
                     bool guess = !Have && Estimated;                        // the last count's, scaled (0.20.125)
-                    Widgets.Field("Signs", !Have && !guess ? "counting ..."                     // first (author, 2026-10-11)
-                                         : cost.Pic.Bands.Count == 1 ? "1" : $"{cost.Pic.Bands.Count}, stacked", width: fw);
-                    Widgets.Field("Pixels", $"{plan.W} x {plan.H}, from {(fromSign ? "the sign's " : "")}{header.W} x {header.H}" +
-                                            (plan.W < header.W ? $" ({header.W / (double)plan.W:0.#} to one)" : " (every one)"), width: fw);
-                    Widgets.Field("Size", $"{plan.WidthM:0.##} x {plan.HeightM:0.##} m, a pixel is " +
-                                          (pxMm >= 10 ? $"{pxMm / 10:0.#} cm" : $"{pxMm:0.#} mm"), width: fw);
-                    if (fineShift != 0)                                     // Fine Width (0.20.128)
-                        Widgets.Field("", $"{fineShift:+0;-0} px for this size" + (fineLimited ? " (limit)" : ""), Theme.Small, fw);
+                    Row(Lang.T("Native pixels"), $"{header.W} x {header.H}");
+                    Row(Lang.T("Resolution pixels"), $"{plan.W} x {plan.H} (1:{Ratio(header.W, plan.W)})");
                     if (showCoarsened)
-                        Widgets.Field("", $"file is {header.W} px wide", Theme.Warn, fw);
+                        Row("", Lang.F("file is {0} px wide", header.W), Theme.Warn);
                     if (showCapped)
-                        Widgets.Field("", $"{PictureOptions.MaxPixels / 1000} k pixel limit", Theme.Warn, fw);
-                    if (showCostError) Widgets.Field("Cost", costError ?? "error", Theme.Warn, fw);
+                        Row("", Lang.F("{0} k pixel limit", PictureOptions.MaxPixels / 1000), Theme.Warn);
+                    Row(Lang.T("Signs"), showCostError ? "-" : !Have && !guess ? Lang.T("counting ...")
+                                       : cost.Pic.Bands.Count == 1 ? "1" : Lang.F("{0}, stacked", cost.Pic.Bands.Count));
+                    if (showCostError) Row(Lang.T("Cost"), costError ?? Lang.T("error"), Theme.Warn);
                     else if (Have || guess)
                     {
                         long glyphs = Have ? cost.Glyphs : Est(cost.Glyphs), bytes = SaveBytes();
                         if (glyphs < plan.Pixels)
-                            Widgets.Field("See-through", $"{plan.Pixels - glyphs} pixels, free", width: fw);
-                        double build = Load(), down = SaveCost.DownloadSeconds(bytes), wait = build + down;
-                        int level = SaveCost.Level(wait);
-                        string limit = Limit(s);                            // multiplayer: the sign and area limits, no asking
-                        Widgets.Field("Arriving", $"{wait:0.#} s ({down:0.#} s download, {build:0.#} s build)",
-                                      level == 2 ? Theme.Warn : level == 1 ? Theme.Notice : Theme.Good, fw);
-                        if (limit != null) Widgets.Field("Multiplayer", limit, Theme.Warn, fw);
-                        else if (SignText.Shared()) Widgets.Field("Multiplayer", "fits the limits", Theme.Good, fw);
-                        else Widgets.Field("Multiplayer", "no limit here", Theme.Small, fw);
-                        Widgets.Field("World save", (guess ? "about " : "") + SaveCost.Label(bytes) +   // last (author, 2026-10-11)
-                                                    (cost.Pic.Bands.Count > 1 && !guess ? $", the largest sign {SaveCost.Label(cost.Largest)}" : "") +
-                                                    (guess ? " (counting ...)" : ""), width: fw);
+                            Row(Lang.T("See-through"), Lang.F("{0} pixels, free", plan.Pixels - glyphs));
+                        Row(Lang.T("Content size"), guess ? Lang.F("about {0} (counting ...)", SaveCost.Label(bytes)) : SaveCost.Label(bytes));
+                        CostRows(s, bytes);
                     }
                 }
             }
@@ -710,9 +721,8 @@ namespace SignLink.UI.Sources
             if (s.Editing && !fromSign && s.Held.Recipe.Kind == SignRecipe.Kinds.Picture)   // made with other Settings: Update applies today's
             {
                 SignRecipe h = s.Held.Recipe;
-                var made = new List<string>();
-                if (h.Transparent != o.Transparent) made.Add(h.Transparent ? "with PNG transparency" : "without PNG transparency");
-                if (made.Count > 0) Widgets.Hint($"Made {string.Join(" and ", made.ToArray())}");
+                if (h.Transparent != o.Transparent)                         // whole sentences (one setting of its own left)
+                    Widgets.Hint(h.Transparent ? Lang.T("Made with PNG transparency") : Lang.T("Made without PNG transparency"));
             }
 
         }

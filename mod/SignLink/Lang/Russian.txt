@@ -1,0 +1,1118 @@
+# SignLink: the window in Russian. english<TAB>translation; English is the key (mod/Kit/Lang.cs).
+@language	Русский
+# Kit/KitWindow.cs:331
+Close	Закрыть
+# Kit/Lang.cs:106
+list|, 	, 
+# Kit/Lang.cs:14
+Game default	Как в игре
+# Kit/Widgets.Buttons.cs:121
+On	Вкл.
+# Kit/Widgets.Buttons.cs:121
+Off	Выкл.
+# SignLink/Animation/ScreenPlayer.cs:287
+the sign is gone	таблички больше нет
+# SignLink/Animation/ScreenPlayer.cs:312
+too big to play: the screens hold {0} MB of frames already (at most {1} MB)	слишком много для воспроизведения: кадры GIF уже занимают {0} MB (максимум {1} MB)
+# SignLink/Animation/ScreenPlayer.cs:694
+paused	на паузе
+# SignLink/Animation/ScreenPlayer.cs:694
+frozen (Play all GIFs)	заморожен (Запустить все GIF)
+# SignLink/Animation/ScreenPlayer.cs:694
+{0:0.#} shown/s	показ {0:0.#}/с
+# SignLink/Animation/ScreenPlayer.cs:697
+{0}x{1}, {2} frames at {3:0.#} fps ({4})	{0}x{1}, кадров: {2}, {3:0.#} fps ({4})
+# SignLink/Animation/ScreenPlayer.cs:698
+lit by the scene	освещается сценой
+# SignLink/Animation/ScreenPlayer.cs:698
+glowing	светится
+# SignLink/Animation/ScreenPlayer.cs:699
+covers {0} signs	перекрывает табличек: {0}
+# SignLink/Animation/StoredAnims.cs:107
+no frames	нет кадров
+# SignLink/Animation/StoredAnims.cs:108
+fps must be in (0, 60]	fps должен быть в диапазоне (0, 60]
+# SignLink/Animation/StoredAnims.cs:110
+{0} characters in all: over the {1} a saved animation holds (no game would play it)	всего символов: {0}, а сохранённая анимация вмещает не более {1} (ни одна игра её не воспроизведёт)
+# SignLink/Animation/StoredAnims.cs:115
+{0} KB with the first frame as text: over {1} KB, too big to send in multiplayer	{0} KB вместе с первым кадром в виде текста: больше {1} KB, в мультиплеере столько не передать
+# SignLink/Animation/StoredAnims.cs:116
+this animation	эта анимация
+# SignLink/Animation/StoredAnims.cs:163
+the sign is gone (unloaded or removed)	таблички больше нет (выгружена или удалена)
+# SignLink/Animation/StoredAnims.cs:164
+that sign has no saved animation any more.	на этой табличке больше нет сохранённой анимации.
+# SignLink/Animation/StoredAnims.cs:472
+{0} frames at {1:0.#} fps	кадров: {0}, {1:0.#} fps
+# SignLink/Commands.cs:42
+SignLink: opens its window; 'signlink version' tells the version, 'signlink close' closes it	SignLink: открывает своё окно; 'signlink version' — версия, 'signlink close' — закрыть окно
+# SignLink/Commands.cs:65
+{0} {1} is running. {2} or /{3} opens its window.	{0} {1} работает. Окно открывается клавишей {2} или командой /{3}.
+# SignLink/Commands.cs:66
+{0} {1} is running. /{2} opens its window.	{0} {1} работает. Окно открывается командой /{2}.
+# SignLink/Commands.cs:67
+Its window failed to load: {0}	Окно не загрузилось: {0}
+# SignLink/Commands.cs:73
+/{0}: open the SignLink window · /{0} version: the version that runs · /{0} close: close it	/{0}: открыть окно SignLink · /{0} version: запущенная версия · /{0} close: закрыть окно
+# SignLink/Commands.cs:78
+{0} {1}: its window failed to load ({2}); BepInEx/LogOutput.log has the details.	{0} {1}: окно не загрузилось ({2}); подробности в BepInEx/LogOutput.log.
+# SignLink/Commands.cs:79
+no window	нет окна
+# SignLink/Commands.cs:83
+{0} {1}: the window opens as soon as the chat or console closes.	{0} {1}: окно откроется, как только закроется чат или консоль.
+# SignLink/Patches/PictureSignPatch.cs:102
+Open in SignLink	Открыть в SignLink
+# SignLink/Patches/PictureSignPatch.cs:77
+A picture on {0} stacked signs	Картинка на стопке из {0} табличек
+# SignLink/Patches/PictureSignPatch.cs:77
+Glyph art on {0} stacked signs	Символьный рисунок на стопке из {0} табличек
+# SignLink/Patches/PictureSignPatch.cs:77
+A long text on {0} stacked signs	Длинный текст на стопке из {0} табличек
+# SignLink/Patches/PictureSignPatch.cs:78
+A picture	Картинка
+# SignLink/Patches/PictureSignPatch.cs:78
+Glyph art	Символьный рисунок
+# SignLink/Patches/PictureSignPatch.cs:78
+A long text	Длинный текст
+# SignLink/Pictures/Fit.cs:199
+lying face up over its edge	лицом вверх, через край
+# SignLink/Pictures/Fit.cs:199
+lying face up	лицом вверх
+# SignLink/Pictures/Fit.cs:200
+lying face down over its edge	лицом вниз, через край
+# SignLink/Pictures/Fit.cs:200
+lying face down	лицом вниз
+# SignLink/Pictures/Fit.cs:201
+tilted back {0:0.#}° over its edge	наклон назад {0:0.#}° через край
+# SignLink/Pictures/Fit.cs:201
+tilted back {0:0.#}°	наклон назад {0:0.#}°
+# SignLink/Pictures/Fit.cs:202
+tilted forward {0:0.#}° over its edge	наклон вперёд {0:0.#}° через край
+# SignLink/Pictures/Fit.cs:202
+tilted forward {0:0.#}°	наклон вперёд {0:0.#}°
+# SignLink/Pictures/Fit.cs:209
+at {0:0.#} %	масштаб {0:0.#} %
+# SignLink/Pictures/Fit.cs:210
+{0:0.##} m right	{0:0.##} m вправо
+# SignLink/Pictures/Fit.cs:210
+{0:0.##} m left	{0:0.##} m влево
+# SignLink/Pictures/Fit.cs:211
+{0:0.##} m up	{0:0.##} m вверх
+# SignLink/Pictures/Fit.cs:211
+{0:0.##} m down	{0:0.##} m вниз
+# SignLink/Pictures/Fit.cs:212
+{0:0.##} m towards you	{0:0.##} m к вам
+# SignLink/Pictures/Fit.cs:212
+{0:0.##} m away	{0:0.##} m от вас
+# SignLink/Pictures/Fit.cs:215
+rotated {0:0.#}°	поворот {0:0.#}°
+# SignLink/Pictures/GifDecoder.cs:141
+a GIF frame of {0} x {1} pixels is too large	кадр GIF {0} x {1} px слишком велик
+# SignLink/Pictures/GifDecoder.cs:149
+a GIF frame without a palette	кадр GIF без палитры
+# SignLink/Pictures/GifDecoder.cs:152
+a GIF frame with LZW code size {0}	кадр GIF с размером кода LZW {0}
+# SignLink/Pictures/GifDecoder.cs:86
+not a GIF	это не GIF
+# SignLink/Pictures/GifDecoder.cs:87
+the GIF is cut short	файл GIF неполный (обрывается)
+# SignLink/Pictures/GifDecoder.cs:89
+the GIF is {0} x {1} pixels: at most 16 million pixels a frame (4000 x 4000)	GIF {0} x {1} px: не более 16 млн пикселей на кадр (4000 x 4000)
+# SignLink/Pictures/GifDecoder.cs:91
+the GIF has no frames	в GIF нет кадров
+# SignLink/Pictures/GifDecoder.cs:93
+the GIF is too long or too large to read: {0} frames, {1} million pixels in all (at most {2} frames and {3} million pixels: about {4} frames of 1920 x 1080). Make it shorter or smaller	GIF слишком длинный или большой для чтения: кадров {0}, всего {1} млн пикселей (максимум: кадров {2} и {3} млн пикселей, это около {4} кадров 1920 x 1080). Сделайте его короче или меньше
+# SignLink/Pictures/GlyphData.cs:31
+palette|Arrows	Стрелки
+# SignLink/Pictures/GlyphData.cs:31
+palette|Shapes	Фигуры
+# SignLink/Pictures/GlyphData.cs:31
+palette|Frames	Рамки
+# SignLink/Pictures/GlyphData.cs:31
+palette|Runes	Руны
+# SignLink/Pictures/GlyphData.cs:31
+palette|Symbols	Символы
+# SignLink/Pictures/GlyphData.cs:31
+palette|Emoji	Эмодзи
+# SignLink/Pictures/PictureImporter.cs:109
+the file is {0} MB, more than the {1} MB a picture may be	файл весит {0} MB, а картинка может быть не больше {1} MB
+# SignLink/Pictures/PictureImporter.cs:225
+Unity's image decoder is missing	нет декодера изображений Unity
+# SignLink/Pictures/PictureImporter.cs:258
+not a PNG, JPG or GIF picture (its header cannot be read)	это не картинка PNG, JPG или GIF (не читается заголовок)
+# SignLink/Pictures/PictureImporter.cs:260
+{0} x {1} is {2} megapixels: SignLink takes pictures up to {3} (scale it down first; a sign picture has at most a million)	{0} x {1} — это {2} Мп, а SignLink принимает картинки до {3} Мп (сначала уменьшите её; на табличке картинка не больше миллиона пикселей)
+# SignLink/Pictures/PictureImporter.cs:292
+not a PNG, JPG or GIF picture	это не картинка PNG, JPG или GIF
+# SignLink/Pictures/PictureImporter.cs:379
+too big to play over the picture (its frames would be {0} MB, the screens hold at most {1} MB)	GIF слишком велик для анимации поверх картинки (кадры заняли бы {0} MB, максимум {1} MB)
+# SignLink/Pictures/PictureImporter.cs:391
+it stays still for now: its frames would be {0} MB, the screens have room for {1} MB	GIF пока не движется: кадры заняли бы {0} MB, а свободно {1} MB
+# SignLink/Pictures/PictureImporter.cs:553
+it stays still here: {0}	GIF здесь не движется: {0}
+# SignLink/Pictures/PictureImporter.cs:557
+the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder	GIF движется поверх неё и снова запускается при каждой загрузке таблички — на каждом компьютере, где этот файл есть в папке картинок
+# SignLink/Pictures/PictureImporter.cs:722
+{0} is on the sign{1} over {2} signs ({3} in the world save; encoded in {4:0.0} s, placed in {5:0.0} s){6}.	{0} на табличке{1}, всего табличек: {2} ({3} в сохранении мира; кодирование {4:0.0} с, размещение {5:0.0} с){6}.
+# SignLink/Pictures/PictureImporter.cs:724
+{0} is on the sign{1} ({2} in the world save; encoded in {3:0.0} s, placed in {4:0.0} s){5}.	{0} на табличке{1} ({2} в сохранении мира; кодирование {3:0.0} с, размещение {4:0.0} с){5}.
+# SignLink/Pictures/PictureImporter.cs:742
+the import was stopped.	импорт остановлен.
+# SignLink/Pictures/PixelText.cs:116
+the picture is fully transparent: nothing to put on a sign	картинка полностью прозрачна: на табличку нечего ставить
+# SignLink/Pictures/PixelText.cs:222
+the picture is too large for the column encoding (tag numbers past 32 767): use fewer pixels or a smaller pixel size	картинка слишком велика для кодирования столбцами (числа в тегах больше 32 767): уменьшите число пикселей или размер пикселя
+# SignLink/Pictures/PixelText.cs:96
+a row of {0} pixels does not fit one sign	строка из {0} пикселей не помещается на одну табличку
+# SignLink/Pictures/QrCode.cs:61
+{0} bytes are too long for a QR code at {1} (version 40 holds at most {2})	{0} байт — слишком много для QR-кода с уровнем {1} (версия 40 вмещает не более {2})
+# SignLink/Pictures/SaveCost.cs:104
+{0} / {1} multiplayer limit within {2} m; with this: {3}	{0} / {1} — лимит мультиплеера в радиусе {2} m; с этим: {3}
+# SignLink/Pictures/SaveCost.cs:105
+{0} / {1} multiplayer limit within {2} m	{0} / {1} — лимит мультиплеера в радиусе {2} m
+# SignLink/Pictures/SaveCost.cs:23
+{0} bytes	{0} байт
+# SignLink/Pictures/SaveCost.cs:59
+On a server, every player who arrives waits {0:0.#} s for the download	На сервере каждый игрок, приходящий сюда, ждёт загрузки {0:0.#} с
+# SignLink/Pictures/SaveCost.cs:82
+{0} is over the {1} SignLink stores on one sign in a multiplayer world	{0} — больше лимита SignLink для одной таблички в мультиплеере ({1})
+# SignLink/Pictures/SaveCost.cs:92
+not counted yet	ещё не подсчитано
+# SignLink/Pictures/SaveCost.cs:95
+the SignLink signs within {0} m hold {1} already: with {2} more that is {3}, over the {4} multiplayer limit for an area	таблички SignLink в радиусе {0} m уже хранят {1}: ещё {2} — это {3}, больше лимита мультиплеера на область ({4})
+# SignLink/Pictures/SignPicture.cs:37
+it holds no pixel picture SignLink can read back	на табличке нет пиксельной картинки, которую SignLink может прочитать
+# SignLink/Pictures/TextTransform.cs:121
+<{0}> is not an absolute plain number	<{0}> — не простое абсолютное число
+# SignLink/Pictures/TextTransform.cs:128
+<{0}> is not something SignLink can resize	<{0}> SignLink не умеет масштабировать
+# SignLink/Pictures/TextTransform.cs:136
+a backslash escape (\\n, \\r, \\t, \\u) that the game reads as a character	экранирование обратной косой чертой (\\n, \\r, \\t, \\u), которое игра читает как символ
+# SignLink/Pictures/TextTransform.cs:142
+plain text without a size: the game sizes it itself	простой текст без размера: игра сама задаёт ему размер
+# SignLink/Pictures/TextTransform.cs:148
+several lines without a line height	несколько строк без высоты строки
+# SignLink/Pictures/TextTransform.cs:256
+too far from the sign: its tag numbers would pass what a sign reads	слишком далеко от таблички: числа в тегах превысят то, что может прочитать табличка
+# SignLink/Pictures/TextTransform.cs:278
+too large or too far from the sign: its tag numbers would pass what a sign reads	слишком велико или слишком далеко от таблички: числа в тегах превысят то, что может прочитать табличка
+# SignLink/Presets/Preset.cs:126
+{0}: {1:0.#} MB is too large to be a sign piece (up to {2} MB)	{0}: {1:0.#} MB — слишком много для рисунка (не более {2} MB)
+# SignLink/Presets/Preset.cs:132
+{0}: {1} signs is too large to be a sign piece (up to {2})	{0}: табличек {1} — слишком много для рисунка (не более {2})
+# SignLink/Presets/Preset.cs:136
+{0}: no '{1} fps=F' first line	{0}: нет первой строки '{1} fps=F'
+# SignLink/Presets/Preset.cs:143
+{0}: {1} frames is too large to be a sign piece (up to {2})	{0}: кадров {1} — слишком много для рисунка (не более {2})
+# SignLink/Signs/SignBuilder.cs:106
+this content	это содержимое
+# SignLink/Signs/SignBuilder.cs:119
+the game allows no building or removing there, so the sign keeps its {0} sign(s) and this content needs {1}	здесь игра не позволяет строить и разбирать: табличек в стопке останется {0}, а этому содержимому нужно {1}
+# SignLink/Signs/SignBuilder.cs:172
+not in a world	вы не в мире
+# SignLink/Signs/SignBuilder.cs:28
+the sign has no ZDO	у таблички нет ZDO
+# SignLink/Signs/SignBuilder.cs:30
+prefab not found	префаб не найден
+# SignLink/Signs/SignBuilder.cs:32
+the game allows no building there	здесь игра не позволяет строить
+# SignLink/Signs/SignBuilder.cs:45
+too many copies for one sign ({0} more in front of {1:0.#} mm)	слишком много копий для одной таблички (ещё {0} перед {1:0.#} mm)
+# SignLink/Signs/SignBuilder.cs:70
+too many copies for one sign ({0})	слишком много копий для одной таблички ({0})
+# SignLink/Signs/SignFinder.cs:242
+the sign's stack is still loading (its copies arrive one by one): try again in a moment	стопка табличек ещё загружается (копии приходят по одной): попробуйте чуть позже
+# SignLink/Signs/SignMove.cs:157
+it could not be weighed: {0}	не удалось рассчитать опору: {0}
+# SignLink/Signs/SignMove.cs:162
+nothing holds it there	там её ничего не держит
+# SignLink/Signs/SignMove.cs:163
+too weak there ({0:0} of {1:0})	там слишком слабая опора ({0:0} из {1:0})
+# SignLink/Signs/SignMove.cs:208
+at most {0:0} m from where it was built	не дальше {0:0} m от места постройки
+# SignLink/Signs/SignMove.cs:211
+a ward you have no access to protects that spot	это место защищает Оберег, к которому у вас нет доступа
+# SignLink/Signs/SignMove.cs:232
+another sign stands there: it would join this sign's copies (move it a little further)	там стоит другая табличка: она слилась бы с копиями этой (сдвиньте чуть дальше)
+# SignLink/Signs/SignMove.cs:266
+too weakly held there until the move is applied ({0:0} of the {1:0} it needs, as the game counts it): apply the steps so far first	там опора слишком слаба, пока перемещение не применено ({0:0} из нужных {1:0} по расчёту игры): сначала примените сделанные шаги
+# SignLink/Signs/SignMove.cs:389
+no support: {0}	нет опоры: {0}
+# SignLink/Signs/SignPose.cs:100
+standing	стоя
+# SignLink/Signs/SignPose.cs:394
+this sign	эта табличка
+# SignLink/Signs/SignText.cs:38
+a ward you have no access to protects this sign	эту табличку защищает Оберег, к которому у вас нет доступа
+# SignLink/Signs/SignText.cs:60
+{0}: {1} (single player has no limit)	{0}: {1} (в одиночной игре лимита нет)
+# SignLink/Signs/SignText.cs:61
+{0} (single player has no limit)	{0} (в одиночной игре лимита нет)
+# SignLink/Signs/SignText.cs:69
+a sign would hold over 512 KB: more than other players can receive (only single player allows that)	на табличке было бы больше 512 KB: другие игроки столько не получат (так можно только в одиночной игре)
+# SignLink/UI/AreaMeter.cs:32
+already {0}	уже {0}
+# SignLink/UI/AreaMeter.cs:33
+1 SignLink sign	1 табличка SignLink
+# SignLink/UI/AreaMeter.cs:33
+{0} SignLink signs	табличек SignLink: {0}
+# SignLink/UI/AreaMeter.cs:34
+Area	Область
+# SignLink/UI/AreaMeter.cs:35
+{0} within {1} m	{0} в радиусе {1} m
+# SignLink/UI/AreaMeter.cs:46
+already {0} MB	уже {0} MB
+# SignLink/UI/AreaMeter.cs:47
+GIFs	GIF
+# SignLink/UI/AreaMeter.cs:47
+{0} of moving GIF frames here	{0} — кадры движущихся GIF здесь
+# SignLink/UI/Confirm.cs:59
+This is very large. Put it on anyway?	Это очень большой объём. Всё равно разместить?
+# SignLink/UI/Confirm.cs:59
+{0} is very large. Put it on anyway?	{0} — очень большой объём. Всё равно разместить?
+# SignLink/UI/Confirm.cs:65
+Content size: {0}	Размер содержимого: {0}
+# SignLink/UI/Confirm.cs:68
+One sign: {0}, over 512 KB: no server	Одна табличка: {0}, больше 512 KB — не для сервера
+# SignLink/UI/Confirm.cs:70
+One sign: {0}, near 512 KB	Одна табличка: {0}, почти 512 KB
+# SignLink/UI/Confirm.cs:76
+Cancel	Отмена
+# SignLink/UI/FitPanel.cs:104
+Rotate (clockwise)	Поворот (по часовой)
+# SignLink/UI/FitPanel.cs:128
+Right	Вправо
+# SignLink/UI/FitPanel.cs:129
+Up	Вверх
+# SignLink/UI/FitPanel.cs:134
+2D coordinates on the sign's face	2D-координаты на лицевой стороне таблички
+# SignLink/UI/FitPanel.cs:32
+Standing	Стоя
+# SignLink/UI/FitPanel.cs:32
+Face up	Лицом вверх
+# SignLink/UI/FitPanel.cs:32
+Face down	Лицом вниз
+# SignLink/UI/FitPanel.cs:75
+The sign	Табличка
+# SignLink/UI/FitPanel.cs:87
+Tilt	Наклон
+# SignLink/UI/LightRow.cs:17
+Glowing	Светится
+# SignLink/UI/LightRow.cs:17
+Lit by the scene	Освещение сцены
+# SignLink/UI/LightRow.cs:18
+As made	Как задумано
+# SignLink/UI/LightRow.cs:30
+Light	Свет
+# SignLink/UI/MovePanel.cs:112
+Turn (clockwise)	Разворот (по часовой)
+# SignLink/UI/MovePanel.cs:132
+Move by	Шаг сдвига
+# SignLink/UI/MovePanel.cs:146
+Away	От вас
+# SignLink/UI/MovePanel.cs:156
+Towards you	К вам
+# SignLink/UI/MovePanel.cs:192
+Changes	Изменения
+# SignLink/UI/MovePanel.cs:193
+none	нет
+# SignLink/UI/MovePanel.cs:202
+Apply sign coord changes	Применить изменения таблички
+# SignLink/UI/MovePanel.cs:205
+Undo steps	Отменить шаги
+# SignLink/UI/MovePanel.cs:211
+Reset to default	Сбросить
+# SignLink/UI/MovePanel.cs:213
+as built	как при постройке
+# SignLink/UI/MovePanel.cs:218
+No support: {0}	Нет опоры: {0}
+# SignLink/UI/MovePanel.cs:22
+{0} left	{0} влево
+# SignLink/UI/MovePanel.cs:22
+{0} right	{0} вправо
+# SignLink/UI/MovePanel.cs:22
+{0} down	{0} вниз
+# SignLink/UI/MovePanel.cs:22
+{0} up	{0} вверх
+# SignLink/UI/MovePanel.cs:22
+{0} towards you	{0} к вам
+# SignLink/UI/MovePanel.cs:22
+{0} away	{0} от вас
+# SignLink/UI/MovePanel.cs:247
+applied: every player sees it {0} now.	применено: теперь все игроки видят табличку так: {0}.
+# SignLink/UI/MovePanel.cs:262
+applied for SignLink players; players without SignLink see it when they come back (the signs could not be made again: {0}).	применено для игроков с SignLink; игроки без SignLink увидят это, когда вернутся (таблички не удалось пересоздать: {0}).
+# SignLink/UI/MovePanel.cs:269
+applied: every player sees the sign there now.	применено: теперь все игроки видят табличку на новом месте.
+# SignLink/UI/MovePanel.cs:286
+undone: the sign is back as it was last applied.	отменено: табличка снова такая, как при последнем применении.
+# SignLink/UI/MovePanel.cs:29
+where it was built	на месте постройки
+# SignLink/UI/MovePanel.cs:297
+the reset stays: the sign is gone (unloaded or removed).	сброс остаётся: таблички больше нет (выгружена или удалена).
+# SignLink/UI/MovePanel.cs:304
+the sign is gone.	таблички больше нет.
+# SignLink/UI/MovePanel.cs:310
+undoing the reset ...	отмена сброса ...
+# SignLink/UI/MovePanel.cs:327
+the reset is undone: the sign stands where and as it stood before, for everyone.	сброс отменён: табличка снова стоит там и так же, как раньше, — для всех.
+# SignLink/UI/MovePanel.cs:337
+the reset is undone: the sign stands where and as it stood before; the steps not applied are back (only you see them).	сброс отменён: табличка снова стоит там и так же, как раньше; неприменённые шаги вернулись (их видите только вы).
+# SignLink/UI/MovePanel.cs:338
+the reset is undone: the sign stands where and as it stood before.	сброс отменён: табличка снова стоит там и так же, как раньше.
+# SignLink/UI/MovePanel.cs:339
+the reset is undone: the steps not applied are back (only you see them).	сброс отменён: неприменённые шаги вернулись (их видите только вы).
+# SignLink/UI/MovePanel.cs:364
+the sign is back where it was built (Undo brings the steps back).	табличка снова на месте постройки («Отменить шаги» вернёт шаги).
+# SignLink/UI/MovePanel.cs:398
+no support where it was built: {0}	на месте постройки нет опоры: {0}
+# SignLink/UI/MovePanel.cs:426
+the sign stands where and as it was built: its signs were made again, every player sees it so now (Undo brings it back).	табличка стоит там и так, как была построена: таблички пересозданы, теперь все игроки видят её такой («Отменить шаги» вернёт как было).
+# SignLink/UI/MovePanel.cs:448
+turned the sign {0:0.#}° clockwise ({1}).	табличка развёрнута на {0:0.#}° по часовой ({1}).
+# SignLink/UI/MovePanel.cs:448
+turned the sign {0:0.#}° anticlockwise ({1}).	табличка развёрнута на {0:0.#}° против часовой ({1}).
+# SignLink/UI/MovePanel.cs:479
+moved the sign {0} ({1} from where it was built).	табличка сдвинута на {0} (от места постройки: {1}).
+# SignLink/UI/MovePanel.cs:480
+moved the sign {0} (back where it was built).	табличка сдвинута на {0} (снова на месте постройки).
+# SignLink/UI/MovePanel.cs:536
+No support.	Нет опоры.
+# SignLink/UI/MovePanel.cs:543
+{0} · only you see it	{0} · видите только вы
+# SignLink/UI/MovePanel.cs:567
+turned {0:0.#}° clockwise	разворот на {0:0.#}° по часовой
+# SignLink/UI/MovePanel.cs:567
+turned {0:0.#}° anticlockwise	разворот на {0:0.#}° против часовой
+# SignLink/UI/MovePanel.cs:570
+rotated {0:0.#}° clockwise	поворот на {0:0.#}° по часовой
+# SignLink/UI/MovePanel.cs:570
+rotated {0:0.#}° anticlockwise	поворот на {0:0.#}° против часовой
+# SignLink/UI/Session.cs:221
+SignLink {0}	SignLink {0}
+# SignLink/UI/Session.cs:221
+SignLink (older version)	SignLink (старая версия)
+# SignLink/UI/Session.cs:221
+not SignLink	не SignLink
+# SignLink/UI/Session.cs:336
+Text too long to edit	Текст слишком длинный для правки
+# SignLink/UI/Session.cs:337
+{0}: not on this computer	{0}: нет на этом компьютере
+# SignLink/UI/Session.cs:439
+Hidden by the game's content settings.	Скрыто настройками контента игры.
+# SignLink/UI/Session.cs:45
+[hidden by the game's content settings]	[скрыто настройками контента игры]
+# SignLink/UI/Session.cs:51
+Hidden by the game's content settings	Скрыто настройками контента игры
+# SignLink/UI/SignLinkWindow.Picking.cs:176
+Click a sign  ·  Esc / {0} cancels	Щёлкните по табличке  ·  Esc / {0} — отмена
+# SignLink/UI/SignLinkWindow.Picking.cs:177
+Click a sign  ·  Esc cancels	Щёлкните по табличке  ·  Esc — отмена
+# SignLink/UI/SignLinkWindow.Picking.cs:178
+No sign there  ·  Esc / {0} cancels	Там нет таблички  ·  Esc / {0} — отмена
+# SignLink/UI/SignLinkWindow.Picking.cs:179
+No sign there  ·  Esc cancels	Там нет таблички  ·  Esc — отмена
+# SignLink/UI/SignLinkWindow.Signs.cs:122
+Every sign within 30 m	Все таблички в радиусе 30 m
+# SignLink/UI/SignLinkWindow.Signs.cs:122
+SignLink signs within {0} m	Таблички SignLink в радиусе {0} m
+# SignLink/UI/SignLinkWindow.Signs.cs:178
+{0:0.0} m ahead	{0:0.0} m впереди
+# SignLink/UI/SignLinkWindow.Signs.cs:178
+{0:0.0} m behind	{0:0.0} m сзади
+# SignLink/UI/SignLinkWindow.Signs.cs:179
+{0:0.0} m right	{0:0.0} m справа
+# SignLink/UI/SignLinkWindow.Signs.cs:179
+{0:0.0} m left	{0:0.0} m слева
+# SignLink/UI/SignLinkWindow.Signs.cs:180
+{0:0.0} m up	{0:0.0} m выше
+# SignLink/UI/SignLinkWindow.Signs.cs:180
+{0:0.0} m down	{0:0.0} m ниже
+# SignLink/UI/SignLinkWindow.Signs.cs:202
+empty	пусто
+# SignLink/UI/SignLinkWindow.Signs.cs:206
+a picture	картинка
+# SignLink/UI/SignLinkWindow.Signs.cs:206
+a sign	табличка
+# SignLink/UI/SignLinkWindow.Signs.cs:207
+{0} signs	табличек: {0}
+# SignLink/UI/SignLinkWindow.Signs.cs:27
+A sign	Табличка
+# SignLink/UI/SignLinkWindow.Signs.cs:277
+1 sign	1 табличка
+# SignLink/UI/SignLinkWindow.Signs.cs:28
+{0} · {1} · {2} signs	{0} · {1} · табличек: {2}
+# SignLink/UI/SignLinkWindow.Signs.cs:29
+{0} · {1}	{0} · {1}
+# SignLink/UI/SignLinkWindow.Signs.cs:290
+{0:0} m north	{0:0} m к северу
+# SignLink/UI/SignLinkWindow.Signs.cs:291
+{0:0} m north-east	{0:0} m к северо-востоку
+# SignLink/UI/SignLinkWindow.Signs.cs:292
+{0:0} m east	{0:0} m к востоку
+# SignLink/UI/SignLinkWindow.Signs.cs:293
+{0:0} m south-east	{0:0} m к юго-востоку
+# SignLink/UI/SignLinkWindow.Signs.cs:294
+{0:0} m south	{0:0} m к югу
+# SignLink/UI/SignLinkWindow.Signs.cs:295
+{0:0} m south-west	{0:0} m к юго-западу
+# SignLink/UI/SignLinkWindow.Signs.cs:296
+{0:0} m west	{0:0} m к западу
+# SignLink/UI/SignLinkWindow.Signs.cs:297
+{0:0} m north-west	{0:0} m к северо-западу
+# SignLink/UI/SignLinkWindow.Signs.cs:322
+None within {0} m	В радиусе {0} m ничего нет
+# SignLink/UI/SignLinkWindow.Signs.cs:363
+Too far:	Слишком далеко:
+# SignLink/UI/SignLinkWindow.Signs.cs:430
+selected the sign with {0}.	выбрана табличка: {0}.
+# SignLink/UI/SignLinkWindow.Signs.cs:430
+selected the sign.	табличка выбрана.
+# SignLink/UI/SignLinkWindow.Signs.cs:47
+Select sign	Выбрать
+# SignLink/UI/SignLinkWindow.Signs.cs:56
+Hide list	Скрыть список
+# SignLink/UI/SignLinkWindow.Signs.cs:56
+Signs nearby	Таблички рядом
+# SignLink/UI/SignLinkWindow.Signs.cs:71
+Clear selection	Снять выбор
+# SignLink/UI/SignLinkWindow.Signs.cs:75
+no sign selected.	табличка не выбрана.
+# SignLink/UI/SignLinkWindow.Signs.cs:84
+Select a sign to work on	Выберите табличку для работы
+# SignLink/UI/SignLinkWindow.Signs.cs:98
+Show all SignLink signs	Показать все таблички SignLink
+# SignLink/UI/SignLinkWindow.cs:167
+SignLink: {0}	SignLink: {0}
+# SignLink/UI/SignLinkWindow.cs:353
+1 Sign	1 Табличка
+# SignLink/UI/SignLinkWindow.cs:357
+3 Place	3 Размещение
+# SignLink/UI/SignLinkWindow.cs:357
+2 Content	2 Содержимое
+# SignLink/UI/SignLinkWindow.cs:466
+SignLink {0} could not load: see BepInEx/LogOutput.log	SignLink {0} не загрузился: см. BepInEx/LogOutput.log
+# SignLink/UI/SignLinkWindow.cs:478
+opened ({0} signs).	открыто (табличек: {0}).
+# SignLink/UI/SignLinkWindow.cs:478
+opened.	открыто.
+# SignLink/UI/SignLinkWindow.cs:511
+{0} of SignLink signs within {1} m	{0} — таблички SignLink в радиусе {1} m
+# SignLink/UI/SignLinkWindow.cs:519
+{0} / {1} multiplayer area limit (over: only lighter content)	{0} / {1} — лимит области в мультиплеере (превышен: только более лёгкое содержимое)
+# SignLink/UI/SignLinkWindow.cs:519
+{0} / {1} multiplayer area limit	{0} / {1} — лимит области в мультиплеере
+# SignLink/UI/SignLinkWindow.cs:520
+{0} / {1} area limit (over)	{0} / {1} — лимит области (превышен)
+# SignLink/UI/SignLinkWindow.cs:520
+{0} / {1} area limit	{0} / {1} — лимит области
+# SignLink/UI/SignLinkWindow.cs:685
+Highlight off (Settings)	Подсветка выкл. (Настройки)
+# SignLink/UI/SignLinkWindow.cs:735
+Could not: {0}	Не удалось: {0}
+# SignLink/UI/SignLinkWindow.cs:735
+Done: {0}	Готово: {0}
+# SignLink/UI/SignLinkWindow.cs:99
+the input blocker did not apply (a game update?)	блокировка ввода не сработала (обновление игры?)
+# SignLink/UI/SignWords.cs:13
+{0:0} m away	{0:0} m от вас
+# SignLink/UI/Sources/ArtSource.cs:143
+{0}: {1} x {2} pixels, {3}, {4} frames at {5:0.#} fps	{0}: {1} x {2} px, {3}, кадров: {4}, {5:0.#} fps
+# SignLink/UI/Sources/ArtSource.cs:144
+{0}: {1} x {2} pixels on {3} stacked signs, {4}	{0}: {1} x {2} px на стопке из {3} табличек, {4}
+# SignLink/UI/Sources/ArtSource.cs:145
+{0}: {1} x {2} pixels, {3}	{0}: {1} x {2} px, {3}
+# SignLink/UI/Sources/ArtSource.cs:151
+{0}: glyph art on {1} stacked signs, {2}	{0}: символьный рисунок на стопке из {1} табличек, {2}
+# SignLink/UI/Sources/ArtSource.cs:152
+{0}: glyph art, {1}	{0}: символьный рисунок, {1}
+# SignLink/UI/Sources/ArtSource.cs:153
+{0}: no quick view on {1} stacked signs, {2}	{0}: без просмотра, стопка из {1} табличек, {2}
+# SignLink/UI/Sources/ArtSource.cs:154
+{0}: no quick view, {1}	{0}: без просмотра, {1}
+# SignLink/UI/Sources/ArtSource.cs:161
+{0}: cannot read it: {1}	{0}: не удаётся прочитать: {1}
+# SignLink/UI/Sources/ArtSource.cs:215
+{0}: reading ...	{0}: чтение ...
+# SignLink/UI/Sources/ArtSource.cs:262
+Art	Рисунки
+# SignLink/UI/Sources/ArtSource.cs:266
+Browse pieces	Список рисунков
+# SignLink/UI/Sources/ArtSource.cs:272
+{0}   · on the sign	{0}   · на табличке
+# SignLink/UI/Sources/ArtSource.cs:277
+nothing here yet	здесь пока пусто
+# SignLink/UI/Sources/ArtSource.cs:330
+Quick view	Просмотр
+# SignLink/UI/Sources/ArtSource.cs:338
+Moving	Движение
+# SignLink/UI/Sources/ArtSource.cs:355
+Summary	Сводка
+# SignLink/UI/Sources/ArtSource.cs:358
+Pixels	Пиксели
+# SignLink/UI/Sources/ArtSource.cs:358
+glyph art	символьный рисунок
+# SignLink/UI/Sources/ArtSource.cs:360
+Signs	Таблички
+# SignLink/UI/Sources/ArtSource.cs:360
+{0}, stacked	{0}, стопкой
+# SignLink/UI/Sources/ArtSource.cs:363
+Frames	Кадры
+# SignLink/UI/Sources/ArtSource.cs:363
+{0} at {1:0.#} fps, goes on still	{0}, {1:0.#} fps, ставится без движения
+# SignLink/UI/Sources/ArtSource.cs:363
+{0} at {1:0.#} fps	{0}, {1:0.#} fps
+# SignLink/UI/Sources/ArtSource.cs:365
+Content size	Размер содержимого
+# SignLink/UI/Sources/ArtSource.cs:417
+{0} (pixel art)	{0} (пиксель-арт)
+# SignLink/UI/Sources/ArtSource.cs:417
+{0} (glyph art)	{0} (символьный)
+# SignLink/UI/Sources/ArtSource.cs:419
+animation	анимация
+# SignLink/UI/Sources/ArtSource.cs:419
+several signs	несколько табличек
+# SignLink/UI/Sources/ArtSource.cs:419
+one sign	одна табличка
+# SignLink/UI/Sources/ArtSource.cs:502
+Pick a piece above	Выберите рисунок выше
+# SignLink/UI/Sources/ArtSource.cs:502
+Reading the piece ...	Чтение рисунка ...
+# SignLink/UI/Sources/ArtSource.cs:555
+Reading ...	Чтение ...
+# SignLink/UI/Sources/ArtSource.cs:556
+Fixed size	Размер фиксирован
+# SignLink/UI/Sources/ArtSource.cs:560
+Goes on {0:0.##} m wide	На табличке: {0:0.##} m в ширину
+# SignLink/UI/Sources/ArtSource.cs:560
+Goes on at {0:0.#} %	На табличке: масштаб {0:0.#} %
+# SignLink/UI/Sources/ArtSource.cs:634
+'{0}' is on the sign{1}, not moving.	«{0}» на табличке{1}, без движения.
+# SignLink/UI/Sources/ArtSource.cs:635
+'{0}' is on the sign{1}, moving.	«{0}» на табличке{1}, движется.
+# SignLink/UI/Sources/ArtSource.cs:636
+'{0}' is on the sign{1}, still.	«{0}» на табличке{1}, неподвижно.
+# SignLink/UI/Sources/ArtSource.cs:638
+'{0}' is on the sign{1} ({2} signs, {3}).	«{0}» на табличке{1} (табличек: {2}, {3}).
+# SignLink/UI/Sources/ArtSource.cs:639
+'{0}' is on the sign{1} ({2}).	«{0}» на табличке{1} ({2}).
+# SignLink/UI/Sources/PictureSource.FromSign.cs:160
+no quick view: {0}	нет просмотра: {0}
+# SignLink/UI/Sources/PictureSource.Put.cs:153
+the picture or the sign changed while it was counted: press the button again	картинка или табличка изменились во время подсчёта: нажмите кнопку ещё раз
+# SignLink/UI/Sources/PictureSource.Put.cs:156
+counted, it is very large for every player who arrives: press the button again to decide	подсчитано: это очень много для каждого приходящего игрока — нажмите кнопку ещё раз, чтобы решить
+# SignLink/UI/Sources/PictureSource.Put.cs:179
+the file changed on disk since it was counted; it is read again: press the button once more	файл на диске изменился после подсчёта и читается заново: нажмите кнопку ещё раз
+# SignLink/UI/Sources/PictureSource.Put.cs:227
+the sign's picture changed meanwhile; it is read again: press the button once more	картинка на табличке тем временем изменилась и читается заново: нажмите кнопку ещё раз
+# SignLink/UI/Sources/PictureSource.Put.cs:26
+The sign's picture cannot be read back: {0}	Картинку с таблички не прочитать: {0}
+# SignLink/UI/Sources/PictureSource.Put.cs:27
+Reading the picture from the sign ...	Чтение картинки с таблички ...
+# SignLink/UI/Sources/PictureSource.Put.cs:28
+Working ...	Обработка ...
+# SignLink/UI/Sources/PictureSource.Put.cs:29
+These settings do not work: {0}	С этими настройками не выйдет: {0}
+# SignLink/UI/Sources/PictureSource.Put.cs:31
+Counting what it costs ...	Подсчёт объёма ...
+# SignLink/UI/Sources/PictureSource.Put.cs:34
+Pick a picture above	Выберите картинку выше
+# SignLink/UI/Sources/PictureSource.Put.cs:35
+Reading the folder ...	Чтение папки ...
+# SignLink/UI/Sources/PictureSource.Put.cs:40
+Reading the picture ...	Чтение картинки ...
+# SignLink/UI/Sources/PictureSource.Put.cs:67
+This picture ({0} x {1} pixels)	Эта картинка ({0} x {1} px)
+# SignLink/UI/Sources/PictureSource.Put.cs:81
+Lighter: lower the Resolution	Легче: уменьшите Разрешение
+# SignLink/UI/Sources/PictureSource.Size.cs:184
+Height (same shape)	Высота (пропорционально)
+# SignLink/UI/Sources/PictureSource.Work.cs:150
+reading a large photo ...	чтение большого фото ...
+# SignLink/UI/Sources/PictureSource.Work.cs:150
+reading {0} ...	чтение {0} ...
+# SignLink/UI/Sources/PictureSource.Work.cs:167
+cannot read: {0}	не читается: {0}
+# SignLink/UI/Sources/PictureSource.Work.cs:225
+drawing the quick view ...	отрисовка просмотра ...
+# SignLink/UI/Sources/PictureSource.Work.cs:261
+the quick view is not this grid	просмотр не совпадает с этой сеткой
+# SignLink/UI/Sources/PictureSource.Work.cs:36
+moving	анимация
+# SignLink/UI/Sources/PictureSource.cs:23
+cannot read: PNG, JPG or GIF only (convert HEIC or WebP first)	не читается: только PNG, JPG или GIF (сначала преобразуйте HEIC или WebP)
+# SignLink/UI/Sources/PictureSource.cs:338
+{0} frames, a long GIF: one frame in {1} moves (the same speed, less smooth).	Кадров: {0}, длинный GIF: показывается каждый {1}-й кадр (скорость та же, плавность ниже).
+# SignLink/UI/Sources/PictureSource.cs:339
+{0} frames, all of them move.	Кадров: {0}, показываются все.
+# SignLink/UI/Sources/PictureSource.cs:436
+reading the picture from the sign ...	чтение картинки с таблички ...
+# SignLink/UI/Sources/PictureSource.cs:436
+Loading {0} ...	Загрузка {0} ...
+# SignLink/UI/Sources/PictureSource.cs:484
+Picture	Картинка
+# SignLink/UI/Sources/PictureSource.cs:490
+Browse pictures	Список картинок
+# SignLink/UI/Sources/PictureSource.cs:494
+Reload	Обновить
+# SignLink/UI/Sources/PictureSource.cs:495
+Open folder	Открыть папку
+# SignLink/UI/Sources/PictureSource.cs:501
+No file here, unreadable: {0}	Файла здесь нет, не читается: {0}
+# SignLink/UI/Sources/PictureSource.cs:501
+No file here: read from the sign	Файла здесь нет: прочитано с таблички
+# SignLink/UI/Sources/PictureSource.cs:515
+No pictures in this folder	В этой папке нет картинок
+# SignLink/UI/Sources/PictureSource.cs:515
+Empty: Open folder	Пусто: Открыть папку
+# SignLink/UI/Sources/PictureSource.cs:538
+up	вверх
+# SignLink/UI/Sources/PictureSource.cs:538
+folder	папка
+# SignLink/UI/Sources/PictureSource.cs:575
+Resolution	Разрешение
+# SignLink/UI/Sources/PictureSource.cs:593
+Multiplayer max: {0}	Макс. для мультиплеера: {0}
+# SignLink/UI/Sources/PictureSource.cs:608
+Max for this size	Макс. для этого размера
+# SignLink/UI/Sources/PictureSource.cs:622
+px wide	px шир.
+# SignLink/UI/Sources/PictureSource.cs:625
+Multiplayer max: {0} px	Макс. для мультиплеера: {0} px
+# SignLink/UI/Sources/PictureSource.cs:656
+Seamless pixels	Пиксели без зазоров
+# SignLink/UI/Sources/PictureSource.cs:679
+One frame: it does not move.	Один кадр: не движется.
+# SignLink/UI/Sources/PictureSource.cs:683
+Too big to move: {0} MB of frames, at most {1} MB; a lower Resolution helps	Слишком велик для анимации: {0} MB кадров, максимум {1} MB; поможет меньшее Разрешение
+# SignLink/UI/Sources/PictureSource.cs:685
+Still for now: other GIFs here hold {0} MB of {1} MB; it needs {2} MB	Пока без движения: другие GIF здесь занимают {0} MB из {1} MB, а нужно {2} MB
+# SignLink/UI/Sources/PictureSource.cs:701
+Native pixels	Исходные пиксели
+# SignLink/UI/Sources/PictureSource.cs:702
+Resolution pixels	Итоговые пиксели
+# SignLink/UI/Sources/PictureSource.cs:704
+file is {0} px wide	ширина файла {0} px
+# SignLink/UI/Sources/PictureSource.cs:706
+{0} k pixel limit	лимит {0} тыс. пикселей
+# SignLink/UI/Sources/PictureSource.cs:707
+counting ...	подсчёт ...
+# SignLink/UI/Sources/PictureSource.cs:709
+Cost	Объём
+# SignLink/UI/Sources/PictureSource.cs:709
+error	ошибка
+# SignLink/UI/Sources/PictureSource.cs:714
+See-through	Прозрачные
+# SignLink/UI/Sources/PictureSource.cs:714
+{0} pixels, free	{0} px, места не занимают
+# SignLink/UI/Sources/PictureSource.cs:715
+about {0} (counting ...)	около {0} (подсчёт ...)
+# SignLink/UI/Sources/PictureSource.cs:725
+Made with PNG transparency	Сделано с прозрачностью PNG
+# SignLink/UI/Sources/PictureSource.cs:725
+Made without PNG transparency	Сделано без прозрачности PNG
+# SignLink/UI/Sources/Source.cs:104
+This	Это
+# SignLink/UI/Sources/Source.cs:122
+{0}. {1}	{0}. {1}
+# SignLink/UI/Sources/Source.cs:122
+{0}.	{0}.
+# SignLink/UI/Sources/Source.cs:163
+Select a sign first	Сначала выберите табличку
+# SignLink/UI/Sources/Source.cs:163
+Locked	Заблокировано
+# SignLink/UI/Sources/Source.cs:187
+{0} is over the {1} SignLink stores on one sign	{0} — больше лимита SignLink для одной таблички ({1})
+# SignLink/UI/Sources/Source.cs:188
+Multiplayer	Мультиплеер
+# SignLink/UI/Sources/Source.cs:189
+fits the limits	в пределах лимитов
+# SignLink/UI/Sources/Source.cs:192
+Arriving	При входе
+# SignLink/UI/Sources/Source.cs:192
+under 0.1 s download	менее 0.1 с загрузки
+# SignLink/UI/Sources/Source.cs:192
+{0:0.#} s download	{0:0.#} с загрузки
+# SignLink/UI/Sources/TextSource.cs:211
+Insert	Вставить
+# SignLink/UI/Sources/TextSource.cs:218
+Reset	Сброс
+# SignLink/UI/Sources/TextSource.cs:229
+Clear	Очистить
+# SignLink/UI/Sources/TextSource.cs:231
+Undo	Отменить
+# SignLink/UI/Sources/TextSource.cs:233
+Redo	Вернуть
+# SignLink/UI/Sources/TextSource.cs:252
+Holds a piece	На табличке рисунок
+# SignLink/UI/Sources/TextSource.cs:252
+Holds a piece (unreadable)	На табличке рисунок (не читается)
+# SignLink/UI/Sources/TextSource.cs:254
+{0} characters: too long	Символов: {0} — слишком длинно
+# SignLink/UI/Sources/TextSource.cs:428
+Type a text above	Введите текст выше
+# SignLink/UI/Sources/TextSource.cs:430
+This text	Этот текст
+# SignLink/UI/Sources/TextSource.cs:471
+the text is on the sign{0}.	текст на табличке{0}.
+# SignLink/UI/Tabs/ContentTab.cs:159
+Calculating ...	Подсчёт ...
+# SignLink/UI/Tabs/ContentTab.cs:160
+Next ▸	Далее ▸
+# SignLink/UI/Tabs/ContentTab.cs:168
+Preview: only you	Предпросмотр: видите только вы
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update sign and content	Обновить табличку и содержимое
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update content	Обновить содержимое
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update sign	Обновить табличку
+# SignLink/UI/Tabs/ContentTab.cs:208
+As it is	Без изменений
+# SignLink/UI/Tabs/ContentTab.cs:225
+Put it on anyway	Всё равно разместить
+# SignLink/UI/Tabs/ContentTab.cs:295
+The sign cannot take this pose: {0}.	Табличку нельзя так поставить: {0}.
+# SignLink/UI/Tabs/ContentTab.cs:379
+now {0}.	теперь: {0}.
+# SignLink/UI/Tabs/ContentTab.cs:379
+back as made.	снова как задумано.
+# SignLink/UI/Tabs/PlaceTab.cs:109
+Fixed place	Место фиксировано
+# SignLink/UI/Tabs/PlaceTab.cs:110
+Fixed size and place	Размер и место фиксированы
+# SignLink/UI/Tabs/PlaceTab.cs:136
+size	размер
+# SignLink/UI/Tabs/PlaceTab.cs:137
+place	место
+# SignLink/UI/Tabs/PlaceTab.cs:138
+light	свет
+# SignLink/UI/Tabs/PlaceTab.cs:139
+settings	настройки
+# SignLink/UI/Tabs/PlaceTab.cs:151
+{0} changed · only you see it	изменено: {0} · видите только вы
+# SignLink/UI/Tabs/PlaceTab.cs:151
+apply Sign first	сначала примените изменения таблички
+# SignLink/UI/Tabs/PlaceTab.cs:152
+new item · the button below puts it on	новое содержимое · кнопка ниже разместит его
+# SignLink/UI/Tabs/PlaceTab.cs:160
+Apply content changes	Применить изменения содержимого
+# SignLink/UI/Tabs/PlaceTab.cs:174
+to the middle	в центр
+# SignLink/UI/Tabs/PlaceTab.cs:227
+Undo changes	Отменить изменения
+# SignLink/UI/Tabs/PlaceTab.cs:71
+Content	Содержимое
+# SignLink/UI/Tabs/PlaceTab.cs:74
+Positioning	Положение
+# SignLink/UI/Tabs/PlaceTab.cs:91
+Sign	Табличка
+# SignLink/UI/Tabs/PlaceTab.cs:94
+Rotations	Повороты
+# SignLink/UI/Tabs/PlaceTab.cs:97
+Positioning fine-tune	Точная настройка положения
+# SignLink/UI/Tabs/PlayingTab.cs:108
+the GIF moves again, for every SignLink player who has its file.	GIF снова движется — у всех игроков с SignLink, у кого есть его файл.
+# SignLink/UI/Tabs/PlayingTab.cs:113
+the GIF moves no more, for anyone: its sign keeps the still picture, as players without SignLink see it.	GIF больше не движется ни у кого: на табличке остаётся неподвижная картинка — такая, какой её видят игроки без SignLink.
+# SignLink/UI/Tabs/PlayingTab.cs:139
+warded	под Оберегом
+# SignLink/UI/Tabs/PlayingTab.cs:142
+Play	Пуск
+# SignLink/UI/Tabs/PlayingTab.cs:142
+Pause	Пауза
+# SignLink/UI/Tabs/PlayingTab.cs:170
+here only	только у вас
+# SignLink/UI/Tabs/PlayingTab.cs:187
+Pause all GIFs	Приостановить все GIF
+# SignLink/UI/Tabs/PlayingTab.cs:187
+Play all GIFs	Запустить все GIF
+# SignLink/UI/Tabs/PlayingTab.cs:187
+paused: frozen	на паузе: замерли
+# SignLink/UI/Tabs/PlayingTab.cs:19
+Playing	Анимации
+# SignLink/UI/Tabs/PlayingTab.cs:190
+None nearby	Рядом нет
+# SignLink/UI/Tabs/PlayingTab.cs:198
+paused the GIF: its still picture shows; Play moves it again.	GIF на паузе: видна неподвижная картинка; «Пуск» снова запустит его.
+# SignLink/UI/Tabs/PlayingTab.cs:198
+the GIF moves again.	GIF снова движется.
+# SignLink/UI/Tabs/PlayingTab.cs:199
+that GIF is gone.	этого GIF больше нет.
+# SignLink/UI/Tabs/PlayingTab.cs:212
+Glyph animations	Символьные анимации
+# SignLink/UI/Tabs/PlayingTab.cs:213
+Pause all glyph animations	Приостановить все анимации
+# SignLink/UI/Tabs/PlayingTab.cs:213
+Play all glyph animations	Запустить все анимации
+# SignLink/UI/Tabs/PlayingTab.cs:213
+paused: first frame	на паузе: первый кадр
+# SignLink/UI/Tabs/PlayingTab.cs:216
+Paused	На паузе
+# SignLink/UI/Tabs/PlayingTab.cs:223
+paused: the sign shows its first frame here; Play moves it again.	на паузе: у вас табличка показывает первый кадр; «Пуск» снова запустит анимацию.
+# SignLink/UI/Tabs/PlayingTab.cs:223
+the animation moves again.	анимация снова движется.
+# SignLink/UI/Tabs/PlayingTab.cs:23
+its sign is no longer loaded	табличка уже не загружена
+# SignLink/UI/Tabs/PlayingTab.cs:68
+not moving	не движется
+# SignLink/UI/Tabs/PlayingTab.cs:68
+paused here (Play all)	на паузе у вас (Запустить все)
+# SignLink/UI/Tabs/PlayingTab.cs:69
+not playing here	здесь не воспроизводится
+# SignLink/UI/Tabs/PlayingTab.cs:83
+not moving here (no room: other GIFs play)	здесь не движется (нет места: играют другие GIF)
+# SignLink/UI/Tabs/PlayingTab.cs:84
+not moving here (no file)	здесь не движется (нет файла)
+# SignLink/UI/Tabs/PlayingTab.cs:85
+not moving here	здесь не движется
+# SignLink/UI/Tabs/PlayingTab.cs:85
+not moving here yet (starting)	здесь пока не движется (запуск)
+# SignLink/UI/Tabs/PlayingTab.cs:99
+that sign holds no GIF picture any more.	на этой табличке больше нет GIF-картинки.
+# SignLink/UI/Tabs/SettingsTab.cs:118
+Settings	Настройки
+# SignLink/UI/Tabs/SettingsTab.cs:136
+Window	Окно
+# SignLink/UI/Tabs/SettingsTab.cs:145
+Language	Язык
+# SignLink/UI/Tabs/SettingsTab.cs:150
+Theme	Оформление
+# SignLink/UI/Tabs/SettingsTab.cs:154
+Text size	Размер текста
+# SignLink/UI/Tabs/SettingsTab.cs:175
+Window size	Размер окна
+# SignLink/UI/Tabs/SettingsTab.cs:179
+Default size	По умолчанию
+# SignLink/UI/Tabs/SettingsTab.cs:193
+Hotkey	Горячая клавиша
+# SignLink/UI/Tabs/SettingsTab.cs:195
+press a key ...	нажмите клавишу ...
+# SignLink/UI/Tabs/SettingsTab.cs:195
+no key	нет клавиши
+# SignLink/UI/Tabs/SettingsTab.cs:205
+Unbind	Отвязать
+# SignLink/UI/Tabs/SettingsTab.cs:212
+Press a key · Esc keeps the old	Нажмите клавишу · Esc оставит прежнюю
+# SignLink/UI/Tabs/SettingsTab.cs:216
+Sign options	Параметры табличек
+# SignLink/UI/Tabs/SettingsTab.cs:221
+Highlight signs	Подсветка табличек
+# SignLink/UI/Tabs/SettingsTab.cs:226
+Highlight sign contents	Подсветка содержимого
+# SignLink/UI/Tabs/SettingsTab.cs:230
+Pictures	Картинки
+# SignLink/UI/Tabs/SettingsTab.cs:234
+PNG transparency	Прозрачность PNG
+# SignLink/UI/Tabs/SettingsTab.cs:236
+Fine Width steps: exact sizes, your Resolution kept	Точный шаг Ширины: точные размеры, ваше Разрешение сохраняется
+# SignLink/UI/Tabs/SettingsTab.cs:241
+Playback	Воспроизведение
+# SignLink/UI/Tabs/SettingsTab.cs:255
+Pause beyond	Пауза дальше
+# SignLink/UI/Tabs/SettingsTab.cs:263
+GIF memory	Память для GIF
+# SignLink/UI/Tabs/SettingsTab.cs:265
+RAM for moving GIFs; 1024 wants 16 GB	ОЗУ для движущихся GIF; для 1024 нужно 16 GB
+# SignLink/UI/Tabs/SettingsTab.cs:275
+Reset to defaults	Сбросить настройки
+# SignLink/UI/Tabs/SettingsTab.cs:275
+Sure? Click again	Точно? Нажмите ещё раз
+# SignLink/UI/Tabs/SettingsTab.cs:284
+every setting is at its default already.	все настройки и так по умолчанию.
+# SignLink/UI/Tabs/SettingsTab.cs:285
+1 setting back to the default.	1 настройка сброшена.
+# SignLink/UI/Tabs/SettingsTab.cs:285
+{0} settings back to the default.	сброшено настроек: {0}.
+# SignLink/UI/Tabs/SettingsTab.cs:290
+About	О моде
+# SignLink/UI/Tabs/SettingsTab.cs:296
+Steps	Шаги
+# SignLink/UI/Tabs/SettingsTab.cs:299
+Open it	Открыть
+# SignLink/UI/Tabs/SettingsTab.cs:299
+no hotkey	нет горячей клавиши
+# SignLink/UI/Tabs/SettingsTab.cs:300
+/signlink in the chat	/signlink в чате
+# SignLink/UI/Tabs/SettingsTab.cs:301
+E on a picture sign	E на табличке с картинкой
+# SignLink/UI/Tabs/SettingsTab.cs:302
+Open in SignLink (sign editor)	«Открыть в SignLink» (редактор таблички)
+# SignLink/UI/Tabs/SettingsTab.cs:304
+Fine-tune	Точная настройка
+# SignLink/UI/Tabs/SettingsTab.cs:304
+Shift+wheel on a slider	Shift+колесо на ползунке
+# SignLink/UI/Tabs/SettingsTab.cs:305
+arrow keys (3 Place)	стрелки (3 Размещение)
+# SignLink/UI/Tabs/SettingsTab.cs:307
+Look around	Осмотреться
+# SignLink/UI/Tabs/SettingsTab.cs:307
+hold the right mouse button	удерживайте правую кнопку мыши
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Graphics tip	Совет по графике
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Bloom off: sharper pictures	Свечение выкл.: картинки чётче
+# SignLink/UI/Tabs/SettingsTab.cs:92
+Classic	Классика
+# SignLink/UI/Tabs/SettingsTab.cs:92
+Nordic	Северная
+# SignLink/UI/Tabs/SignTab.cs:105
+Actions	Действия
+# SignLink/UI/Tabs/SignTab.cs:123
+the sign is empty.	табличка пуста.
+# SignLink/UI/Tabs/SignTab.cs:123
+the sign is empty, and its {0} stacked copies are gone.	табличка пуста, копии из стопки ({0}) удалены.
+# SignLink/UI/Tabs/SignTab.cs:127
+Clears the sign's content	Убирает содержимое таблички
+# SignLink/UI/Tabs/SignTab.cs:133
+Copy	Копировать
+# SignLink/UI/Tabs/SignTab.cs:138
+copied the moving piece: Paste puts it on another sign, moving.	движущийся рисунок скопирован: «Вставить» поставит его на другую табличку, с движением.
+# SignLink/UI/Tabs/SignTab.cs:139
+copied the picture ({0} signs): Paste puts it on another sign.	картинка скопирована (табличек: {0}): «Вставить» поставит её на другую табличку.
+# SignLink/UI/Tabs/SignTab.cs:140
+copied the sign's text: Paste puts it on another sign.	текст таблички скопирован: «Вставить» поставит его на другую табличку.
+# SignLink/UI/Tabs/SignTab.cs:143
+Copies all it holds, moving art and GIFs too	Копирует всё содержимое, включая анимации и GIF
+# SignLink/UI/Tabs/SignTab.cs:150
+Paste	Вставить
+# SignLink/UI/Tabs/SignTab.cs:156
+the clipboard holds no text (Copy a sign first)	в буфере обмена нет текста (сначала скопируйте табличку)
+# SignLink/UI/Tabs/SignTab.cs:159
+the moving piece is on the sign.	движущийся рисунок на табличке.
+# SignLink/UI/Tabs/SignTab.cs:160
+the piece is on the sign, not moving (Playing › Moving starts it).	рисунок на табличке, без движения (включается в Анимации › Движение).
+# SignLink/UI/Tabs/SignTab.cs:161
+a picture over {0} signs is on the sign.	картинка на табличке (табличек: {0}).
+# SignLink/UI/Tabs/SignTab.cs:161
+the text is on the sign.	текст на табличке.
+# SignLink/UI/Tabs/SignTab.cs:164
+Pastes a copied sign's content onto this sign	Вставляет скопированное содержимое на эту табличку
+# SignLink/UI/Tabs/SignTab.cs:171
+Delete	Удалить
+# SignLink/UI/Tabs/SignTab.cs:176
+the sign is gone: select it again	таблички больше нет: выберите её снова
+# SignLink/UI/Tabs/SignTab.cs:179
+signs here cannot be removed: a place where nothing may be built or removed	здесь таблички не убрать: в этом месте нельзя строить и разбирать
+# SignLink/UI/Tabs/SignTab.cs:182
+nothing was deleted: a ward you have no access to protects the sign	ничего не удалено: табличку защищает Оберег, к которому у вас нет доступа
+# SignLink/UI/Tabs/SignTab.cs:183
+deleted the sign and the {0} copies stacked on it (nothing drops).	табличка и её копии в стопке ({0}) удалены (ресурсы не выпадают).
+# SignLink/UI/Tabs/SignTab.cs:183
+deleted the sign (nothing drops).	табличка удалена (ресурсы не выпадают).
+# SignLink/UI/Tabs/SignTab.cs:186
+Deletes the sign completely	Полностью удаляет табличку
+# SignLink/UI/Tabs/SignTab.cs:202
+the game hides this sign's content here (a blocked or muted author, or user content off)	игра скрывает здесь содержимое этой таблички (автор заблокирован или заглушён, либо пользовательский контент выключен)
+# SignLink/UI/Tabs/SignTab.cs:31
+What the sign holds	Что на табличке
+# SignLink/UI/Tabs/SignTab.cs:49
+Holds	Содержит
+# SignLink/UI/Tabs/SignTab.cs:49
+nothing	ничего
+# SignLink/UI/Tabs/SignTab.cs:50
+a picture or glyph art	картинку или символьный рисунок
+# SignLink/UI/Tabs/SignTab.cs:50
+text or a small picture	текст или маленькую картинку
+# SignLink/UI/Tabs/SignTab.cs:51
+Made with	Создано в
+# SignLink/UI/Tabs/SignTab.cs:54
+Fit	Размещение
+# SignLink/UI/Tabs/SignTab.cs:61
+too big: {0} on a sign	слишком много: {0} на табличке
+# SignLink/UI/Tabs/SignTab.cs:62
+over {0}	больше {0}
+# SignLink/UI/Tabs/SignTab.cs:62
+fits	в пределах
+# SignLink/UI/Tabs/SignTab.cs:65
+Animation	Анимация
+# SignLink/UI/Tabs/SignTab.cs:65
+{0} frames, {1:0.#} fps	кадров: {0}, {1:0.#} fps
+# SignLink/UI/Tabs/SignTab.cs:98
+as made	как задумано
+# SignLink/UI/TemplateRows.cs:107
+Width	Ширина
+# SignLink/UI/TemplateRows.cs:108
+Height	Высота
+# SignLink/UI/TemplateRows.cs:109
+Colour	Цвет
+# SignLink/UI/TemplateRows.cs:114
+Text	Текст
+# SignLink/UI/TemplateRows.cs:117
+Letter height	Высота букв
+# SignLink/UI/TemplateRows.cs:125
+Glyph	Символ
+# SignLink/UI/TemplateRows.cs:128
+Columns	Столбцы
+# SignLink/UI/TemplateRows.cs:129
+Rows	Строки
+# SignLink/UI/TemplateRows.cs:130
+Cell	Клетка
+# SignLink/UI/TemplateRows.cs:131
+Colour A	Цвет A
+# SignLink/UI/TemplateRows.cs:132
+Colour B	Цвет B
+# SignLink/UI/TemplateRows.cs:133
+Chessboard	Шахматный порядок
+# SignLink/UI/TemplateRows.cs:152
+Pick a template	Выберите шаблон
+# SignLink/UI/TemplateRows.cs:153
+Pick a symbol	Выберите символ
+# SignLink/UI/TemplateRows.cs:168
+Too long: {0:0.#} k characters, {1:0.#} k left	Слишком длинно: {0:0.#} тыс. символов, осталось {1:0.#} тыс.
+# SignLink/UI/TemplateRows.cs:17
+Block	Блок
+# SignLink/UI/TemplateRows.cs:17
+Label	Надпись
+# SignLink/UI/TemplateRows.cs:17
+Symbol	Символ
+# SignLink/UI/TemplateRows.cs:17
+Pattern	Узор
+# SignLink/UI/TemplateRows.cs:17
+QR	QR
+# SignLink/UI/TemplateRows.cs:178
+Link or text	Ссылка или текст
+# SignLink/UI/TemplateRows.cs:181
+Error correction	Коррекция ошибок
+# SignLink/UI/TemplateRows.cs:183
+Size	Размер
+# SignLink/UI/TemplateRows.cs:184
+qr colour|Dark	Тёмный
+# SignLink/UI/TemplateRows.cs:185
+qr colour|Light	Светлый
+# SignLink/UI/TemplateRows.cs:194
+Making the code ...	Создание кода ...
+# SignLink/UI/TemplateRows.cs:202
+Palette	Палитра
+# SignLink/UI/TemplateRows.cs:216
+Pick one	Выберите символ
+# SignLink/UI/TemplateRows.cs:218
+Rotate	Поворот
+# SignLink/UI/TemplateRows.cs:219
+Mirror (flip left to right)	Отразить (слева направо)
+# SignLink/UI/TemplateRows.cs:255
+Opacity	Непрозрачность
+# SignLink/UI/TemplateRows.cs:292
+a {0:0.##} x {1:0.##} m block, {2}{3}, in the sign's middle	блок {0:0.##} x {1:0.##} m, {2}{3}, в центре таблички
+# SignLink/UI/TemplateRows.cs:293
+'{0}' with {1:0} cm capitals, {2}{3}, in the middle	«{0}», заглавные {1:0} cm, {2}{3}, по центру
+# SignLink/UI/TemplateRows.cs:294
+{0} {1:0} cm tall	{0} высотой {1:0} cm
+# SignLink/UI/TemplateRows.cs:295
+rotated {0:0}°	поворот {0:0}°
+# SignLink/UI/TemplateRows.cs:295
+mirrored	зеркально
+# SignLink/UI/TemplateRows.cs:297
+{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5} and {6}{7}	клетки {0} x {1} по {2:0} cm ({3:0.##} x {4:0.##} m), {5} и {6}{7}
+# SignLink/UI/TemplateRows.cs:298
+{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5}{6}	клетки {0} x {1} по {2:0} cm ({3:0.##} x {4:0.##} m), {5}{6}
+# SignLink/UI/TemplateRows.cs:68
+Type a link	Введите ссылку
+# SignLink/UI/TemplateRows.cs:76
+{0} x {0}, version {1}, {2:0.#} k characters	{0} x {0}, версия {1}, {2:0.#} тыс. символов
+# SignLink/UI/TemplateRows.cs:90
+Templates	Шаблоны
+# SignLink/UI/Thumb.cs:52
+no quick view: {0} x {1} pixels is too big to show	нет просмотра: {0} x {1} px — слишком много для показа

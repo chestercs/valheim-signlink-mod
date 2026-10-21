@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using PetyusPolisz.Kit;
 using SignLink.UI;
 
 namespace SignLink
@@ -38,7 +39,7 @@ namespace SignLink
                 {
                     Type t = ps[i].ParameterType;
                     if (i == 0) args[i] = Name;
-                    else if (i == 1) args[i] = "SignLink: opens its window; 'signlink version' tells the version, 'signlink close' closes it";
+                    else if (i == 1) args[i] = Lang.T("SignLink: opens its window; 'signlink version' tells the version, 'signlink close' closes it");
                     else if (t == typeof(Terminal.ConsoleEvent)) args[i] = new Terminal.ConsoleEvent(Run);
                     else if (t == typeof(Terminal.ConsoleOptionsFetcher))
                         args[i] = new Terminal.ConsoleOptionsFetcher(() => new List<string> { "open", "version", "close", "help" });
@@ -60,24 +61,26 @@ namespace SignLink
             switch (what)
             {
                 case "version":
-                    t?.AddString($"{Plugin.Name} {Plugin.Version} is running. {(PluginConfig.MenuKeyText().Length > 0 ? PluginConfig.MenuKeyText() + " or " : "")}/{Name} opens its window." +
-                                 (w != null && w.Broken != null ? $" Its window failed to load: {w.Broken}" : ""));
+                    string key = PluginConfig.MenuKeyText();
+                    t?.AddString((key.Length > 0 ? Lang.F("{0} {1} is running. {2} or /{3} opens its window.", Plugin.Name, Plugin.Version, key, Name)
+                                                 : Lang.F("{0} {1} is running. /{2} opens its window.", Plugin.Name, Plugin.Version, Name)) +
+                                 (w != null && w.Broken != null ? " " + Lang.F("Its window failed to load: {0}", w.Broken) : ""));
                     break;
                 case "close":
                     w?.Close();
                     break;
                 case "help":
-                    t?.AddString($"/{Name}: open the SignLink window · /{Name} version: the version that runs · /{Name} close: close it");
+                    t?.AddString(Lang.F("/{0}: open the SignLink window · /{0} version: the version that runs · /{0} close: close it", Name));
                     break;
                 default:
                     if (w == null || w.Broken != null)
                     {
-                        t?.AddString($"{Plugin.Name} {Plugin.Version}: its window failed to load ({w?.Broken ?? "no window"}); " +
-                                     "BepInEx/LogOutput.log has the details.");
+                        t?.AddString(Lang.F("{0} {1}: its window failed to load ({2}); BepInEx/LogOutput.log has the details.",
+                                            Plugin.Name, Plugin.Version, w?.Broken ?? Lang.T("no window")));
                         break;
                     }
                     w.OpenSoon();
-                    t?.AddString($"{Plugin.Name} {Plugin.Version}: the window opens as soon as the chat or console closes.");
+                    t?.AddString(Lang.F("{0} {1}: the window opens as soon as the chat or console closes.", Plugin.Name, Plugin.Version));
                     break;
             }
         }

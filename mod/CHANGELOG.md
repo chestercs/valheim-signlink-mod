@@ -1,5 +1,92 @@
 # Changelog
 
+## 1.1.0 (2026-10-21)
+
+- A new look for the window: the game's own Averia Serif Libre font, rounded and framed controls, tabs and choices in a
+  framed track with a line under the chosen one, a diamond before each heading, filled check boxes with a tick. It
+  comes in two colour themes: **Classic** (dark wood and gold, the warm colours of before; the default) and **Nordic**
+  (slate and amber). Settings › Window › Theme switches between them at once.
+- The window is a little more solid by default (Opacity 0.85; a config file that already says 0.8 keeps it).
+- The groups' arrows turn: hover a heading (3 Place's Content and Sign, the quick views, Art's groups) and its arrow
+  turns the way a click would open or close it, and back when the mouse leaves.
+- **The window speaks Hungarian, Chinese (Simplified) and Russian** besides English. Settings › Window › Language:
+  *Game default* follows the game's language (English where SignLink has no translation for it), then English, Magyar,
+  简体中文, Русский. Every text of the window, its messages and the hover line on a picture sign are translated.
+- 1 Sign: *Pick in view* is now **Select sign**, and *Signs nearby* is the same grey button beside it; *Clear selection*
+  sits at the bar's right. With no sign selected the bar says *Select a sign to work on*.
+- *Show all SignLink signs* is a check box in the last row, beside Close, on every tab (grey and off while both
+  highlights are off: nothing to frame with).
+- Select sign and a click in the world find the sign under the cursor with any render scale: under 100 % the click
+  landed off, further the further from the screen's lower left corner.
+- They select a sign by its picture or moving GIF too, not only by its board (a picture moved up off its board, a
+  tilted sign whose board is in the ground), and the empty part of a glyph art no longer hides the signs behind it.
+- A click off any sign no longer ends Select sign: it waits for a sign, Esc or the window's key (Page Up).
+- Look around with the window open: hold the right mouse button off the window and move the mouse; let go, the cursor
+  is back where it was (also during Select sign). Not while one of the game's own panels is open (a trader's store, the
+  map), and the mouse wheel stays the game's while you look.
+- A click on a sign selects it with Show all SignLink signs on too (Show all switches off, as with Select sign).
+- Signs nearby: the up and down arrows step through the list (shown while it is open).
+- 3 Place: each group's *Changes* box is inside its group (Content's and Sign's), closed with it.
+- 2 Content › Picture: the *Max (multiplayer)* button is now **Multiplayer max**.
+- A quick view keeps its size while a picture loads ("Loading ..." stands in it): the window no longer jumps.
+- A quick view (Art, Picture, 1 Sign's *What the sign holds*) stays closed while it has nothing to show and opens once
+  it does.
+- A picture picked again before the one between had loaded stayed on "Loading ..." (for good when Multiplayer max could
+  not move the Resolution); it shows now, and a picture that could not be read is read again when picked again.
+- Text: the editor's scroll bar is inside its frame.
+- Art: the pieces are listed by their own names, without a heading line over a name's variants; more air between a
+  group's name and its line, and between a list's thumbnails and their rows.
+- 2 Content: *Art* and *Picture* read alike: a title row with the list's button, the pick's name, the *Quick view* (no
+  line under it), *Light*, *Moving*, and a *Summary* on both; a click on a piece closes the list, as on Picture. Both
+  quick views are equally tall, and the arrow keys' hint sits level with the list's button.
+- The Summary, top to bottom: *Native pixels* (the file's) and *Resolution pixels* with how many of the file's go into
+  one (1:4.5) on Picture, *Pixels* on Art; *Signs*; an animation's *Frames*; a PNG's free *See-through* pixels;
+  *Content size* (was *World save*); in multiplayer only, *Multiplayer* (the limits) and *Arriving* (the download of a
+  player who arrives). The size in metres
+  went (3 Place sets it and shows it), and so did the seconds a player's computer takes to build the picture: that
+  number was this computer's own, and under the multiplayer limits it stays below half a second. 1 Sign's *What the
+  sign holds* reads alike: *Content size*, and *Multiplayer* only in multiplayer. The "very large" question before a put
+  says the download and the content size. The "-9 px for this size" note under the pixels went: the
+  *Resolution pixels* row shows what goes on. The *Native* / *Most* button is *Max for this size* (as many of the file's
+  pixels as the size takes).
+- The Area bar in the footers of 2 Content and 3 Place shows only in multiplayer, where its 600 KB limit holds; in
+  single player the title says what SignLink's signs within 100 m hold, without a limit.
+- The footer is as tall as what it shows: no empty grey stretch under the button once a longer line has gone (it
+  still keeps its height while a slider is dragged, the wheel turns or a key moves the sign, so the button does not
+  jump).
+- 3 Place: a little air between the buttons of the Content and Sign *Changes* boxes; with another item picked the
+  Content box says that the button below puts it on (its place and size too). Picture's *Width (free)* is *Width*.
+- Playing: air between each row's Pause button and its *Moving* switch, and *here only* sits level with its button.
+- 3 Place: putting a tipped sign back upright says so ("now standing"), and the footer no longer trips over a line
+  that came between two draws of the same frame (a rare error in the log).
+- The developer API is gone from SignLink's code altogether (off by default in 1.0.0-1.0.2, left out of the released mod
+  since 1.0.3, in developer builds until now); any of its entries still in a config file leave it.
+- 2 Content › Picture: *Max for this size* is lit only when it would give more pixels; the ratio beside the
+  Resolution pixels no longer rounds a few dropped pixels to 1:1; with no sign selected, a pick over 300 KB says so
+  in the multiplayer row.
+- A picture file over 512 MB is not read (a video in the folder made the list read it whole), a picture that could not
+  be read during a loading screen is read again, and *Open folder* on a read-only data folder no longer throws.
+- 1 Sign: *Delete* says when a ward kept the sign, and when the sign is gone meanwhile.
+- SignLink keeps working when one of its start steps fails (the images folder, an odd data folder), and a short burst
+  of errors no longer switches the window off for the whole session.
+- Art: with the list closed, the arrow keys step through the pieces and groups as the list would show them (after a
+  group was closed with ←, ↓ went on inside it).
+- The quick views let go of their pictures when the window closes (an art animation held its frames until the next pick).
+- A damaged GIF no longer stops with an internal error.
+- 1 Sign: the quick view of a long text (a QR code) no longer ends in a piece of a tag ("rotate").
+- Playing and Settings no longer show an empty bar at the bottom.
+- Settings › Sign options: the *Re-read changed signs every* slider is gone (it only sped up animations a developer tool
+  wrote into signs; 2 s, the game's own pace, stays); its entry leaves the config file.
+- Settings › Sign options: *Highlight signs* (every board outline: the selected sign's, Show all's, the sign under the
+  cursor, the faint ones while you choose) and *Highlight sign contents* (every frame of where content goes) are two
+  switches of their own; turning the first off no longer turns off the second.
+- Settings › Window: Language, Theme and Text size are drop-down lists, and the group reads Language, Theme, Text size,
+  Opacity, Window size (*Default size* at its right), Hotkey. A click on the hotkey's key changes it (the *Change key*
+  button went); *No key* is *Unbind*. Every row fits one row in a narrow window.
+- Settings › About has a *Graphics tip*: turn the game's Bloom off (glowing pictures stay sharp).
+- A button that asks twice ("Sure? Click again": Clear, Paste, Delete, Reset to defaults) turns red while it waits for
+  the second click.
+
 ## 1.0.3 (2026-10-18)
 
 - Your pictures have a new home: `SignLink/images` in the game's own data folder, next to your worlds (on Windows

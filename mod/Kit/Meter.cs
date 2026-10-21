@@ -8,12 +8,13 @@ namespace PetyusPolisz.Kit
     /// GIFs bars are two of them.</summary>
     internal static class Meter
     {
-        public static readonly Color Back = new Color(0.07f, 0.065f, 0.06f, 1f);
-        public static readonly Color Good = new Color(0.55f, 0.85f, 0.45f, 1f);
-        public static readonly Color Near = new Color(0.98f, 0.76f, 0.36f, 1f);
-        public static readonly Color Over = new Color(1f, 0.45f, 0.35f, 1f);
+        // the look's colours (Theme: the flat ones as they always were, a painted look's from its tokens)
+        public static Color Back => Theme.MeterBack;
+        public static Color Good => Theme.MeterGood;
+        public static Color Near => Theme.MeterNear;
+        public static Color Over => Theme.MeterOver;
 
-        public static readonly Color Info = new Color(0.70f, 0.67f, 0.60f, 1f);
+        public static Color Info => Theme.MeterInfo;
 
         /// <summary>A bar and its words: what is there (now), with what comes added lighter (after), against limit; the
         /// longest wording that fits the row.</summary>
@@ -24,13 +25,24 @@ namespace PetyusPolisz.Kit
                 GUILayout.Label(label, Theme.SmallLabel, Widgets.W(52));
                 using (Widgets.Vertical(Widgets.W(Widgets.ContentWidth * 0.32f)))
                 {
-                    Widgets.Space(7);                                       // the bar in the middle of the words' line
-                    Rect r = GUILayoutUtility.GetRect(Widgets.U(60), Widgets.U(10), GUILayout.ExpandWidth(true), Widgets.H(10));
+                    bool round = Theme.MeterTrack != null;                  // a painted look: round ends
+                    Widgets.Space(round ? 9 : 7);                           // the bar in the middle of the words' line
+                    float bar = round ? 6 : 10;
+                    Rect r = GUILayoutUtility.GetRect(Widgets.U(60), Widgets.U(bar), GUILayout.ExpandWidth(true), Widgets.H(bar));
                     if (Event.current.type == EventType.Repaint)
                     {
-                        Fill(r, 1f, Back);
-                        Fill(r, Mathf.Clamp01(after / (float)limit), new Color(c.r, c.g, c.b, 0.45f));   // what this adds, lighter
-                        Fill(r, Mathf.Clamp01(now / (float)limit), c);    // what is there either way
+                        if (round)
+                        {
+                            Pill(r, 1f, Theme.MeterTrack, Color.white);
+                            Pill(r, Mathf.Clamp01(after / (float)limit), Theme.MeterFill, new Color(c.r, c.g, c.b, 0.45f));
+                            Pill(r, Mathf.Clamp01(now / (float)limit), Theme.MeterFill, c);
+                        }
+                        else
+                        {
+                            Fill(r, 1f, Back);
+                            Fill(r, Mathf.Clamp01(after / (float)limit), new Color(c.r, c.g, c.b, 0.45f));   // what this adds, lighter
+                            Fill(r, Mathf.Clamp01(now / (float)limit), c);    // what is there either way
+                        }
                     }
                 }
                 Widgets.Space(8);
@@ -39,7 +51,7 @@ namespace PetyusPolisz.Kit
                 // the longest wording that fits the room left, in that room (0.20.98): the whole line, wider than the row, widened
                 // the window past its size and past the screen's edge (the author: some element widens the window)
                 float room = Widgets.ContentWidth - 30f - 52f - Widgets.ContentWidth * 0.32f - 20f;
-                GUILayout.Label(Fitting(room, wordings), Theme.SmallLabel, Widgets.W(room));
+                GUILayout.Label(Fitting(room, wordings), Theme.MeterWords, Widgets.W(room));
                 GUI.contentColor = was;
             }
         }
@@ -67,6 +79,16 @@ namespace PetyusPolisz.Kit
             if (fitted.Count > 64) fitted.Clear();                          // the words change with the numbers
             fitted[wordings[0]] = new Fitted { Room = room, Scale = Widgets.Scale, Got = got };
             return got;
+        }
+
+        /// <summary>A part of the bar as a rounded piece (a nine-sliced style tinted by c), never narrower than its round ends.</summary>
+        static void Pill(Rect r, float part, GUIStyle style, Color c)
+        {
+            if (part <= 0f) return;
+            Color was = GUI.backgroundColor;
+            GUI.backgroundColor = c;
+            style.Draw(new Rect(r.x, r.y, Mathf.Min(r.width, Mathf.Max(r.height, r.width * part)), r.height), false, false, false, false);
+            GUI.backgroundColor = was;
         }
 
         static void Fill(Rect r, float part, Color c)

@@ -1,4 +1,4 @@
-"""Animation 1 (2026-10-08): the gallery-8 fjord, moving. Frames for SignLink (mod/SignLink, live.py anim).
+"""Animation 1 (2026-10-08): the gallery-8 fjord, moving. Frames for SignLink (mod/SignLink, its art pieces: presets.py).
 
 Everything that moves is periodic in t (0..1), so the loop is seamless: the aurora curtain drifts and its rays
 shimmer, stars twinkle, smoke rises from the longhouse, ripples and the moon glitter run over the lake, and

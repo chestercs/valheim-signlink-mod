@@ -119,7 +119,7 @@ namespace SignLink.UI.Sources
                     Fit held = s.Held.Fit;
                     SignRecipe recipe = s.Held.Recipe.Copy();
                     held.Centre(0, 0, out double fx, out double fy);         // where the fit puts a picture's middle
-                    thumb.Info = "reading the picture from the sign ...";
+                    thumb.Info = Lang.T("reading the picture from the sign ...");
                     return () =>
                     {
                         if (!SignPicture.Read(texts, fx, fy, out SignPicture p, out string why)) throw new InvalidOperationException(why);
@@ -157,7 +157,7 @@ namespace SignLink.UI.Sources
                     signHeader = null;
                     signError = e.Message;
                     thumb.Clear();
-                    thumb.Info = "no quick view: " + e.Message;
+                    thumb.Info = Lang.F("no quick view: {0}", e.Message);
                 });
         }
 

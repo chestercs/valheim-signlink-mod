@@ -17,7 +17,7 @@ namespace SignLink.UI
     {
         public SignTab(SignLinkWindow w, ContentTab content) : base(w) { }
 
-        public override string Title => "1 Sign";
+        public override string Title => Lang.T("1 Sign");
         public override bool UsesTarget => true;
 
         public override void Body()
@@ -26,42 +26,43 @@ namespace SignLink.UI
             bool has = s.HasTarget;
             Sign target = has ? s.Target : null;
 
-            // folds with its quick view, as the other quick views do (0.20.171, the author)
-            if (Widgets.Foldout("sign.holds", "What the sign holds"))
+            // folds with its quick view, as the other quick views do (0.20.171, the author); closed while there is nothing
+            // to show (no sign, an empty sign), open again once there is (1.1.0, the author)
+            if (Widgets.Foldout("sign.holds", Lang.T("What the sign holds"), usable: has && !s.Held.Empty))
             using (Widgets.Horizontal(Theme.Section))
             {
-                using (Widgets.Vertical(Widgets.W(230)))
+                using (Widgets.Vertical(Widgets.W(244)))                   // the view's box: 220 and its frame's padding
                 {
                     string info = Plain(s.ViewInfo);                        // it quotes the sign's words: no markup from the world
                     // the content alone, no words about it (0.20.174, the author): the picture, or the sign's words
+                    // the same box with the picture or the words (1.1.0, the author: the quick view keeps its size)
                     if (has && s.View.Has) s.View.Draw(220, 160);
-                    else GUILayout.Label(has ? info : "", Theme.ViewText, Widgets.W(220), Widgets.H(160));
+                    else Thumb.DrawBox(220, 160, null, has ? info : "", Theme.ViewText);
                 }
+                Widgets.Space(18);                                          // air between the view and the facts (1.1.0, the author)
                 using (Widgets.Vertical())
                 {
-                    float fw = Widgets.ContentWidth - 150 - 240;
-                    if (!has) GUILayout.Label("No sign", Theme.Label);
-                    else
+                    float fw = Widgets.ContentWidth - 150 - 262;
+                    if (has)                                                // none: the bar above asks for one (1.1.0)
                     {
                         int n = s.Stack.Count;
-                        Widgets.Field("Holds", s.Held.Empty ? "nothing" : s.Name.Length > 0 ? s.Name
-                            : n > 1 ? "a picture or glyph art" : "text or a small picture", width: fw);
-                        Widgets.Field("Made with", s.MadeWith, width: fw);
+                        Widgets.Field(Lang.T("Holds"), s.Held.Empty ? Lang.T("nothing") : s.Name.Length > 0 ? s.Name
+                            : n > 1 ? Lang.T("a picture or glyph art") : Lang.T("text or a small picture"), width: fw);
+                        Widgets.Field(Lang.T("Made with"), s.MadeWith, width: fw);
                         if (n > 1)
-                            Widgets.Field("Signs", $"{n}, stacked", width: fw);
-                        Widgets.Field("Fit", FitWords(s.Held.Fit, s.NaturalM), width: fw);
-                        Widgets.Field("World save", SaveCost.Label(s.SaveBytes) + "", width: fw);
-                        // the multiplayer facts in one row (0.20.52, the author: the Download row was too much; the load time goes
-                        // beside the rest): the limit, then how long every player who arrives waits for it (download and build)
-                        bool tooBig = s.Largest > SignText.NetworkLimit, overLimit = !SaveCost.Fits(s.SaveBytes, true);
-                        double wait = SaveCost.WaitSeconds(s.GlyphsKnown ? SaveCost.LoadSeconds(s.Glyphs) : 0, s.SaveBytes);
-                        int level = s.Held.Empty || !s.GlyphsKnown ? 0 : SaveCost.Level(wait);
-                        string loads = s.Held.Empty ? "" : s.GlyphsKnown ? $" · {wait:0.#} s to load" : " · counting ...";
-                        Widgets.Field("Multiplayer", (tooBig ? $"too big: {SaveCost.Label(s.Largest)} on a sign"
-                            : overLimit ? $"over {SaveCost.Label(SaveCost.SignLimit)}"
-                            : "fits") + loads,
-                            tooBig || overLimit || level == 2 ? Theme.Warn : level == 1 ? Theme.Notice : Theme.Good, fw);
-                        if (s.HasAnim) Widgets.Field("Animation", $"{s.Frames} frames, {s.Fps:0.#} fps", width: fw);
+                            Widgets.Field(Lang.T("Signs"), Lang.F("{0}, stacked", n), width: fw);
+                        Widgets.Field(Lang.T("Fit"), FitWords(s.Held.Fit, s.NaturalM), width: fw);
+                        Widgets.Field(Lang.T("Content size"), SaveCost.Label(s.SaveBytes), width: fw);   // the Summary's name (1.1.0)
+                        // the multiplayer limits, only in multiplayer, and no seconds (1.1.0, the author: as the Summary; one
+                        // row since 0.20.52)
+                        if (SignText.Shared())
+                        {
+                            bool tooBig = s.Largest > SignText.NetworkLimit, overLimit = !SaveCost.Fits(s.SaveBytes, true);
+                            Widgets.Field(Lang.T("Multiplayer"), tooBig ? Lang.F("too big: {0} on a sign", SaveCost.Label(s.Largest))
+                                : overLimit ? Lang.F("over {0}", SaveCost.Label(SaveCost.SignLimit)) : Lang.T("fits"),
+                                tooBig || overLimit ? Theme.Warn : Theme.Good, fw);
+                        }
+                        if (s.HasAnim) Widgets.Field(Lang.T("Animation"), Lang.F("{0} frames, {1:0.#} fps", s.Frames, s.Fps), width: fw);
                     }
                 }
             }
@@ -94,14 +95,14 @@ namespace SignLink.UI
                 return $"{f.Scale * naturalM.x:0.##} x {f.Scale * naturalM.y:0.##} m{rest}";
             }
             string how = f.Describe();
-            return how.Length > 0 ? how.Substring(2) : "as made";
+            return how.Length > 0 ? how.Substring(Lang.Comma.Length) : Lang.T("as made");
         }
 
         /// <summary>Clear, Copy, Paste and Delete for the whole stack (SignBuilder.SetContent: as many signs as the content
         /// needs; Clear leaves one empty sign). What cannot be undone asks twice (Armed).</summary>
         void Actions(bool has, Sign target, Session s)
         {
-            Widgets.Header("Actions");
+            Widgets.Header(Lang.T("Actions"));
             using (Widgets.Vertical(Theme.Section))
             {
                 // one action a row, its button and what it does beside it (0.20.65, the author: the buttons one under the
@@ -113,78 +114,76 @@ namespace SignLink.UI
                 using (Widgets.Horizontal())
                 {
                     GUI.enabled = editable && !s.Held.Empty;
-                    if (Armed.Button(Window, "sign.clear|" + id, "Clear", "Sure? Click again", Theme.Button, Widgets.W(bw), Widgets.H(bh)))
+                    if (Armed.Button(Window, "sign.clear|" + id, Lang.T("Clear"), Lang.T("Sure? Click again"), Theme.Button, Widgets.W(bw), Widgets.H(bh)))
                     {
                         int copies = s.Stack.Count - 1;
                         Window.Act(() =>
                         {
                             SignBuilder.SetContent(target, new[] { "" });
-                            return copies <= 0 ? "the sign is empty." : $"the sign is empty, and its {copies} stacked copies are gone.";
+                            return copies <= 0 ? Lang.T("the sign is empty.") : Lang.F("the sign is empty, and its {0} stacked copies are gone.", copies);
                         });
                     }
                     GUI.enabled = true;
-                    GUILayout.Label("Clears the sign's content", Theme.SideNote, Widgets.W(tw), Widgets.H(bh));
+                    GUILayout.Label(Lang.T("Clears the sign's content"), Theme.SideNote, Widgets.W(tw), Widgets.H(bh));
                 }
                 Widgets.Space(6);
                 using (Widgets.Horizontal())
                 {
                     GUI.enabled = has && !s.Held.Empty && !s.Hidden;
-                    if (Widgets.Button("Copy", Theme.Button, Widgets.W(bw), Widgets.H(bh)))
+                    if (Widgets.Button(Lang.T("Copy"), Theme.Button, Widgets.W(bw), Widgets.H(bh)))
                         Window.Act(() =>
                         {
                             SignClip clip = Copy(target);
                             GUIUtility.systemCopyBuffer = clip.Pack();
-                            if (clip.Anim != null) return "copied the moving piece: Paste puts it on another sign, moving.";
-                            return clip.Texts.Count > 1 ? $"copied the picture ({clip.Texts.Count} signs): Paste puts it on another sign."
-                                                        : "copied the sign's text: Paste puts it on another sign.";
+                            if (clip.Anim != null) return Lang.T("copied the moving piece: Paste puts it on another sign, moving.");
+                            return clip.Texts.Count > 1 ? Lang.F("copied the picture ({0} signs): Paste puts it on another sign.", clip.Texts.Count)
+                                                        : Lang.T("copied the sign's text: Paste puts it on another sign.");
                         });
                     GUI.enabled = true;
-                    GUILayout.Label("Copies all it holds, moving art and GIFs too", Theme.SideNote,
+                    GUILayout.Label(Lang.T("Copies all it holds, moving art and GIFs too"), Theme.SideNote,
                                     Widgets.W(tw), Widgets.H(bh));
                 }
                 Widgets.Space(6);
                 using (Widgets.Horizontal())
                 {
                     GUI.enabled = editable;
-                    bool paste = s.Held.Empty ? Widgets.Button("Paste", Theme.Button, Widgets.W(bw), Widgets.H(bh))
-                                              : Armed.Button(Window, "sign.paste|" + id, "Paste", "Sure? Click again", Theme.Button, Widgets.W(bw), Widgets.H(bh));
+                    bool paste = s.Held.Empty ? Widgets.Button(Lang.T("Paste"), Theme.Button, Widgets.W(bw), Widgets.H(bh))
+                                              : Armed.Button(Window, "sign.paste|" + id, Lang.T("Paste"), Lang.T("Sure? Click again"), Theme.Button, Widgets.W(bw), Widgets.H(bh));
                     if (paste)
                         Window.Act(() =>
                         {
                             string clip = GUIUtility.systemCopyBuffer ?? "";
-                            if (clip.Trim().Length == 0) throw new InvalidOperationException("the clipboard holds no text (Copy a sign first)");
-#if SIGNLINK_DEVAPI
-                            // the API password (Settings › Copy) is not written where every player reads it (0.20.132, review)
-                            if (Api.Password.In(clip, PluginConfig.ApiPassword.Value))
-                                throw new InvalidOperationException("the clipboard holds the API password: it is not pasted onto a sign, where every player " +
-                                                                    "could read it (Copy a sign first)");
-#endif
+                            if (clip.Trim().Length == 0) throw new InvalidOperationException(Lang.T("the clipboard holds no text (Copy a sign first)"));
                             SignClip got = SignClip.Unpack(clip);
                             int n = Paste(target, got, out bool moving);    // in a shared world: 512 KiB a sign, the 300 / 600 KB limits
-                            if (moving) return "the moving piece is on the sign.";
-                            if (got.Anim != null && got.Still) return "the piece is on the sign, not moving (Playing › Moving starts it).";
-                            return n > 1 ? $"a picture over {n} signs is on the sign." : "the text is on the sign.";
+                            if (moving) return Lang.T("the moving piece is on the sign.");
+                            if (got.Anim != null && got.Still) return Lang.T("the piece is on the sign, not moving (Playing › Moving starts it).");
+                            return n > 1 ? Lang.F("a picture over {0} signs is on the sign.", n) : Lang.T("the text is on the sign.");
                         });
                     GUI.enabled = true;
-                    GUILayout.Label("Pastes a copied sign's content onto this sign", Theme.SideNote,
+                    GUILayout.Label(Lang.T("Pastes a copied sign's content onto this sign"), Theme.SideNote,
                                     Widgets.W(tw), Widgets.H(bh));
                 }
                 Widgets.Space(6);
                 using (Widgets.Horizontal())
                 {
                     GUI.enabled = editable;
-                    if (Armed.Button(Window, "sign.delete|" + id, "Delete", "Sure? Click again", Theme.Button, Widgets.W(bw), Widgets.H(bh)))
+                    if (Armed.Button(Window, "sign.delete|" + id, Lang.T("Delete"), Lang.T("Sure? Click again"), Theme.Button, Widgets.W(bw), Widgets.H(bh)))
                         Window.Act(() =>
                         {
                             SignBuilder.Guard();
+                            // gone meanwhile (unloaded, or removed by another player): said, not a Unity error (1.1.0, review)
+                            if (!target || SignFinder.Zdo(target) == null) throw new InvalidOperationException(Lang.T("the sign is gone: select it again"));
                             SignFinder.RequireLoaded(target);
                             if (Location.IsInsideNoBuildLocation(target.transform.position))   // as the hammer (0.20.151, review)
-                                throw new InvalidOperationException("signs here cannot be removed: a place where nothing may be built or removed");
+                                throw new InvalidOperationException(Lang.T("signs here cannot be removed: a place where nothing may be built or removed"));
                             int n = SignBuilder.Delete(SignFinder.Stack(target));
-                            return n > 1 ? $"deleted the sign and the {n - 1} copies stacked on it (nothing drops)." : "deleted the sign (nothing drops).";
+                            // a ward or another player's hold left them all in place: not "deleted" (1.1.0, review)
+                            if (n == 0) throw new InvalidOperationException(Lang.T("nothing was deleted: a ward you have no access to protects the sign"));
+                            return n > 1 ? Lang.F("deleted the sign and the {0} copies stacked on it (nothing drops).", n - 1) : Lang.T("deleted the sign (nothing drops).");
                         });
                     GUI.enabled = true;
-                    GUILayout.Label("Deletes the sign completely", Theme.SideNote, Widgets.W(tw), Widgets.H(bh));
+                    GUILayout.Label(Lang.T("Deletes the sign completely"), Theme.SideNote, Widgets.W(tw), Widgets.H(bh));
                 }
                 GUI.enabled = true;
 
@@ -198,9 +197,9 @@ namespace SignLink.UI
         static SignClip Copy(Sign target)
         {
             Sign root = SignFinder.Root(target);
-            if (!root) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!root) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             if (!root.m_isViewable)                                         // the game hides it here: not copied out of it (0.20.151)
-                throw new InvalidOperationException("the game hides this sign's content here (a blocked or muted author, or user content off)");
+                throw new InvalidOperationException(Lang.T("the game hides this sign's content here (a blocked or muted author, or user content off)"));
             var clip = new SignClip();
             clip.Texts.AddRange(SignBuilder.Content(root));
             SignRecipe r = SignRecipe.Parse(SignMarks.Source(root));
@@ -256,8 +255,9 @@ namespace SignLink.UI
             return made.Count;
         }
 
-        /// <summary>The way on (2 Content), and a stop button while a tool's animation plays on the stack (only this computer
-        /// shows it). A GIF's Pause went (0.20.117, the author: this Pause GIF on 1 Sign is not needed, take it out): it is on the
+        public override bool HasFooter => true;
+
+        /// <summary>The way on (2 Content). A GIF's Pause went (0.20.117, the author: this Pause GIF on 1 Sign is not needed, take it out): it is on the
         /// Playing tab, with the saved animations.</summary>
         public override void Footer()
         {
@@ -268,22 +268,9 @@ namespace SignLink.UI
                 GUI.enabled = has;
                 // "Next", the clearest word (1.0.2, the author: a friend new to the window did not understand what to do;
                 // the lines that told what the next tab does read as a lure)
-                if (Widgets.NextButton("Next ▸"))
-                    Window.Later(() => Window.ShowTab("2 Content"));
+                if (Widgets.NextButton(Lang.T("Next ▸")))
+                    Window.Later(() => Window.ShowTab(Lang.T("2 Content")));   // the tab's Title, in the language shown
                 GUI.enabled = true;
-                if (has && s.Tools > 0)
-                {
-                    if (Widgets.Button("Stop the tool's animation", Theme.Button, Widgets.H(36), Widgets.W(250)))
-                    {
-                        var mine = new List<Sign>(s.Stack);
-                        Window.Act(() =>
-                        {
-                            int n = 0;
-                            foreach (Sign x in mine) n += Plugin.Text.Stop(x);
-                            return n > 0 ? "stopped: the sign shows its own text again." : "nothing was playing.";
-                        });
-                    }
-                }
             }
         }
     }

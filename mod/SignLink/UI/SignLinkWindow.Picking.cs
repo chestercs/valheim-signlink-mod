@@ -8,7 +8,7 @@ using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
-    /// <summary>Pick in view: the window hides, the sign under the cursor wears a frame (white board), a click selects it.</summary>
+    /// <summary>Select sign: the window hides, the sign under the cursor wears a frame (white board), a click selects it.</summary>
     internal partial class SignLinkWindow
     {
         void StartPicking()
@@ -30,6 +30,9 @@ namespace SignLink.UI
         Sign hoverFor, hoverFirst, hoverHost;
         List<Sign> hoverStack;
         const float LookEvery = 0.5f;
+        /// <summary>Looks at most this often while the mouse or the camera moves (1.1.0, review: walking or the right button
+        /// turning the view looked every frame, every loaded sign each time, in a large base).</summary>
+        const float LookMoving = 0.05f;
 
         /// <summary>The hover frame is worked out again at the next look (another sign selected, picking started, the
         /// frame hidden).</summary>
@@ -46,6 +49,7 @@ namespace SignLink.UI
         {
             Camera cam = Camera.main;
             float now = Time.unscaledTime;
+            if (now - hoverLookAt < LookMoving) return;
             Vector3 camPos = cam ? cam.transform.position : Vector3.zero;
             Quaternion camRot = cam ? cam.transform.rotation : Quaternion.identity;
             if (now - hoverLookAt < LookEvery && screen.Equals(hoverMouse) && camPos.Equals(hoverCamPos) && camRot.Equals(hoverCamRot)) return;
@@ -57,7 +61,7 @@ namespace SignLink.UI
             List<Sign> stack = null;
             if (cam)
             {
-                Ray ray = cam.ScreenPointToRay(screen);
+                Ray ray = PointerRay(cam, screen);
                 root = AlongRay(ray.origin, ray.direction, out stack);
             }
             if (!root)
@@ -105,54 +109,83 @@ namespace SignLink.UI
             hovering = true;
         }
 
-        /// <summary>The click while picking: the sign under the cursor by a ray from the camera (its board, or where a
-        /// lying sign stood); the window shows again either way.</summary>
+        /// <summary>The click while picking: the sign under the cursor by a ray from the camera (its picture, its board, or
+        /// where a lying sign stood) is selected and the window shows again; a click off any sign keeps picking (1.1.0, the
+        /// author: Pick in view should not stop when I miss a sign), until a sign, Esc or the window's key.</summary>
         void PickAt(Vector3 screen)
         {
-            Picking = false;
             Camera cam = Camera.main;
             Sign s = null;
             if (cam)
             {
-                Ray ray = cam.ScreenPointToRay(screen);
+                Ray ray = PointerRay(cam, screen);
                 s = AlongRay(ray.origin, ray.direction, out _);
             }
-            if (s)
+            if (!s)
             {
-                KeepOpen();                                                 // the player's own pick: no put closes it now
-                SelectSign(s);
-                Say($"selected {Called(s)}.");
+                missedAt = Time.unscaledTime;                               // the hint says so for a moment (PickHint)
+                return;
             }
-            else
-            {
-                Session.Touch();
-                Say("error: no sign there. Click a sign's board, or where a lying sign stood.");
-            }
+            Picking = false;
+            KeepOpen();                                                     // the player's own pick: no put closes it now
+            SelectSign(s);
+            Say(Selected(s));
         }
 
-        /// <summary>A click in the world while the window is open: the sign under it is selected, as Pick in view selects it;
+        /// <summary>The ray from the camera through a point of the screen (Input.mousePosition, screen pixels). The game draws
+        /// its world camera into a smaller texture when its render scale is under 100 % (3070 x 1656 on a 3840 x 2071 screen),
+        /// and ScreenPointToRay counts the camera's own pixels: a click landed further off the further it was from the
+        /// screen's lower left corner (1.1.0, the author: Pick in view hardly took a click). A camera drawing on the screen
+        /// itself takes screen pixels as they are (its viewport's place counted by ScreenPointToRay).</summary>
+        static Ray PointerRay(Camera cam, Vector3 screen) =>
+            cam.targetTexture == null ? cam.ScreenPointToRay(new Vector3(screen.x, screen.y, 0f))
+            : cam.ScreenPointToRay(new Vector3(screen.x * cam.pixelWidth / Mathf.Max(1, Screen.width),
+                                               screen.y * cam.pixelHeight / Mathf.Max(1, Screen.height), 0f));
+
+        /// <summary>When a click while picking last met no sign (the hint says so for MissShown seconds).</summary>
+        float missedAt = -100f;
+        const float MissShown = 1.5f;
+        string hintKey, hintLang, hintClick, hintMissed;                    // the hint's words, made once per key and language
+        readonly GUIContent hintContent = new GUIContent();
+
+        /// <summary>A click in the world while the window is open: the sign under it is selected, as Select sign selects it;
         /// off any sign nothing happens (no message: a click in the world is not always meant for a sign).</summary>
         void ClickAt(Vector3 screen)
         {
             Camera cam = Camera.main;
             if (!cam) return;
-            Ray ray = cam.ScreenPointToRay(screen);
+            Ray ray = PointerRay(cam, screen);
             Sign s = AlongRay(ray.origin, ray.direction, out _);
             if (!s || Target && ReferenceEquals(SignFinder.Root(s), SignFinder.Root(Target))) return;   // already the selected one
-            KeepOpen();
+            if (ShowAll.On) SetShowAll(false);                              // as Select sign does (1.1.0, the author: with Show
+            KeepOpen();                                                     // all on a click picked nothing)
             SelectSign(s);
-            Say($"selected {Called(s)}.");
+            Say(Selected(s));
         }
 
         /// <summary>While picking: one line in the upper middle of the screen, the window hidden.</summary>
         void PickHint()
         {
-            const string text = "Click a sign  ·  Esc cancels";
-            Vector2 size = Theme.Header.CalcSize(new GUIContent(text));
+            string key = PluginConfig.MenuKeyText();                        // the window's key ends it too (1.1.0)
+            string lang = Lang.Current;                                     // a language changed meanwhile: its words (review)
+            if (!ReferenceEquals(key, hintKey) || lang != hintLang)
+            {
+                hintKey = key;
+                hintLang = lang;
+                // whole sentences for the translations (docs/mod-standards.md)
+                hintClick = key.Length > 0 ? Lang.F("Click a sign  ·  Esc / {0} cancels", key)
+                                           : Lang.T("Click a sign  ·  Esc cancels");
+                hintMissed = key.Length > 0 ? Lang.F("No sign there  ·  Esc / {0} cancels", key)
+                                            : Lang.T("No sign there  ·  Esc cancels");
+            }
+            string text = Time.unscaledTime - missedAt < MissShown ? hintMissed : hintClick;
+            hintContent.text = text;                                        // one content, not one per event
+            Vector2 size = Theme.Lead.CalcSize(hintContent);
+            size.x += Widgets.U(6);                                         // a few pixels to spare: drawn in its exact width it wrapped
             float pad = Widgets.U(24);
             var box = new Rect((Screen.width - size.x - 2 * pad) / 2f, Screen.height * 0.12f, size.x + 2 * pad, size.y + pad);
             GUI.Box(box, GUIContent.none, Theme.Section);
-            GUI.Label(new Rect(box.x + pad, box.y + pad / 2, size.x, size.y), text, Theme.Header);
+            GUI.Label(new Rect(box.x + pad, box.y + pad / 2, size.x, size.y), text, Theme.Lead);
         }
     }
 }

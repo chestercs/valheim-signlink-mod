@@ -8,22 +8,21 @@ using PetyusPolisz.Kit;
 namespace SignLink.UI
 {
     /// <summary>Everything that moves around you, in two kinds (0.20.54): GIFs over pictures (moving on every computer
-    /// with the file) first, then glyph animations (saved on signs: every SignLink player sees them; and, when a tool
-    /// started some, text animations played from here), each with Pause / Play (here only) and the Moving switch (for
-    /// everyone: off, the sign keeps its still picture, as vanilla players see it; on, it moves again). A switched-off
+    /// with the file) first, then glyph animations (saved on signs: every SignLink player sees them), each with Pause /
+    /// Play (here only) and the Moving switch (for everyone: off, the sign keeps its still picture, as vanilla players see it; on, it moves again). A switched-off
     /// one stays in the list (2026-10-16, the author: not Delete but the Moving switch, since that is what it does, and
     /// it stays in the list so Moving can go on again). The playback switches are on Settings › Playback.</summary>
     internal sealed class PlayingTab : Tab
     {
         public PlayingTab(SignLinkWindow w) : base(w) { }
 
-        public override string Title => "Playing";
+        public override string Title => Lang.T("Playing");
 
         static string Where(Sign s)
         {
-            if (!s) return "its sign is no longer loaded";
+            if (!s) return Lang.T("its sign is no longer loaded");
             string name = Session.ShownName(s);
-            return (name.Length > 0 ? name : "a sign") + ", " + SignWords.Distance(s);
+            return (name.Length > 0 ? name : Lang.T("a sign")) + Lang.Comma + SignWords.Distance(s);
         }
 
         /// <summary>A sign near you that can move but plays no screen or animation here: Moving off, or on but not
@@ -66,7 +65,8 @@ namespace SignLink.UI
                     if (Plugin.Stored.Drives(s)) continue;
                     bool moving = !StoredAnims.Still(zdo);
                     idleAnims.Add(new Idle { Sign = s, Moving = moving,
-                                             Text = !moving ? "not moving" : !PluginConfig.PlayAnimations.Value ? "paused here (Play all)" : "not playing here" });
+                                             Text = !moving ? Lang.T("not moving") : !PluginConfig.PlayAnimations.Value ? Lang.T("paused here (Play all)")
+                                                  : Lang.T("not playing here") });
                     continue;
                 }
                 if (zdo.GetInt(SignBuilder.CopyKey, 0) != 0) continue;     // a picture's recipe is on its first sign
@@ -79,10 +79,10 @@ namespace SignLink.UI
                     Moving = r.Animate,
                     // the row adds the sign's name, the GIF's (Where): once is enough
                     // why it stands, as far as this computer knows (1.0.2, review: "starting" stood for any reason)
-                    Text = !r.Animate ? "not moving" : !PluginConfig.PlayGifs.Value ? "paused here (Play all)"
-                         : Plugin.Restore.WaitsForRoom(s) ? "not moving here (no room: other GIFs play)"
-                         : !HasFile(r.File) ? "not moving here (no file)"
-                         : Plugin.Restore.Skipped(s) ? "not moving here" : "not moving here yet (starting)",
+                    Text = !r.Animate ? Lang.T("not moving") : !PluginConfig.PlayGifs.Value ? Lang.T("paused here (Play all)")
+                         : Plugin.Restore.WaitsForRoom(s) ? Lang.T("not moving here (no room: other GIFs play)")
+                         : !HasFile(r.File) ? Lang.T("not moving here (no file)")
+                         : Plugin.Restore.Skipped(s) ? Lang.T("not moving here") : Lang.T("not moving here yet (starting)"),
                 });
             }
         }
@@ -93,10 +93,10 @@ namespace SignLink.UI
         static string SetGifMoving(Sign any, bool on)
         {
             Sign root = SignFinder.Root(any);
-            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             SignText.RequireEdit(root);
             SignRecipe r = SignRecipe.Parse(SignMarks.Source(root));
-            if (r.Kind != SignRecipe.Kinds.Picture) return "that sign holds no GIF picture any more.";
+            if (r.Kind != SignRecipe.Kinds.Picture) return Lang.T("that sign holds no GIF picture any more.");
             if (r.Animate != on)
             {
                 r.Animate = on;
@@ -105,12 +105,12 @@ namespace SignLink.UI
             if (on)
             {
                 Plugin.Restore.Soon();                                      // its screen comes back (ScreenRestore)
-                return "the GIF moves again, for every SignLink player who has its file.";
+                return Lang.T("the GIF moves again, for every SignLink player who has its file.");
             }
             Plugin.Restore.Pause(root, false);                               // nothing to hold any more
             Plugin.Screens.Stop(root, keep: true);                           // parked: on again plays at once (1.0.2, review:
                                                                             // dropped, it waited its minute to be read again)
-            return "the GIF moves no more, for anyone: its sign keeps the still picture, as players without SignLink see it.";
+            return Lang.T("the GIF moves no more, for anyone: its sign keeps the still picture, as players without SignLink see it.");
         }
 
         /// <summary>The Moving switch at a row's end, as on 2 Content: the box and its word both flip it; greyed for a
@@ -121,8 +121,8 @@ namespace SignLink.UI
             GUI.enabled = can;
             using (Widgets.Horizontal(Widgets.W(156)))
             {
-                if (GUILayout.Toggle(on, GUIContent.none, Theme.Toggle, Widgets.W(30)) != on) v = !on;
-                if (GUILayout.Button("Moving", Theme.CheckText)) v = !on;
+                if (Widgets.CheckBox(on, Widgets.W(30)) != on) v = !on;
+                if (GUILayout.Button(Lang.T("Moving"), Theme.CheckText)) v = !on;
             }
             GUI.enabled = true;
             return v;
@@ -136,11 +136,12 @@ namespace SignLink.UI
             bool want;
             using (Widgets.Horizontal(Theme.Section))
             {
-                GUILayout.Label($"{text} · {Where(sign)}" + (sign && !mine ? " · warded" : ""),
-                                Theme.Label, Widgets.W(Widgets.ContentWidth - 40 - 160 - 104));
+                GUILayout.Label($"{text} · {Where(sign)}" + (sign && !mine ? " · " + Lang.T("warded") : ""),
+                                Theme.Label, Widgets.W(Widgets.ContentWidth - 40 - 160 - 104 - 14));
                 if (!plays) Widgets.Space(104);
-                else if (Widgets.Button(paused ? "Play" : "Pause", paused ? Theme.ButtonGo : Theme.Button, Widgets.W(100)))
+                else if (Widgets.Button(paused ? Lang.T("Play") : Lang.T("Pause"), paused ? Theme.ButtonGo : Theme.Button, Widgets.W(100)))
                     Window.Act(() => pause(!paused));
+                Widgets.Space(14);                                          // air between the button and the switch (1.1.0, the author)
                 want = MovingSwitch(moving, mine);
             }
             return want;
@@ -159,14 +160,14 @@ namespace SignLink.UI
         }
 
         /// <summary>One button for every animation of a kind on this computer: Pause all, then Play all (a config switch, so it
-        /// lasts over restarts); what pausing does, beside it.</summary>
-        void PauseAll(BepInEx.Configuration.ConfigEntry<bool> play, string what, string paused)
+        /// lasts over restarts); what pausing does, beside it. The labels whole, each in the language shown.</summary>
+        void PauseAll(BepInEx.Configuration.ConfigEntry<bool> play, string pauseAll, string playAll, string paused)
         {
             using (Widgets.Horizontal(Theme.Section))
             {
-                if (Widgets.Button(play.Value ? $"Pause all {what}" : $"Play all {what}", play.Value ? Theme.Button : Theme.ButtonGo, Widgets.W(260)))
+                if (Widgets.Button(play.Value ? pauseAll : playAll, play.Value ? Theme.Button : Theme.ButtonGo, Widgets.W(260), Widgets.H(34)))
                     Window.Later(() => play.Value = !play.Value);
-                GUILayout.Label(play.Value ? "here only" : $"paused: {paused}", Theme.SideNote);
+                GUILayout.Label(play.Value ? Lang.T("here only") : paused, Theme.SideNote, Widgets.H(34));   // level with the button's middle (1.1.0)
             }
         }
 
@@ -182,11 +183,11 @@ namespace SignLink.UI
             // two kinds, apart (0.20.54, the author: just 2 separate categories ... GIF and glyph animation, GIF on
             // top); each with its own Pause all (0.20.163, the author: put it in playback after all, as 2 buttons, one
             // for glyphs and one for GIFs: from Settings › Playback)
-            Widgets.Header("GIFs");
-            PauseAll(PluginConfig.PlayGifs, "GIFs", "frozen");
+            Widgets.Header(Lang.T("GIFs"));
+            PauseAll(PluginConfig.PlayGifs, Lang.T("Pause all GIFs"), Lang.T("Play all GIFs"), Lang.T("paused: frozen"));
             AreaMeter.Gifs(0);                                              // what the moving GIFs hold here (1.0.2)
             List<ScreenPlayer.Row> screens = Plugin.Screens.Describe(now);
-            if (screens.Count == 0 && idleGifs.Count == 0) Widgets.EmptyList("None nearby");
+            if (screens.Count == 0 && idleGifs.Count == 0) Widgets.EmptyList(Lang.T("None nearby"));
             foreach (ScreenPlayer.Row s in screens)
             {
                 Sign sign = s.Sign;
@@ -194,8 +195,8 @@ namespace SignLink.UI
                     {
                         Plugin.Restore.Pause(sign, pause);                  // holds while the stack unloads and comes back
                         return Plugin.Screens.Pause(sign, pause) > 0
-                            ? (pause ? "paused the GIF: its still picture shows; Play moves it again." : "the GIF moves again.")
-                            : "that GIF is gone.";
+                            ? (pause ? Lang.T("paused the GIF: its still picture shows; Play moves it again.") : Lang.T("the GIF moves again."))
+                            : Lang.T("that GIF is gone.");
                     }))
                     Switched(() => SetGifMoving(sign, false));
             }
@@ -208,19 +209,18 @@ namespace SignLink.UI
 
             Widgets.Space(6);
             Widgets.Rule();
-            Widgets.Header("Glyph animations");
-            PauseAll(PluginConfig.PlayAnimations, "glyph animations", "first frame");
+            Widgets.Header(Lang.T("Glyph animations"));
+            PauseAll(PluginConfig.PlayAnimations, Lang.T("Pause all glyph animations"), Lang.T("Play all glyph animations"), Lang.T("paused: first frame"));
             List<KeyValuePair<string, Sign>> stored = Plugin.Stored.Describe();
-            List<KeyValuePair<string, Sign>> tools = Plugin.Text.Describe(now);
-            if (stored.Count == 0 && tools.Count == 0 && idleAnims.Count == 0)
-                Widgets.EmptyList(!PluginConfig.PlayAnimations.Value ? "Paused" : "None nearby");
+            if (stored.Count == 0 && idleAnims.Count == 0)
+                Widgets.EmptyList(!PluginConfig.PlayAnimations.Value ? Lang.T("Paused") : Lang.T("None nearby"));
             foreach (KeyValuePair<string, Sign> s in stored)
             {
                 Sign sign = s.Value;
                 if (!Row(s.Key, sign, true, Plugin.Stored.Paused(sign), true, pause =>
                     {
                         Plugin.Stored.Pause(sign, pause);
-                        return pause ? "paused: the sign shows its first frame here; Play moves it again." : "the animation moves again.";
+                        return pause ? Lang.T("paused: the sign shows its first frame here; Play moves it again.") : Lang.T("the animation moves again.");
                     }))
                     Switched(() => Plugin.Stored.SetMoving(sign, false));
             }
@@ -230,9 +230,6 @@ namespace SignLink.UI
                 bool on = !a.Moving;
                 if (Row(a.Text, sign, false, false, a.Moving, null) == on) Switched(() => Plugin.Stored.SetMoving(sign, on));
             }
-            foreach (KeyValuePair<string, Sign> t in tools)                 // a program's, through the API: they stop when you leave
-                if (Widgets.Row($"{t.Key} · {Where(t.Value)} · started by a tool", "Stop") == 0)
-                    Window.Act(() => Plugin.Text.Stop(t.Value) > 0 ? "stopped that animation." : "it had already stopped.");
         }
     }
 }

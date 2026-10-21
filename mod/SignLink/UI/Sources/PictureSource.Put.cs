@@ -8,7 +8,7 @@ using PetyusPolisz.Kit;
 
 namespace SignLink.UI.Sources
 {
-    /// <summary>What stops the put (limits, counts), Max (multiplayer), and the put itself.</summary>
+    /// <summary>What stops the put (limits, counts), Multiplayer max, and the put itself.</summary>
     internal partial class PictureSource
     {
         public override string Problem(Session s) => Why(out _);
@@ -23,24 +23,24 @@ namespace SignLink.UI.Sources
             waiting = false;
             if (fromSign)
             {
-                if (signError != null) return "The sign's picture cannot be read back: " + signError;
-                if (!known) return Waiting("Reading the picture from the sign ...", out waiting);
-                if (job.Busy) return "Working ...";
-                if (GridFailed) return "These settings do not work: " + gridError;
-                if (counted && costError != null) return "These settings do not work: " + costError;
-                if (!counted && !Estimated) return Waiting("Counting what it costs ...", out waiting);
+                if (signError != null) return Lang.F("The sign's picture cannot be read back: {0}", signError);
+                if (!known) return Waiting(Lang.T("Reading the picture from the sign ..."), out waiting);
+                if (job.Busy) return Lang.T("Working ...");
+                if (GridFailed) return Lang.F("These settings do not work: {0}", gridError);
+                if (counted && costError != null) return Lang.F("These settings do not work: {0}", costError);
+                if (!counted && !Estimated) return Waiting(Lang.T("Counting what it costs ..."), out waiting);
                 return null;
             }
-            if (selected < 0) return "Pick a picture above";
-            if (header == null) return Waiting("Reading the folder ...", out waiting);
-            if (header.Error != null) return header.Error;
-            if (!known) return Unreadable;
+            if (selected < 0) return Lang.T("Pick a picture above");
+            if (header == null) return Waiting(Lang.T("Reading the folder ..."), out waiting);
+            if (header.Error != null) return Lang.T(header.Error);          // Unreadable
+            if (!known) return Lang.T(Unreadable);
             if (readErrorKey != null && readErrorKey == decodeKey) return readError;
-            if (job.Busy) return "Working ...";
-            if (!decoded) return Waiting("Reading the picture ...", out waiting);
-            if (GridFailed) return "These settings do not work: " + gridError;
-            if (counted && costError != null) return "These settings do not work: " + costError;
-            if (!counted && !Estimated) return Waiting("Counting what it costs ...", out waiting);   // the red level needs its bytes (download time)
+            if (job.Busy) return Lang.T("Working ...");
+            if (!decoded) return Waiting(Lang.T("Reading the picture ..."), out waiting);
+            if (GridFailed) return Lang.F("These settings do not work: {0}", gridError);
+            if (counted && costError != null) return Lang.F("These settings do not work: {0}", costError);
+            if (!counted && !Estimated) return Waiting(Lang.T("Counting what it costs ..."), out waiting);   // the red level needs its bytes (download time)
             return null;
         }
 
@@ -64,7 +64,7 @@ namespace SignLink.UI.Sources
             return true;
         }
 
-        public override string What(Session s) => $"This picture ({plan.W} x {plan.H} pixels)";
+        public override string What(Session s) => Lang.F("This picture ({0} x {1} pixels)", plan.W, plan.H);
 
         /// <summary>The live preview (0.20.129): the quick view's texture, the very grid Place encodes, at the plan's size
         /// and the chosen place (stretched while a new size's grid is drawn); lit by the scene when its light is Lit and no
@@ -78,7 +78,7 @@ namespace SignLink.UI.Sources
                                         Hwu = plan.H * (double)plan.Pitch, C0x = x, C0y = y, Fit = s.Chosen.Fit, Key = "picture|" + file };
         }
 
-        public override string Lighter(Session s) => "Lighter: lower the Resolution";
+        public override string Lighter(Session s) => Lang.T("Lighter: lower the Resolution");
 
         // the Max button: the most Resolution whose sign texts stay within maxTarget bytes, found from the counted bytes
         int maxSteps, maxLastW = -1;
@@ -124,15 +124,14 @@ namespace SignLink.UI.Sources
         /// <summary>The most Detail a picture can have (PictureOptions.MaxDetail: its own pixels, within MaxPixels).</summary>
         static int MostDetail(Header h) => PictureOptions.MaxDetail(h.W, h.H);
 
-        /// <summary>The red level (SaveCost.Heavy): a long wait for every player who arrives on a server (download and
-        /// build), or a sign close to the 512 KiB a player can receive.</summary>
-        public override bool Heavy(Session s, out double loadSeconds, out long saveBytes, out long largest)
+        /// <summary>The red level (SaveCost.Heavy): a long download for every player who arrives on a server, or a sign
+        /// close to the 512 KiB a player can receive.</summary>
+        public override bool Heavy(Session s, out long saveBytes, out long largest)
         {
-            loadSeconds = Load();
             saveBytes = SaveBytes();
             // estimated: a stack's largest sign stays about as large (MaxKb splits it), one sign grows with the picture
             largest = Have ? cost.Largest : Estimated ? (cost.Pic.Bands.Count > 1 ? Math.Min(cost.Largest, saveBytes) : saveBytes) : 0;
-            return SaveCost.Heavy(loadSeconds, saveBytes, largest);
+            return SaveCost.Heavy(saveBytes, largest);
         }
 
         /// <summary>Place or Update: the texts the cost line made when they are for these very settings and the file is
@@ -145,16 +144,16 @@ namespace SignLink.UI.Sources
             if (!Have && Estimated)                                         // pressed on the estimate: once it is counted
             {
                 Sign pressedOn = s.Target;
-                bool asked = Heavy(s, out _, out _, out _);                 // the red-level question was asked on the estimate
+                bool asked = Heavy(s, out _, out _);                        // the red-level question was asked on the estimate
                 pendingIn = w;
                 pendingAct = () =>
                 {
                     string why = Have ? Problem(s) ?? Limit(s) : null;
                     if (!Have || !ReferenceEquals(s.Target, pressedOn))     // another pick or sign meanwhile (0.20.130: said)
-                        w.Say("error: the picture or the sign changed while it was counted: press the button again");
+                        w.Say("error: " + Lang.T("the picture or the sign changed while it was counted: press the button again"));
                     else if (why != null) w.Say("error: " + why);
-                    else if (!asked && Heavy(s, out _, out _, out _))       // counted, it is very large: asked first, as always
-                        w.Say("error: counted, it is very large for every player who arrives: press the button again to decide");
+                    else if (!asked && Heavy(s, out _, out _))              // counted, it is very large: asked first, as always
+                        w.Say("error: " + Lang.T("counted, it is very large for every player who arrives: press the button again to decide"));
                     else Act(s, w, v);
                 };
                 return;
@@ -177,7 +176,7 @@ namespace SignLink.UI.Sources
                 if (stamp == null || Stamp(f0) != stamp)                    // changed on disk since it was counted: read again,
                 {                                                           // not placed unseen (0.20.130, review)
                     Relist();
-                    w.Say("error: the file changed on disk since it was counted; it is read again: press the button once more");
+                    w.Say("error: " + Lang.T("the file changed on disk since it was counted; it is read again: press the button once more"));
                     return;
                 }
                 if (gif && c != null && c.Stamp == stamp)                   // the counted texts too (0.20.132, review: an Update
@@ -225,7 +224,7 @@ namespace SignLink.UI.Sources
                 if (s.StackKey != readFor && (!root || SignPicture.TextsHash(SignBuilder.Content(root)) != hash))
                 {
                     signJob.Forget();                                       // another player changed its picture: read it again
-                    w.Say("error: the sign's picture changed meanwhile; it is read again: press the button once more");
+                    w.Say("error: " + Lang.T("the sign's picture changed meanwhile; it is read again: press the button once more"));
                     return;
                 }
                 job.Place(target, c.Pic, o, x =>

@@ -1,3 +1,4 @@
+using System;
 using HarmonyLib;
 using SignLink.UI;
 
@@ -10,8 +11,17 @@ namespace SignLink.Patches
     [HarmonyPatch(typeof(TextInput), nameof(TextInput.IsVisible))]
     internal static class InputBlockPatch
     {
-        /// <summary>Set for one call by WalkPatch, which asks the game whether it would take input but for the window.</summary>
-        internal static bool Bypass;
+        /// <summary>Set for one call by GameTakes.</summary>
+        static bool Bypass;
+
+        /// <summary>Whether the game would take input but for the window (its TakeInput asked with the block lifted): WalkPatch,
+        /// UsePatch and RightLook ask it.</summary>
+        internal static bool GameTakes<T>(T on, Func<T, bool> takeInput)   // a lambda that captures nothing: made once
+        {
+            Bypass = true;
+            try { return takeInput(on); }
+            finally { Bypass = false; }
+        }
 
         static void Postfix(ref bool __result)
         {

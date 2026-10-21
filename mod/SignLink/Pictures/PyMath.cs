@@ -98,7 +98,8 @@ namespace SignLink.Pictures
         /// <summary>f"{x:.{nd}f}"</summary>
         public static string Fixed(double x, int nd)
         {
-            string digits = (ScaledFast(x, nd, out ulong q) ? q.ToString(CultureInfo.InvariantCulture) : Scaled(x, nd).ToString()).PadLeft(nd + 1, '0');
+            string digits = (ScaledFast(x, nd, out ulong q) ? q.ToString(CultureInfo.InvariantCulture)
+                                                            : Scaled(x, nd).ToString(CultureInfo.InvariantCulture)).PadLeft(nd + 1, '0');
             string s = nd == 0 ? digits : digits.Substring(0, digits.Length - nd) + "." + digits.Substring(digits.Length - nd);
             return Negative(x) ? "-" + s : s;
         }

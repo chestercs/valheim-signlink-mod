@@ -34,8 +34,6 @@
     <Compile Include="../SignLink/Animation/AnimBlob.cs" />
     <Compile Include="../SignLink/Animation/FrameTimes.cs" />
     <Compile Include="../SignLink/MainThread.cs" />
-    <Compile Include="../SignLink/Api/Password.cs" />
-    <Compile Include="../SignLink/Api/HttpRules.cs" />
     <Compile Include="../SignLink/UI/Jobs.cs" />
     <Compile Include="../SignLink/UI/Change.cs" />
     <Compile Include="../SignLink/UI/ThumbCache.cs" />
@@ -49,6 +47,8 @@
     <Compile Include="../Kit/HotkeyText.cs" />
     <Compile Include="../SignLink/UI/SourceFollow.cs" />
     <Compile Include="../Kit/FineStep.cs" />
+    <Compile Include="../Kit/Paint.cs" />
+    <Compile Include="../Kit/Lang.cs" />
     <Compile Include="../SignLink/Signs/SupportMath.cs" />
     <EmbeddedResource Include="../SignLink/Art/**/*" LogicalName="SignLink.Art.%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

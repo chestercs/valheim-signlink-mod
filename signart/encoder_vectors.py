@@ -72,6 +72,8 @@ def random_grid(rnd, W, H, empty=0.0, palette=None, translucent=0.0, alphas=None
 def resample_case(name, img, W, H, opaque):
     rgba = np.asarray(img.convert("RGBA"), dtype=np.uint8)
     src = img.convert("RGB") if opaque else img
+    if opaque:
+        src.info.pop("transparency", None)                    # a GIF's transparent colour: no alpha on the opaque path
     px = I.grid(*I.downscale(src, W, H), translucent=not opaque)
     return {"name": name, "w": img.width, "h": img.height, "W": W, "H": H, "opaque": opaque,
             "rgba": base64.b64encode(rgba.tobytes()).decode(), "px": [packed(c) for row in px for c in row]}
@@ -143,7 +145,7 @@ def main():
         W, H = I.fit(img.width, img.height, min(198000, img.width * img.height))
         rc = resample_case(os.path.basename(path), img, W, H, True)
         v["resample"].append(rc)
-        grid = [["#%06x" % rc["px"][r * W + c] for c in range(W)] for r in range(H)]
+        grid = [["" if rc["px"][r * W + c] == -1 else "#%06x" % rc["px"][r * W + c] for c in range(W)] for r in range(H)]
         v["text"].append(text_case(os.path.basename(path) + " bands", grid, 1.0, 0.0, 40.0, 2.0, 400))
     # header sizes (ImageHeader.cs): a PNG, a baseline and a progressive JPEG with a big APP1 block, every IMAGE
     sizes = []

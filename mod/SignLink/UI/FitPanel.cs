@@ -29,7 +29,7 @@ namespace SignLink.UI
         /// percentage. Set between frames (it changes which rows show).</summary>
         public Vector2 NaturalM;
 
-        static readonly string[] Poses = { "Standing", "Face up", "Face down" };
+        static readonly ChoiceNames Poses = new ChoiceNames("Standing", "Face up", "Face down");   // lang:keys
         static readonly float[] PoseTilts = { 0f, 90f, -90f };
         readonly string key;
 
@@ -72,7 +72,7 @@ namespace SignLink.UI
                 int posed = Array.IndexOf(PoseTilts, Mathf.Round(Tilt * 10f) / 10f), pick;
                 // small, as the pivot's chips were (0.20.78, the author: the Standing / Face up / Face down buttons as
                 // small as the middle / bottom edge buttons being removed now)
-                pick = Widgets.Choice("The sign", posed, Poses, 300f);
+                pick = Widgets.Choice(Lang.T("The sign"), posed, Poses.Shown, 300f);
                 if (pick >= 0 && pick != posed)
                 {
                     float to = PoseTilts[pick];
@@ -84,7 +84,7 @@ namespace SignLink.UI
                 // middle or bottom edge is legacy ... no bottom edge rotation needed, the fine-tuning is there for that:
                 // Move the sign puts it where it should rest). A sign tilted over its bottom edge before keeps that pose
                 // until its tilt changes.
-                float tilt = Widgets.Number(key + "tilt", "Tilt", Tilt, -90f, 90f, 5f, "°", "0.#", snap: HalfDegree);
+                float tilt = Widgets.Number(key + "tilt", Lang.T("Tilt"), Tilt, -90f, 90f, 5f, "°", "0.#", snap: HalfDegree);
                 if (Mathf.Abs(tilt - Tilt) > 1e-4f)
                 {
                     tilt = HalfDegree(tilt);                                // as the save keeps it (SignPose.Savable)
@@ -101,7 +101,7 @@ namespace SignLink.UI
                 }
                 Widgets.Space(4);
                 turnRow?.Invoke();
-                float turn = Widgets.Number(key + "turn", "Rotate (clockwise)", Turn, -180f, 180f, 5f, "°", "0.#", snap: HalfDegree);   // a piece that cannot move still turns
+                float turn = Widgets.Number(key + "turn", Lang.T("Rotate (clockwise)"), Turn, -180f, 180f, 5f, "°", "0.#", snap: HalfDegree);   // a piece that cannot move still turns
                 if (Mathf.Abs(turn - Turn) > 1e-4f) Turn = HalfDegree(turn);   // a value the sign had already stays as it is
             }
         }
@@ -125,13 +125,13 @@ namespace SignLink.UI
             using (Widgets.Vertical(Theme.Section))
             {
                 GUI.enabled = was && movable;
-                RightM = Widgets.Number(key + "right", "Right", RightM, -25f, 25f, 0.25f, "m", typedLimit: 300f);
-                AlongM = Widgets.Number(key + "up", "Up", AlongM, -25f, 25f, 0.25f, "m", typedLimit: 300f);
+                RightM = Widgets.Number(key + "right", Lang.T("Right"), RightM, -25f, 25f, 0.25f, "m", typedLimit: 300f);
+                AlongM = Widgets.Number(key + "up", Lang.T("Up"), AlongM, -25f, 25f, 0.25f, "m", typedLimit: 300f);
                 GUI.enabled = was;
                 // the same lines whatever the tilt, the tilt's own words on a line of their own: a hint that grew a line
                 // as the Tilt slider below it crossed 45° moved the slider under the mouse (0.20.75)
                 bool up = Tilt >= 45f, down = Tilt <= -45f;
-                Widgets.Hint("2D coordinates on the sign's face");               // 1.0.2, the author: relative to the sign
+                Widgets.Hint(Lang.T("2D coordinates on the sign's face"));   // 1.0.2, the author: relative to the sign
             }
         }
     }

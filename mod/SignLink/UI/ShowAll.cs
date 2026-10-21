@@ -30,6 +30,8 @@ namespace SignLink.UI
         public void Step(float now)
         {
             if (On && !Game.instance) On = false;                          // left the world: it starts off next time
+            // nothing to frame with (1.1.0, the author: off with both highlights off), the window shut too (the config file)
+            if (On && !PluginConfig.Highlight.Value && !PluginConfig.HighlightContent.Value) On = false;
             if (!On || !Player.m_localPlayer)
             {
                 if (frames.Count > 0) Clear();

@@ -49,7 +49,7 @@ namespace SignLink.UI
             if (w <= 0 || h <= 0 || w > MaxSide || h > MaxSide || rows == null || rows.Count == 0)
             {
                 Clear();
-                Info = $"no quick view: {w} x {h} pixels is too big to show";
+                Info = Lang.F("no quick view: {0} x {1} pixels is too big to show", w, h);
                 return;
             }
             var kept = new List<byte[]>();
@@ -87,22 +87,53 @@ namespace SignLink.UI
             shown = -1;
         }
 
-        /// <summary>Draws it centred, as large as fits maxW x maxH (logical units; the height grows with the window),
-        /// with Info under it.</summary>
-        public void Draw(float maxW, float maxH)
+        /// <summary>Draws it centred, as large as fits maxW x maxH (logical units; the height grows with the window), no line
+        /// under it (1.1.0, the author: the Summary says what it is); while there is no picture Info stands in the box
+        /// instead ("Loading ...").</summary>
+        public void Draw(float maxW, float maxH) => DrawBox(maxW, maxH, this, Has ? null : Info, Theme.ViewEmpty);
+
+        /// <summary>The quick view's box, the same size with a picture or without (1.1.0, the author: the quick view keeps its
+        /// width and height and says Loading in it; the window jumped as it went and came back): thumb's picture fitted in its
+        /// middle when it has one, else words there (in wordsStyle, without its background: the box is the section's).</summary>
+        public static void DrawBox(float maxW, float maxH, Thumb thumb, string words, GUIStyle wordsStyle)
         {
-            if (!Has)
-            {
-                if (Info.Length > 0) Widgets.Hint(Info);
-                return;
-            }
+            float w = Widgets.U(maxW), h = Widgets.U(Widgets.Tall(maxH));
             using (Widgets.Horizontal(Theme.Section))
             {
                 GUILayout.FlexibleSpace();
-                DrawSmall(maxW, Widgets.Tall(maxH));
+                Rect box = GUILayoutUtility.GetRect(w, h, GUILayout.Width(w), GUILayout.Height(h));
+                if (thumb != null && thumb.Has) thumb.DrawFitted(box);
+                else if (!string.IsNullOrEmpty(words))
+                {
+                    Color was = GUI.backgroundColor;
+                    GUI.backgroundColor = Color.clear;
+                    GUI.Label(box, words, wordsStyle);
+                    GUI.backgroundColor = was;
+                }
                 GUILayout.FlexibleSpace();
             }
-            if (Info.Length > 0) Widgets.Hint(Info);
+        }
+
+        /// <summary>The picture as large as fits the box, in its middle.</summary>
+        void DrawFitted(Rect box)
+        {
+            NextFrame();
+            float k = Mathf.Min(box.width / tex.width, box.height / tex.height);
+            float dw = tex.width * k, dh = tex.height * k;
+            GUI.DrawTexture(new Rect(box.x + (box.width - dw) / 2f, box.y + (box.height - dh) / 2f, dw, dh), tex, ScaleMode.ScaleToFit);
+        }
+
+        /// <summary>An animation's frame due now, uploaded once per change (Repaint only).</summary>
+        void NextFrame()
+        {
+            if (frames == null || frames.Count <= 1 || fps <= 0) return;
+            int i = Paused ? 0 : (int)(Time.unscaledTime * fps) % frames.Count;
+            if (i != shown && Event.current.type == EventType.Repaint)
+            {
+                tex.LoadRawTextureData(frames[i]);
+                tex.Apply(false);
+                shown = i;
+            }
         }
 
         /// <summary>The quick view's box with words in its middle instead of a picture (an empty sign, one still being
@@ -118,17 +149,8 @@ namespace SignLink.UI
         public void DrawSmall(float maxW, float maxH)
         {
             if (!Has) return;
-            if (frames != null && frames.Count > 1 && fps > 0)
-            {
-                int i = Paused ? 0 : (int)(Time.unscaledTime * fps) % frames.Count;
-                if (i != shown && Event.current.type == EventType.Repaint)
-                {
-                    tex.LoadRawTextureData(frames[i]);
-                    tex.Apply(false);
-                    shown = i;
-                }
-            }
-            float k = Mathf.Min(Widgets.U(maxW) / tex.width, Widgets.U(maxH) / tex.height);
+            NextFrame();
+            float k =Mathf.Min(Widgets.U(maxW) / tex.width, Widgets.U(maxH) / tex.height);
             float dw = tex.width * k, dh = tex.height * k;                  // screen pixels
             // the whole maxW box is taken whatever the picture's shape, so what follows starts at one place; the picture
             // in its middle (0.20.74, the author: the picture centred, not slid to the left)

@@ -124,7 +124,7 @@ namespace SignLink.UI
         /// <summary>8 bytes of header (int W, int H) then W x H x 4 bytes; refuses a side over Side or a short file.</summary>
         static Source ReadRaw(string file)
         {
-            byte[] bytes = File.ReadAllBytes(file);
+            byte[] bytes = PictureImporter.ReadFile(file);
             if (bytes.Length < 8) throw new InvalidDataException("a short thumbnail file");
             int w = BitConverter.ToInt32(bytes, 0), h = BitConverter.ToInt32(bytes, 4);
             if (w <= 0 || h <= 0 || w > Side || h > Side || bytes.Length != 8 + w * h * 4) throw new InvalidDataException("a bad thumbnail file");
@@ -236,7 +236,7 @@ namespace SignLink.UI
         /// the size until the file is picked).</summary>
         public static Func<Source> FromFile(string path) => () =>
         {
-            byte[] bytes = File.ReadAllBytes(path);
+            byte[] bytes = PictureImporter.ReadFile(path);
             if (GifDecoder.IsGif(bytes))
             {
                 GifImage g = GifDecoder.Decode(bytes, maxFrames: 1);

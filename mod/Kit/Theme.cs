@@ -3,16 +3,18 @@ using UnityEngine;
 
 namespace PetyusPolisz.Kit
 {
-    /// <summary>IMGUI styles for the SignLink window, in the game's dark wood and amber. Unity's default skin draws
+    /// <summary>IMGUI styles for the SignLink window: the flat base built here, which a look (Theme.Looks.cs: Classic or
+    /// Nordic, 1.1.0) paints over; it stays if painting fails. Unity's default skin draws
     /// windows half transparent, which is hard to read over a bright world; these are as solid as the player's Opacity
-    /// (Settings, 0.8 by default: the backgrounds take the alpha, the text and the frames stay opaque).
+    /// (Settings, 0.85 by default: the backgrounds take the alpha, the text and the frames stay opaque).
     /// The fonts are built at their pixel size for the window's text scale (Ensure), so the text is crisp at every
     /// screen size instead of being drawn small and magnified; paddings and margins scale with them.</summary>
-    internal static class Theme
+    internal static partial class Theme
     {
         public static GUIStyle Window, Section, Header, Label, Small, Warn, Good, Notice, Button, Next, Tab, Field, Area, Item, ItemRich, BoxText,
                                TitleName, TitleVersion, TitleArea, TitleAreaOver, Chip, SmallLabel, Fold, FoldOn, ViewEmpty, ViewText, SideNote, SubHeader,
-                               ListEmpty, CheckText, ButtonDown, ButtonGap, KeyCap, KeyHint, SmallButton, ButtonLess, NextLess, ButtonGo, SmallGo, Toggle, Slider, Thumb;
+                               ListEmpty, CheckText, ButtonDown, ButtonGap, KeyCap, KeyHint, SmallButton, ButtonLess, NextLess, ButtonGo, SmallGo, Toggle, Slider, Thumb,
+                               AreaBox, AreaBoxOn, AreaText, Drop, DropList, KeyButton;
         static Texture2D bg, panel, button, hover, active, accent, field, fieldOn, thumb, thumbHover, thumbActive, toggleOff, toggleOn,
                          next, nextHover, nextActive;
         static int built = -1, builtScale = -1, builtOpacity = -1;
@@ -26,7 +28,11 @@ namespace PetyusPolisz.Kit
             bg = panel = button = hover = active = accent = field = fieldOn = thumb = thumbHover = thumbActive = toggleOff = toggleOn =
                 next = nextHover = nextActive = null;
             built = builtScale = builtOpacity = -1;
+            builtTheme = null;
+            ReleaseLook();
         }
+
+        static string builtTheme;
 
         /// <summary>The hint font's pixel size (rich-text rows name it).</summary>
         public static int SmallSize { get; private set; } = 14;
@@ -102,12 +108,14 @@ namespace PetyusPolisz.Kit
         /// logical unit, and an opacity (0.5-1: the alpha of every background; text, frames and the toggle's mark stay
         /// opaque); again when the rounded scale, the rounded opacity or the skin changes. Base sizes: 14 hints, 16
         /// labels, buttons and fields, 17 headers, 18 the title, never under 12 px.</summary>
-        public static void Ensure(float scale, float opacity = 1f)
+        public static void Ensure(float scale, float opacity = 1f, string theme = ClassicName)
         {
             int skin = GUI.skin.GetInstanceID(), s100 = Mathf.RoundToInt(scale * 100f);
             int o100 = Mathf.RoundToInt(Mathf.Clamp(opacity, 0.5f, 1f) * 100f);
-            if (built == skin && builtScale == s100 && builtOpacity == o100 && Window != null && bg) return;
+            if (System.Array.IndexOf(Names, theme) < 0) theme = Names[0];         // as the setting's list clamps it (1.1.0, review)
+            if (built == skin && builtScale == s100 && builtOpacity == o100 && builtTheme == theme && Window != null && bg) return;
             built = skin;
+            builtTheme = theme;
             variants.Clear();                                               // the styles are new: so are their variants
             fits.Clear();
             builtScale = s100;
@@ -178,7 +186,7 @@ namespace PetyusPolisz.Kit
                                               margin = new RectOffset(R(2), R(2), R(3), R(3)) };
             CheckText.hover.textColor = Amber;
             CheckText.active.textColor = Amber;
-            // a key of the hotkey in a small frame (Widgets.KeyCaps, 0.20.82)
+            // a key of the hotkey in a small frame (0.20.82; KeyButton, the clickable one, starts from it)
             KeyCap = new GUIStyle(GUI.skin.box) { fontSize = F(15), fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, wordWrap = false,
                                                   padding = new RectOffset(R(9), R(9), R(3), R(4)), margin = new RectOffset(R(2), R(2), R(4), R(4)) };
             KeyCap.normal.textColor = Amber;
@@ -286,6 +294,41 @@ namespace PetyusPolisz.Kit
             Thumb.normal.background = Thumb.focused.background = thumb;
             Thumb.hover.background = thumbHover;
             Thumb.active.background = thumbActive;
+
+            // 1.1.0: the parts a look draws its own way (Theme.Looks.cs); flat: a track without a background, the armed
+            // button's words red, the lead line as the headers
+            Track = new GUIStyle();
+            ButtonWarn = new GUIStyle(Button);
+            ButtonWarn.normal.textColor = ButtonWarn.hover.textColor = ButtonWarn.active.textColor = ButtonWarn.focused.textColor = Warn.normal.textColor;
+            Lead = new GUIStyle(Header);
+            MeterWords = SmallLabel;
+            armedOf.Clear();
+            UseLook(theme, scale, alpha);                                   // the look painted over these (Theme.Looks.cs)
+            LookParts(scale);
+        }
+
+        /// <summary>Styles made from others as the look left them (1.1.0). The text editor's parts (the author: the scroll bar
+        /// is the editor's, inside its frame, not its wrapper's): the frame around the scroll (AreaBox; AreaBoxOn while the
+        /// text has the keys) and the text in it without a frame of its own (AreaText). A drop-down's button (Drop: a button,
+        /// its words at the left, room for the arrow at the right) and its open list's box (DropList). A key cap that is a
+        /// button (KeyButton: the hotkey, clicked to change it), its words in the headings' hover colour under the mouse.</summary>
+        static void LookParts(float scale)
+        {
+            int R(float x) => Mathf.RoundToInt(x * scale);
+            Drop = new GUIStyle(Button) { alignment = TextAnchor.MiddleLeft, wordWrap = false, clipping = TextClipping.Clip };
+            Drop.padding = new RectOffset(R(12), R(12) + (FoldArrow ? FoldArrow.width : R(12)), Button.padding.top, Button.padding.bottom);
+            DropList = new GUIStyle(Section) { padding = new RectOffset(R(4), R(4), R(4), R(4)), margin = new RectOffset() };
+            KeyButton = new GUIStyle(KeyCap);
+            KeyButton.hover.textColor = KeyButton.active.textColor = Fold.hover.textColor;
+            int inset = Mathf.Max(1, Mathf.RoundToInt(2f * scale));
+            AreaBox = new GUIStyle(GUIStyle.none) { border = Area.border, margin = Area.margin, padding = new RectOffset(inset, inset, inset, inset) };
+            AreaBox.normal.background = Area.normal.background;
+            AreaBoxOn = new GUIStyle(AreaBox);
+            AreaBoxOn.normal.background = Area.focused.background ? Area.focused.background : Area.normal.background;
+            AreaText = new GUIStyle(Area) { margin = new RectOffset() };
+            foreach (GUIStyleState st in new[] { AreaText.normal, AreaText.hover, AreaText.active, AreaText.focused,
+                                                 AreaText.onNormal, AreaText.onHover, AreaText.onActive, AreaText.onFocused })
+                st.background = null;
         }
 
         /// <summary>The toggle's texture: the box (a frame, a dark inside at the window's opacity, an amber mark when on)

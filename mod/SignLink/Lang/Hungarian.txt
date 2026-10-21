@@ -1,0 +1,1118 @@
+# SignLink: the window in Hungarian. english<TAB>translation; English is the key (mod/Kit/Lang.cs).
+@language	Magyar
+# Kit/KitWindow.cs:331
+Close	Bezár
+# Kit/Lang.cs:106
+list|, 	, 
+# Kit/Lang.cs:14
+Game default	A játék nyelve
+# Kit/Widgets.Buttons.cs:121
+On	Be
+# Kit/Widgets.Buttons.cs:121
+Off	Ki
+# SignLink/Animation/ScreenPlayer.cs:287
+the sign is gone	a tábla eltűnt
+# SignLink/Animation/ScreenPlayer.cs:312
+too big to play: the screens hold {0} MB of frames already (at most {1} MB)	túl nagy a lejátszáshoz: a GIF-ek már {0} MB képkockát foglalnak (legfeljebb {1} MB fér el)
+# SignLink/Animation/ScreenPlayer.cs:694
+paused	szünetel
+# SignLink/Animation/ScreenPlayer.cs:694
+frozen (Play all GIFs)	megállítva (Összes GIF lejátszása)
+# SignLink/Animation/ScreenPlayer.cs:694
+{0:0.#} shown/s	{0:0.#} kocka/mp látszik
+# SignLink/Animation/ScreenPlayer.cs:697
+{0}x{1}, {2} frames at {3:0.#} fps ({4})	{0}x{1}, {2} képkocka, {3:0.#} fps ({4})
+# SignLink/Animation/ScreenPlayer.cs:698
+lit by the scene	a környezet fényében
+# SignLink/Animation/ScreenPlayer.cs:698
+glowing	világítva
+# SignLink/Animation/ScreenPlayer.cs:699
+covers {0} signs	{0} táblát takar
+# SignLink/Animation/StoredAnims.cs:107
+no frames	nincsenek képkockák
+# SignLink/Animation/StoredAnims.cs:108
+fps must be in (0, 60]	az fps 0-nál nagyobb és legfeljebb 60 lehet
+# SignLink/Animation/StoredAnims.cs:110
+{0} characters in all: over the {1} a saved animation holds (no game would play it)	összesen {0} karakter: több, mint a mentett animációba férő {1} (egyik játék sem játszaná le)
+# SignLink/Animation/StoredAnims.cs:115
+{0} KB with the first frame as text: over {1} KB, too big to send in multiplayer	{0} KB az első képkocka szövegével együtt: több mint {1} KB, többjátékos módban túl nagy az elküldéshez
+# SignLink/Animation/StoredAnims.cs:116
+this animation	ez az animáció
+# SignLink/Animation/StoredAnims.cs:163
+the sign is gone (unloaded or removed)	a tábla eltűnt (nincs betöltve, vagy lebontották)
+# SignLink/Animation/StoredAnims.cs:164
+that sign has no saved animation any more.	ezen a táblán már nincs mentett animáció.
+# SignLink/Animation/StoredAnims.cs:472
+{0} frames at {1:0.#} fps	{0} képkocka, {1:0.#} fps
+# SignLink/Commands.cs:42
+SignLink: opens its window; 'signlink version' tells the version, 'signlink close' closes it	SignLink: megnyitja az ablakát; a 'signlink version' kiírja a verziót, a 'signlink close' bezárja
+# SignLink/Commands.cs:65
+{0} {1} is running. {2} or /{3} opens its window.	{0} {1} fut. Az ablakát ez nyitja meg: {2} vagy /{3}.
+# SignLink/Commands.cs:66
+{0} {1} is running. /{2} opens its window.	{0} {1} fut. Az ablakát ez nyitja meg: /{2}.
+# SignLink/Commands.cs:67
+Its window failed to load: {0}	Az ablaka nem töltődött be: {0}
+# SignLink/Commands.cs:73
+/{0}: open the SignLink window · /{0} version: the version that runs · /{0} close: close it	/{0}: a SignLink ablak megnyitása · /{0} version: a futó verzió · /{0} close: az ablak bezárása
+# SignLink/Commands.cs:78
+{0} {1}: its window failed to load ({2}); BepInEx/LogOutput.log has the details.	{0} {1}: az ablaka nem töltődött be ({2}); a részletek a BepInEx/LogOutput.log fájlban vannak.
+# SignLink/Commands.cs:79
+no window	nincs ablak
+# SignLink/Commands.cs:83
+{0} {1}: the window opens as soon as the chat or console closes.	{0} {1}: az ablak megnyílik, amint bezárod a csetet vagy a konzolt.
+# SignLink/Patches/PictureSignPatch.cs:102
+Open in SignLink	Megnyitás a SignLinkben
+# SignLink/Patches/PictureSignPatch.cs:77
+A picture on {0} stacked signs	Kép {0} egymásra rakott táblán
+# SignLink/Patches/PictureSignPatch.cs:77
+Glyph art on {0} stacked signs	Betűrajz {0} egymásra rakott táblán
+# SignLink/Patches/PictureSignPatch.cs:77
+A long text on {0} stacked signs	Hosszú szöveg {0} egymásra rakott táblán
+# SignLink/Patches/PictureSignPatch.cs:78
+A picture	Kép
+# SignLink/Patches/PictureSignPatch.cs:78
+Glyph art	Betűrajz
+# SignLink/Patches/PictureSignPatch.cs:78
+A long text	Hosszú szöveg
+# SignLink/Pictures/Fit.cs:199
+lying face up over its edge	hanyatt fektetve az alsó éle körül
+# SignLink/Pictures/Fit.cs:199
+lying face up	hanyatt fektetve
+# SignLink/Pictures/Fit.cs:200
+lying face down over its edge	hasra fektetve az alsó éle körül
+# SignLink/Pictures/Fit.cs:200
+lying face down	hasra fektetve
+# SignLink/Pictures/Fit.cs:201
+tilted back {0:0.#}° over its edge	{0:0.#}°-kal hátradöntve az alsó éle körül
+# SignLink/Pictures/Fit.cs:201
+tilted back {0:0.#}°	{0:0.#}°-kal hátradöntve
+# SignLink/Pictures/Fit.cs:202
+tilted forward {0:0.#}° over its edge	{0:0.#}°-kal előredöntve az alsó éle körül
+# SignLink/Pictures/Fit.cs:202
+tilted forward {0:0.#}°	{0:0.#}°-kal előredöntve
+# SignLink/Pictures/Fit.cs:209
+at {0:0.#} %	{0:0.#}%-os méretben
+# SignLink/Pictures/Fit.cs:210
+{0:0.##} m right	{0:0.##} m-rel jobbra
+# SignLink/Pictures/Fit.cs:210
+{0:0.##} m left	{0:0.##} m-rel balra
+# SignLink/Pictures/Fit.cs:211
+{0:0.##} m up	{0:0.##} m-rel feljebb
+# SignLink/Pictures/Fit.cs:211
+{0:0.##} m down	{0:0.##} m-rel lejjebb
+# SignLink/Pictures/Fit.cs:212
+{0:0.##} m towards you	{0:0.##} m-rel közelebb
+# SignLink/Pictures/Fit.cs:212
+{0:0.##} m away	{0:0.##} m-rel távolabb
+# SignLink/Pictures/Fit.cs:215
+rotated {0:0.#}°	{0:0.#}°-kal elforgatva
+# SignLink/Pictures/GifDecoder.cs:141
+a GIF frame of {0} x {1} pixels is too large	egy {0} x {1} pixeles GIF-képkocka túl nagy
+# SignLink/Pictures/GifDecoder.cs:149
+a GIF frame without a palette	egy GIF-képkocka paletta nélkül
+# SignLink/Pictures/GifDecoder.cs:152
+a GIF frame with LZW code size {0}	egy GIF-képkocka {0} LZW-kódmérettel
+# SignLink/Pictures/GifDecoder.cs:86
+not a GIF	nem GIF
+# SignLink/Pictures/GifDecoder.cs:87
+the GIF is cut short	a GIF csonka
+# SignLink/Pictures/GifDecoder.cs:89
+the GIF is {0} x {1} pixels: at most 16 million pixels a frame (4000 x 4000)	a GIF {0} x {1} pixeles: képkockánként legfeljebb 16 millió pixel lehet (4000 x 4000)
+# SignLink/Pictures/GifDecoder.cs:91
+the GIF has no frames	a GIF-ben nincs egy képkocka sem
+# SignLink/Pictures/GifDecoder.cs:93
+the GIF is too long or too large to read: {0} frames, {1} million pixels in all (at most {2} frames and {3} million pixels: about {4} frames of 1920 x 1080). Make it shorter or smaller	a GIF túl hosszú vagy túl nagy a beolvasáshoz: {0} képkocka, összesen {1} millió pixel (legfeljebb {2} képkocka és {3} millió pixel: kb. {4} képkocka 1920 x 1080-ban). Rövidítsd vagy kicsinyítsd le
+# SignLink/Pictures/GlyphData.cs:31
+palette|Arrows	Nyilak
+# SignLink/Pictures/GlyphData.cs:31
+palette|Shapes	Formák
+# SignLink/Pictures/GlyphData.cs:31
+palette|Frames	Keretek
+# SignLink/Pictures/GlyphData.cs:31
+palette|Runes	Rúnák
+# SignLink/Pictures/GlyphData.cs:31
+palette|Symbols	Jelek
+# SignLink/Pictures/GlyphData.cs:31
+palette|Emoji	Emoji
+# SignLink/Pictures/PictureImporter.cs:109
+the file is {0} MB, more than the {1} MB a picture may be	a fájl {0} MB, több a képeknél megengedett {1} MB-nál
+# SignLink/Pictures/PictureImporter.cs:225
+Unity's image decoder is missing	hiányzik a Unity képdekódolója
+# SignLink/Pictures/PictureImporter.cs:258
+not a PNG, JPG or GIF picture (its header cannot be read)	nem PNG, JPG vagy GIF kép (a fejléce nem olvasható)
+# SignLink/Pictures/PictureImporter.cs:260
+{0} x {1} is {2} megapixels: SignLink takes pictures up to {3} (scale it down first; a sign picture has at most a million)	{0} x {1} = {2} megapixel: a SignLink legfeljebb {3} megapixeles képet fogad (előbb kicsinyítsd le; egy táblakép legfeljebb egymillió pixeles)
+# SignLink/Pictures/PictureImporter.cs:292
+not a PNG, JPG or GIF picture	nem PNG, JPG vagy GIF kép
+# SignLink/Pictures/PictureImporter.cs:379
+too big to play over the picture (its frames would be {0} MB, the screens hold at most {1} MB)	túl nagy ahhoz, hogy a kép fölött mozogjon (a képkockái {0} MB-ot foglalnának, a GIF-eknek legfeljebb {1} MB jut)
+# SignLink/Pictures/PictureImporter.cs:391
+it stays still for now: its frames would be {0} MB, the screens have room for {1} MB	egyelőre állókép marad: a képkockái {0} MB-ot foglalnának, a GIF-eknek csak {1} MB hely maradt
+# SignLink/Pictures/PictureImporter.cs:553
+it stays still here: {0}	nálad állókép marad: {0}
+# SignLink/Pictures/PictureImporter.cs:557
+the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder	a GIF mozog rajta, és újra elindul, valahányszor a tábla betöltődik, minden gépen, amelynek a képmappájában megvan a fájl
+# SignLink/Pictures/PictureImporter.cs:722
+{0} is on the sign{1} over {2} signs ({3} in the world save; encoded in {4:0.0} s, placed in {5:0.0} s){6}.	{0} felkerült a táblára{1}, {2} táblán ({3} a világmentésben; kódolás {4:0.0} s, felrakás {5:0.0} s){6}.
+# SignLink/Pictures/PictureImporter.cs:724
+{0} is on the sign{1} ({2} in the world save; encoded in {3:0.0} s, placed in {4:0.0} s){5}.	{0} felkerült a táblára{1} ({2} a világmentésben; kódolás {3:0.0} s, felrakás {4:0.0} s){5}.
+# SignLink/Pictures/PictureImporter.cs:742
+the import was stopped.	az importálás megszakadt.
+# SignLink/Pictures/PixelText.cs:116
+the picture is fully transparent: nothing to put on a sign	a kép teljesen átlátszó: nincs mit táblára tenni
+# SignLink/Pictures/PixelText.cs:222
+the picture is too large for the column encoding (tag numbers past 32 767): use fewer pixels or a smaller pixel size	a kép túl nagy az oszlopos kódoláshoz (a címkeszámok 32 767 fölé mennének): használj kevesebb pixelt vagy kisebb pixelméretet
+# SignLink/Pictures/PixelText.cs:96
+a row of {0} pixels does not fit one sign	egy {0} pixeles sor nem fér el egy táblán
+# SignLink/Pictures/QrCode.cs:61
+{0} bytes are too long for a QR code at {1} (version 40 holds at most {2})	{0} bájt túl sok egy QR-kódhoz {1} szinten (a 40-es verzióba legfeljebb {2} fér)
+# SignLink/Pictures/SaveCost.cs:104
+{0} / {1} multiplayer limit within {2} m; with this: {3}	{0} / {1} többjátékos korlát {2} m-en belül; ezzel: {3}
+# SignLink/Pictures/SaveCost.cs:105
+{0} / {1} multiplayer limit within {2} m	{0} / {1} többjátékos korlát {2} m-en belül
+# SignLink/Pictures/SaveCost.cs:23
+{0} bytes	{0} bájt
+# SignLink/Pictures/SaveCost.cs:59
+On a server, every player who arrives waits {0:0.#} s for the download	Szerveren minden érkező játékos {0:0.#} másodpercig vár a letöltésre
+# SignLink/Pictures/SaveCost.cs:82
+{0} is over the {1} SignLink stores on one sign in a multiplayer world	{0}: több, mint a SignLink táblánkénti korlátja többjátékos világban ({1})
+# SignLink/Pictures/SaveCost.cs:92
+not counted yet	még nincs kiszámolva
+# SignLink/Pictures/SaveCost.cs:95
+the SignLink signs within {0} m hold {1} already: with {2} more that is {3}, over the {4} multiplayer limit for an area	{0} m-en belül a SignLink-táblákon már {1} van: még {2} hozzáadásával {3} lenne, ez túllépi a terület {4} többjátékos korlátját
+# SignLink/Pictures/SignPicture.cs:37
+it holds no pixel picture SignLink can read back	nincs rajta olyan pixelkép, amit a SignLink vissza tud olvasni
+# SignLink/Pictures/TextTransform.cs:121
+<{0}> is not an absolute plain number	<{0}> nem egyszerű abszolút szám
+# SignLink/Pictures/TextTransform.cs:128
+<{0}> is not something SignLink can resize	<{0}> olyasmi, amit a SignLink nem tud átméretezni
+# SignLink/Pictures/TextTransform.cs:136
+a backslash escape (\\n, \\r, \\t, \\u) that the game reads as a character	egy fordított perjeles kód (\\n, \\r, \\t, \\u), amit a játék karakterként olvas
+# SignLink/Pictures/TextTransform.cs:142
+plain text without a size: the game sizes it itself	méret nélküli sima szöveg: a játék maga méretezi
+# SignLink/Pictures/TextTransform.cs:148
+several lines without a line height	több sor sormagasság nélkül
+# SignLink/Pictures/TextTransform.cs:256
+too far from the sign: its tag numbers would pass what a sign reads	túl messze a táblától: a címkeszámai túllépnék, amit egy tábla olvasni tud
+# SignLink/Pictures/TextTransform.cs:278
+too large or too far from the sign: its tag numbers would pass what a sign reads	túl nagy vagy túl messze a táblától: a címkeszámai túllépnék, amit egy tábla olvasni tud
+# SignLink/Presets/Preset.cs:126
+{0}: {1:0.#} MB is too large to be a sign piece (up to {2} MB)	{0}: {1:0.#} MB túl nagy egy rajzhoz (legfeljebb {2} MB)
+# SignLink/Presets/Preset.cs:132
+{0}: {1} signs is too large to be a sign piece (up to {2})	{0}: {1} tábla túl sok egy rajzhoz (legfeljebb {2})
+# SignLink/Presets/Preset.cs:136
+{0}: no '{1} fps=F' first line	{0}: hiányzik a '{1} fps=F' első sor
+# SignLink/Presets/Preset.cs:143
+{0}: {1} frames is too large to be a sign piece (up to {2})	{0}: {1} képkocka túl sok egy rajzhoz (legfeljebb {2})
+# SignLink/Signs/SignBuilder.cs:106
+this content	ez a tartalom
+# SignLink/Signs/SignBuilder.cs:119
+the game allows no building or removing there, so the sign keeps its {0} sign(s) and this content needs {1}	ott a játék nem enged építeni vagy bontani, így a tábla {0} táblából áll továbbra is, ennek a tartalomnak viszont {1} kell
+# SignLink/Signs/SignBuilder.cs:172
+not in a world	nincs betöltött világ
+# SignLink/Signs/SignBuilder.cs:28
+the sign has no ZDO	a táblának nincs ZDO-ja
+# SignLink/Signs/SignBuilder.cs:30
+prefab not found	a prefab nem található
+# SignLink/Signs/SignBuilder.cs:32
+the game allows no building there	ott a játék nem enged építeni
+# SignLink/Signs/SignBuilder.cs:45
+too many copies for one sign ({0} more in front of {1:0.#} mm)	túl sok példány egy táblához ({0} további, a meglévők már {1:0.#} mm-rel előrébb állnak)
+# SignLink/Signs/SignBuilder.cs:70
+too many copies for one sign ({0})	túl sok példány egy táblához ({0})
+# SignLink/Signs/SignFinder.cs:242
+the sign's stack is still loading (its copies arrive one by one): try again in a moment	az egymásra rakott táblák még töltődnek (a példányok egyenként érkeznek): próbáld újra egy pillanat múlva
+# SignLink/Signs/SignMove.cs:157
+it could not be weighed: {0}	az alátámasztás nem mérhető fel: {0}
+# SignLink/Signs/SignMove.cs:162
+nothing holds it there	ott semmi sem tartja
+# SignLink/Signs/SignMove.cs:163
+too weak there ({0:0} of {1:0})	ott túl gyenge az alátámasztás ({0:0} / {1:0})
+# SignLink/Signs/SignMove.cs:208
+at most {0:0} m from where it was built	legfeljebb {0:0} m-re az építési helyétől
+# SignLink/Signs/SignMove.cs:211
+a ward you have no access to protects that spot	azt a helyet egy Védőkő védi, amihez nincs hozzáférésed
+# SignLink/Signs/SignMove.cs:232
+another sign stands there: it would join this sign's copies (move it a little further)	ott egy másik tábla áll: összeolvadna ennek a táblának a példányaival (vidd kicsit messzebb)
+# SignLink/Signs/SignMove.cs:266
+too weakly held there until the move is applied ({0:0} of the {1:0} it needs, as the game counts it): apply the steps so far first	ott túl gyenge az alátámasztás, amíg a mozgatás nincs alkalmazva ({0:0}, de {1:0} kellene, a játék számítása szerint): előbb alkalmazd az eddigi lépéseket
+# SignLink/Signs/SignMove.cs:389
+no support: {0}	nincs alátámasztás: {0}
+# SignLink/Signs/SignPose.cs:100
+standing	állva
+# SignLink/Signs/SignPose.cs:394
+this sign	ez a tábla
+# SignLink/Signs/SignText.cs:38
+a ward you have no access to protects this sign	ezt a táblát egy Védőkő védi, amihez nincs hozzáférésed
+# SignLink/Signs/SignText.cs:60
+{0}: {1} (single player has no limit)	{0}: {1} (egyjátékos módban nincs korlát)
+# SignLink/Signs/SignText.cs:61
+{0} (single player has no limit)	{0} (egyjátékos módban nincs korlát)
+# SignLink/Signs/SignText.cs:69
+a sign would hold over 512 KB: more than other players can receive (only single player allows that)	egy táblára 512 KB-nál több kerülne: ennyit a többi játékos nem tud fogadni (csak egyjátékos módban lehet)
+# SignLink/UI/AreaMeter.cs:32
+already {0}	már {0}
+# SignLink/UI/AreaMeter.cs:33
+1 SignLink sign	1 SignLink-tábla
+# SignLink/UI/AreaMeter.cs:33
+{0} SignLink signs	{0} SignLink-tábla
+# SignLink/UI/AreaMeter.cs:34
+Area	Terület
+# SignLink/UI/AreaMeter.cs:35
+{0} within {1} m	{0} {1} m-en belül
+# SignLink/UI/AreaMeter.cs:46
+already {0} MB	már {0} MB
+# SignLink/UI/AreaMeter.cs:47
+GIFs	GIF-ek
+# SignLink/UI/AreaMeter.cs:47
+{0} of moving GIF frames here	mozgó GIF-képkockák nálad: {0}
+# SignLink/UI/Confirm.cs:59
+This is very large. Put it on anyway?	Ez nagyon nagy. Mégis felrakod?
+# SignLink/UI/Confirm.cs:59
+{0} is very large. Put it on anyway?	{0} nagyon nagy. Mégis felrakod?
+# SignLink/UI/Confirm.cs:65
+Content size: {0}	Tartalom mérete: {0}
+# SignLink/UI/Confirm.cs:68
+One sign: {0}, over 512 KB: no server	Egy tábla: {0}, 512 KB fölött: szerveren nem megy
+# SignLink/UI/Confirm.cs:70
+One sign: {0}, near 512 KB	Egy tábla: {0}, közel 512 KB
+# SignLink/UI/Confirm.cs:76
+Cancel	Mégse
+# SignLink/UI/FitPanel.cs:104
+Rotate (clockwise)	Forgatás (órairányban)
+# SignLink/UI/FitPanel.cs:128
+Right	Jobbra
+# SignLink/UI/FitPanel.cs:129
+Up	Fel
+# SignLink/UI/FitPanel.cs:134
+2D coordinates on the sign's face	2D koordináták a tábla lapján
+# SignLink/UI/FitPanel.cs:32
+Standing	Álló
+# SignLink/UI/FitPanel.cs:32
+Face up	Hanyatt
+# SignLink/UI/FitPanel.cs:32
+Face down	Hasra
+# SignLink/UI/FitPanel.cs:75
+The sign	Tábla
+# SignLink/UI/FitPanel.cs:87
+Tilt	Döntés
+# SignLink/UI/LightRow.cs:17
+Glowing	Világító
+# SignLink/UI/LightRow.cs:17
+Lit by the scene	Környezeti fény
+# SignLink/UI/LightRow.cs:18
+As made	Ahogy készült
+# SignLink/UI/LightRow.cs:30
+Light	Fény
+# SignLink/UI/MovePanel.cs:112
+Turn (clockwise)	Fordítás (órairányban)
+# SignLink/UI/MovePanel.cs:132
+Move by	Lépésköz
+# SignLink/UI/MovePanel.cs:146
+Away	Távolabb
+# SignLink/UI/MovePanel.cs:156
+Towards you	Közelebb
+# SignLink/UI/MovePanel.cs:192
+Changes	Változások
+# SignLink/UI/MovePanel.cs:193
+none	nincs
+# SignLink/UI/MovePanel.cs:202
+Apply sign coord changes	Táblaváltozások alkalmazása
+# SignLink/UI/MovePanel.cs:205
+Undo steps	Lépések vissza
+# SignLink/UI/MovePanel.cs:211
+Reset to default	Alaphelyzet
+# SignLink/UI/MovePanel.cs:213
+as built	ahogy épült
+# SignLink/UI/MovePanel.cs:218
+No support: {0}	Nincs alátámasztás: {0}
+# SignLink/UI/MovePanel.cs:22
+{0} left	{0}-rel balra
+# SignLink/UI/MovePanel.cs:22
+{0} right	{0}-rel jobbra
+# SignLink/UI/MovePanel.cs:22
+{0} down	{0}-rel lejjebb
+# SignLink/UI/MovePanel.cs:22
+{0} up	{0}-rel feljebb
+# SignLink/UI/MovePanel.cs:22
+{0} towards you	{0}-rel közelebb
+# SignLink/UI/MovePanel.cs:22
+{0} away	{0}-rel távolabb
+# SignLink/UI/MovePanel.cs:247
+applied: every player sees it {0} now.	alkalmazva: mostantól minden játékos {0} látja.
+# SignLink/UI/MovePanel.cs:262
+applied for SignLink players; players without SignLink see it when they come back (the signs could not be made again: {0}).	alkalmazva a SignLinkes játékosoknak; a SignLink nélküliek akkor látják, amikor visszajönnek (a táblákat nem sikerült újra elkészíteni: {0}).
+# SignLink/UI/MovePanel.cs:269
+applied: every player sees the sign there now.	alkalmazva: mostantól minden játékos ott látja a táblát.
+# SignLink/UI/MovePanel.cs:286
+undone: the sign is back as it was last applied.	visszavonva: a tábla újra úgy áll, ahogy legutóbb alkalmaztad.
+# SignLink/UI/MovePanel.cs:29
+where it was built	az építési helyén
+# SignLink/UI/MovePanel.cs:297
+the reset stays: the sign is gone (unloaded or removed).	az alaphelyzet marad: a tábla eltűnt (nincs betöltve, vagy lebontották).
+# SignLink/UI/MovePanel.cs:304
+the sign is gone.	a tábla eltűnt.
+# SignLink/UI/MovePanel.cs:310
+undoing the reset ...	az alaphelyzet visszavonása ...
+# SignLink/UI/MovePanel.cs:327
+the reset is undone: the sign stands where and as it stood before, for everyone.	az alaphelyzet visszavonva: a tábla mindenkinél ott és úgy áll, mint előtte.
+# SignLink/UI/MovePanel.cs:337
+the reset is undone: the sign stands where and as it stood before; the steps not applied are back (only you see them).	az alaphelyzet visszavonva: a tábla ott és úgy áll, mint előtte; a nem alkalmazott lépések visszajöttek (csak te látod őket).
+# SignLink/UI/MovePanel.cs:338
+the reset is undone: the sign stands where and as it stood before.	az alaphelyzet visszavonva: a tábla ott és úgy áll, mint előtte.
+# SignLink/UI/MovePanel.cs:339
+the reset is undone: the steps not applied are back (only you see them).	az alaphelyzet visszavonva: a nem alkalmazott lépések visszajöttek (csak te látod őket).
+# SignLink/UI/MovePanel.cs:364
+the sign is back where it was built (Undo brings the steps back).	a tábla visszakerült az építési helyére (a Lépések vissza gomb visszahozza a lépéseket).
+# SignLink/UI/MovePanel.cs:398
+no support where it was built: {0}	az építési helyén nincs alátámasztás: {0}
+# SignLink/UI/MovePanel.cs:426
+the sign stands where and as it was built: its signs were made again, every player sees it so now (Undo brings it back).	a tábla ott és úgy áll, ahogy épült: a táblái újra elkészültek, mostantól minden játékos így látja (a Lépések vissza gomb visszahozza az előzőt).
+# SignLink/UI/MovePanel.cs:448
+turned the sign {0:0.#}° clockwise ({1}).	a tábla {0:0.#}°-kal elfordult órairányban ({1}).
+# SignLink/UI/MovePanel.cs:448
+turned the sign {0:0.#}° anticlockwise ({1}).	a tábla {0:0.#}°-kal elfordult órairánnyal szemben ({1}).
+# SignLink/UI/MovePanel.cs:479
+moved the sign {0} ({1} from where it was built).	a tábla {0} mozdult ({1} az építési helyéhez képest).
+# SignLink/UI/MovePanel.cs:480
+moved the sign {0} (back where it was built).	a tábla {0} mozdult (vissza az építési helyére).
+# SignLink/UI/MovePanel.cs:536
+No support.	Nincs alátámasztás.
+# SignLink/UI/MovePanel.cs:543
+{0} · only you see it	{0} · csak te látod
+# SignLink/UI/MovePanel.cs:567
+turned {0:0.#}° clockwise	{0:0.#}°-kal elfordítva órairányban
+# SignLink/UI/MovePanel.cs:567
+turned {0:0.#}° anticlockwise	{0:0.#}°-kal elfordítva órairánnyal szemben
+# SignLink/UI/MovePanel.cs:570
+rotated {0:0.#}° clockwise	{0:0.#}°-kal elforgatva órairányban
+# SignLink/UI/MovePanel.cs:570
+rotated {0:0.#}° anticlockwise	{0:0.#}°-kal elforgatva órairánnyal szemben
+# SignLink/UI/Session.cs:221
+SignLink {0}	SignLink {0}
+# SignLink/UI/Session.cs:221
+SignLink (older version)	SignLink (régebbi verzió)
+# SignLink/UI/Session.cs:221
+not SignLink	nem SignLink
+# SignLink/UI/Session.cs:336
+Text too long to edit	Túl hosszú szöveg a szerkesztéshez
+# SignLink/UI/Session.cs:337
+{0}: not on this computer	{0}: nincs ezen a gépen
+# SignLink/UI/Session.cs:439
+Hidden by the game's content settings.	A játék tartalombeállításai elrejtik.
+# SignLink/UI/Session.cs:45
+[hidden by the game's content settings]	[a játék tartalombeállításai elrejtik]
+# SignLink/UI/Session.cs:51
+Hidden by the game's content settings	A játék tartalombeállításai elrejtik
+# SignLink/UI/SignLinkWindow.Picking.cs:176
+Click a sign  ·  Esc / {0} cancels	Kattints egy táblára  ·  Esc / {0}: mégse
+# SignLink/UI/SignLinkWindow.Picking.cs:177
+Click a sign  ·  Esc cancels	Kattints egy táblára  ·  Esc: mégse
+# SignLink/UI/SignLinkWindow.Picking.cs:178
+No sign there  ·  Esc / {0} cancels	Ott nincs tábla  ·  Esc / {0}: mégse
+# SignLink/UI/SignLinkWindow.Picking.cs:179
+No sign there  ·  Esc cancels	Ott nincs tábla  ·  Esc: mégse
+# SignLink/UI/SignLinkWindow.Signs.cs:122
+Every sign within 30 m	Minden tábla 30 m-en belül
+# SignLink/UI/SignLinkWindow.Signs.cs:122
+SignLink signs within {0} m	SignLink-táblák {0} m-en belül
+# SignLink/UI/SignLinkWindow.Signs.cs:178
+{0:0.0} m ahead	{0:0.0} m előtted
+# SignLink/UI/SignLinkWindow.Signs.cs:178
+{0:0.0} m behind	{0:0.0} m mögötted
+# SignLink/UI/SignLinkWindow.Signs.cs:179
+{0:0.0} m right	{0:0.0} m jobbra
+# SignLink/UI/SignLinkWindow.Signs.cs:179
+{0:0.0} m left	{0:0.0} m balra
+# SignLink/UI/SignLinkWindow.Signs.cs:180
+{0:0.0} m up	{0:0.0} m feljebb
+# SignLink/UI/SignLinkWindow.Signs.cs:180
+{0:0.0} m down	{0:0.0} m lejjebb
+# SignLink/UI/SignLinkWindow.Signs.cs:202
+empty	üres
+# SignLink/UI/SignLinkWindow.Signs.cs:206
+a picture	kép
+# SignLink/UI/SignLinkWindow.Signs.cs:206
+a sign	tábla
+# SignLink/UI/SignLinkWindow.Signs.cs:207
+{0} signs	{0} tábla
+# SignLink/UI/SignLinkWindow.Signs.cs:27
+A sign	Tábla
+# SignLink/UI/SignLinkWindow.Signs.cs:277
+1 sign	1 tábla
+# SignLink/UI/SignLinkWindow.Signs.cs:28
+{0} · {1} · {2} signs	{0} · {1} · {2} tábla
+# SignLink/UI/SignLinkWindow.Signs.cs:29
+{0} · {1}	{0} · {1}
+# SignLink/UI/SignLinkWindow.Signs.cs:290
+{0:0} m north	{0:0} m-re északra
+# SignLink/UI/SignLinkWindow.Signs.cs:291
+{0:0} m north-east	{0:0} m-re északkeletre
+# SignLink/UI/SignLinkWindow.Signs.cs:292
+{0:0} m east	{0:0} m-re keletre
+# SignLink/UI/SignLinkWindow.Signs.cs:293
+{0:0} m south-east	{0:0} m-re délkeletre
+# SignLink/UI/SignLinkWindow.Signs.cs:294
+{0:0} m south	{0:0} m-re délre
+# SignLink/UI/SignLinkWindow.Signs.cs:295
+{0:0} m south-west	{0:0} m-re délnyugatra
+# SignLink/UI/SignLinkWindow.Signs.cs:296
+{0:0} m west	{0:0} m-re nyugatra
+# SignLink/UI/SignLinkWindow.Signs.cs:297
+{0:0} m north-west	{0:0} m-re északnyugatra
+# SignLink/UI/SignLinkWindow.Signs.cs:322
+None within {0} m	Nincs {0} m-en belül
+# SignLink/UI/SignLinkWindow.Signs.cs:363
+Too far:	Túl messze:
+# SignLink/UI/SignLinkWindow.Signs.cs:430
+selected the sign with {0}.	kijelölted a táblát, rajta: {0}.
+# SignLink/UI/SignLinkWindow.Signs.cs:430
+selected the sign.	kijelölted a táblát.
+# SignLink/UI/SignLinkWindow.Signs.cs:47
+Select sign	Tábla kijelölése
+# SignLink/UI/SignLinkWindow.Signs.cs:56
+Hide list	Lista elrejtése
+# SignLink/UI/SignLinkWindow.Signs.cs:56
+Signs nearby	Közeli táblák
+# SignLink/UI/SignLinkWindow.Signs.cs:71
+Clear selection	Kijelölés törlése
+# SignLink/UI/SignLinkWindow.Signs.cs:75
+no sign selected.	nincs kijelölt tábla.
+# SignLink/UI/SignLinkWindow.Signs.cs:84
+Select a sign to work on	Jelölj ki egy táblát
+# SignLink/UI/SignLinkWindow.Signs.cs:98
+Show all SignLink signs	Összes SignLink-tábla mutatása
+# SignLink/UI/SignLinkWindow.cs:167
+SignLink: {0}	SignLink: {0}
+# SignLink/UI/SignLinkWindow.cs:353
+1 Sign	1 Tábla
+# SignLink/UI/SignLinkWindow.cs:357
+3 Place	3 Elhelyezés
+# SignLink/UI/SignLinkWindow.cs:357
+2 Content	2 Tartalom
+# SignLink/UI/SignLinkWindow.cs:466
+SignLink {0} could not load: see BepInEx/LogOutput.log	A SignLink {0} nem töltődött be: lásd BepInEx/LogOutput.log
+# SignLink/UI/SignLinkWindow.cs:478
+opened ({0} signs).	megnyitva ({0} tábla).
+# SignLink/UI/SignLinkWindow.cs:478
+opened.	megnyitva.
+# SignLink/UI/SignLinkWindow.cs:511
+{0} of SignLink signs within {1} m	{0}: SignLink-táblák {1} m-en belül
+# SignLink/UI/SignLinkWindow.cs:519
+{0} / {1} multiplayer area limit (over: only lighter content)	{0} / {1} többjátékos területi korlát (túllépve: csak kisebb tartalom mehet)
+# SignLink/UI/SignLinkWindow.cs:519
+{0} / {1} multiplayer area limit	{0} / {1} többjátékos területi korlát
+# SignLink/UI/SignLinkWindow.cs:520
+{0} / {1} area limit (over)	{0} / {1} területi korlát (túllépve)
+# SignLink/UI/SignLinkWindow.cs:520
+{0} / {1} area limit	{0} / {1} területi korlát
+# SignLink/UI/SignLinkWindow.cs:685
+Highlight off (Settings)	Kiemelés kikapcsolva (Beállítások)
+# SignLink/UI/SignLinkWindow.cs:735
+Could not: {0}	Nem sikerült: {0}
+# SignLink/UI/SignLinkWindow.cs:735
+Done: {0}	Kész: {0}
+# SignLink/UI/SignLinkWindow.cs:99
+the input blocker did not apply (a game update?)	a bemenetblokkoló nem kapcsolt be (játékfrissítés?)
+# SignLink/UI/SignWords.cs:13
+{0:0} m away	{0:0} m-re
+# SignLink/UI/Sources/ArtSource.cs:143
+{0}: {1} x {2} pixels, {3}, {4} frames at {5:0.#} fps	{0}: {1} x {2} pixel, {3}, {4} képkocka, {5:0.#} fps
+# SignLink/UI/Sources/ArtSource.cs:144
+{0}: {1} x {2} pixels on {3} stacked signs, {4}	{0}: {1} x {2} pixel {3} egymásra rakott táblán, {4}
+# SignLink/UI/Sources/ArtSource.cs:145
+{0}: {1} x {2} pixels, {3}	{0}: {1} x {2} pixel, {3}
+# SignLink/UI/Sources/ArtSource.cs:151
+{0}: glyph art on {1} stacked signs, {2}	{0}: betűrajz {1} egymásra rakott táblán, {2}
+# SignLink/UI/Sources/ArtSource.cs:152
+{0}: glyph art, {1}	{0}: betűrajz, {1}
+# SignLink/UI/Sources/ArtSource.cs:153
+{0}: no quick view on {1} stacked signs, {2}	{0}: nincs gyorsnézet, {1} egymásra rakott tábla, {2}
+# SignLink/UI/Sources/ArtSource.cs:154
+{0}: no quick view, {1}	{0}: nincs gyorsnézet, {1}
+# SignLink/UI/Sources/ArtSource.cs:161
+{0}: cannot read it: {1}	{0}: nem olvasható: {1}
+# SignLink/UI/Sources/ArtSource.cs:215
+{0}: reading ...	{0}: beolvasás ...
+# SignLink/UI/Sources/ArtSource.cs:262
+Art	Rajzok
+# SignLink/UI/Sources/ArtSource.cs:266
+Browse pieces	Rajzok böngészése
+# SignLink/UI/Sources/ArtSource.cs:272
+{0}   · on the sign	{0}   · a táblán
+# SignLink/UI/Sources/ArtSource.cs:277
+nothing here yet	még nincs itt semmi
+# SignLink/UI/Sources/ArtSource.cs:330
+Quick view	Gyorsnézet
+# SignLink/UI/Sources/ArtSource.cs:338
+Moving	Mozgás
+# SignLink/UI/Sources/ArtSource.cs:355
+Summary	Összegzés
+# SignLink/UI/Sources/ArtSource.cs:358
+Pixels	Pixelek
+# SignLink/UI/Sources/ArtSource.cs:358
+glyph art	betűrajz
+# SignLink/UI/Sources/ArtSource.cs:360
+Signs	Táblák
+# SignLink/UI/Sources/ArtSource.cs:360
+{0}, stacked	{0}, egymásra rakva
+# SignLink/UI/Sources/ArtSource.cs:363
+Frames	Képkockák
+# SignLink/UI/Sources/ArtSource.cs:363
+{0} at {1:0.#} fps, goes on still	{0}, {1:0.#} fps, állóképként kerül fel
+# SignLink/UI/Sources/ArtSource.cs:363
+{0} at {1:0.#} fps	{0}, {1:0.#} fps
+# SignLink/UI/Sources/ArtSource.cs:365
+Content size	Tartalom mérete
+# SignLink/UI/Sources/ArtSource.cs:417
+{0} (pixel art)	{0} (pixelrajz)
+# SignLink/UI/Sources/ArtSource.cs:417
+{0} (glyph art)	{0} (betűrajz)
+# SignLink/UI/Sources/ArtSource.cs:419
+animation	animáció
+# SignLink/UI/Sources/ArtSource.cs:419
+several signs	több tábla
+# SignLink/UI/Sources/ArtSource.cs:419
+one sign	egy tábla
+# SignLink/UI/Sources/ArtSource.cs:502
+Pick a piece above	Válassz fent egy rajzot
+# SignLink/UI/Sources/ArtSource.cs:502
+Reading the piece ...	A rajz beolvasása ...
+# SignLink/UI/Sources/ArtSource.cs:555
+Reading ...	Beolvasás ...
+# SignLink/UI/Sources/ArtSource.cs:556
+Fixed size	Rögzített méret
+# SignLink/UI/Sources/ArtSource.cs:560
+Goes on {0:0.##} m wide	{0:0.##} m szélesen kerül fel
+# SignLink/UI/Sources/ArtSource.cs:560
+Goes on at {0:0.#} %	{0:0.#}%-os méretben kerül fel
+# SignLink/UI/Sources/ArtSource.cs:634
+'{0}' is on the sign{1}, not moving.	'{0}' felkerült a táblára{1}, kikapcsolt mozgással.
+# SignLink/UI/Sources/ArtSource.cs:635
+'{0}' is on the sign{1}, moving.	'{0}' felkerült a táblára{1}, mozog.
+# SignLink/UI/Sources/ArtSource.cs:636
+'{0}' is on the sign{1}, still.	'{0}' felkerült a táblára{1}, állóképként.
+# SignLink/UI/Sources/ArtSource.cs:638
+'{0}' is on the sign{1} ({2} signs, {3}).	'{0}' felkerült a táblára{1} ({2} tábla, {3}).
+# SignLink/UI/Sources/ArtSource.cs:639
+'{0}' is on the sign{1} ({2}).	'{0}' felkerült a táblára{1} ({2}).
+# SignLink/UI/Sources/PictureSource.FromSign.cs:160
+no quick view: {0}	nincs gyorsnézet: {0}
+# SignLink/UI/Sources/PictureSource.Put.cs:153
+the picture or the sign changed while it was counted: press the button again	a kép vagy a tábla megváltozott számolás közben: nyomd meg újra a gombot
+# SignLink/UI/Sources/PictureSource.Put.cs:156
+counted, it is very large for every player who arrives: press the button again to decide	kiszámolva: minden érkező játékosnak nagyon nagy: nyomd meg újra a gombot, és dönts
+# SignLink/UI/Sources/PictureSource.Put.cs:179
+the file changed on disk since it was counted; it is read again: press the button once more	a fájl megváltozott a lemezen a számolás óta; újra beolvasom: nyomd meg még egyszer a gombot
+# SignLink/UI/Sources/PictureSource.Put.cs:227
+the sign's picture changed meanwhile; it is read again: press the button once more	a tábla képe közben megváltozott; újra beolvasom: nyomd meg még egyszer a gombot
+# SignLink/UI/Sources/PictureSource.Put.cs:26
+The sign's picture cannot be read back: {0}	A tábla képe nem olvasható vissza: {0}
+# SignLink/UI/Sources/PictureSource.Put.cs:27
+Reading the picture from the sign ...	A kép beolvasása a tábláról ...
+# SignLink/UI/Sources/PictureSource.Put.cs:28
+Working ...	Folyamatban ...
+# SignLink/UI/Sources/PictureSource.Put.cs:29
+These settings do not work: {0}	Ezekkel a beállításokkal nem megy: {0}
+# SignLink/UI/Sources/PictureSource.Put.cs:31
+Counting what it costs ...	Költség számolása ...
+# SignLink/UI/Sources/PictureSource.Put.cs:34
+Pick a picture above	Válassz fent egy képet
+# SignLink/UI/Sources/PictureSource.Put.cs:35
+Reading the folder ...	A mappa beolvasása ...
+# SignLink/UI/Sources/PictureSource.Put.cs:40
+Reading the picture ...	A kép beolvasása ...
+# SignLink/UI/Sources/PictureSource.Put.cs:67
+This picture ({0} x {1} pixels)	Ez a kép ({0} x {1} pixel)
+# SignLink/UI/Sources/PictureSource.Put.cs:81
+Lighter: lower the Resolution	Kevesebb adat: vedd lejjebb a Felbontást
+# SignLink/UI/Sources/PictureSource.Size.cs:184
+Height (same shape)	Magasság (arányosan)
+# SignLink/UI/Sources/PictureSource.Work.cs:150
+reading a large photo ...	nagy fotó beolvasása ...
+# SignLink/UI/Sources/PictureSource.Work.cs:150
+reading {0} ...	{0} beolvasása ...
+# SignLink/UI/Sources/PictureSource.Work.cs:167
+cannot read: {0}	nem olvasható: {0}
+# SignLink/UI/Sources/PictureSource.Work.cs:225
+drawing the quick view ...	gyorsnézet rajzolása ...
+# SignLink/UI/Sources/PictureSource.Work.cs:261
+the quick view is not this grid	a gyorsnézet nem ehhez a rácshoz tartozik
+# SignLink/UI/Sources/PictureSource.Work.cs:36
+moving	mozgó
+# SignLink/UI/Sources/PictureSource.cs:23
+cannot read: PNG, JPG or GIF only (convert HEIC or WebP first)	nem olvasható: csak PNG, JPG vagy GIF (a HEIC-et vagy WebP-t előbb alakítsd át)
+# SignLink/UI/Sources/PictureSource.cs:338
+{0} frames, a long GIF: one frame in {1} moves (the same speed, less smooth).	{0} képkocka, hosszú GIF: minden {1}. képkocka látszik (ugyanolyan gyors, kevésbé folyamatos).
+# SignLink/UI/Sources/PictureSource.cs:339
+{0} frames, all of them move.	{0} képkocka, mind látszik.
+# SignLink/UI/Sources/PictureSource.cs:436
+reading the picture from the sign ...	a kép beolvasása a tábláról ...
+# SignLink/UI/Sources/PictureSource.cs:436
+Loading {0} ...	{0} betöltése ...
+# SignLink/UI/Sources/PictureSource.cs:484
+Picture	Kép
+# SignLink/UI/Sources/PictureSource.cs:490
+Browse pictures	Képek böngészése
+# SignLink/UI/Sources/PictureSource.cs:494
+Reload	Frissítés
+# SignLink/UI/Sources/PictureSource.cs:495
+Open folder	Mappa megnyitása
+# SignLink/UI/Sources/PictureSource.cs:501
+No file here, unreadable: {0}	Nincs itt a fájl, olvashatatlan: {0}
+# SignLink/UI/Sources/PictureSource.cs:501
+No file here: read from the sign	Nincs itt a fájl: a tábláról beolvasva
+# SignLink/UI/Sources/PictureSource.cs:515
+No pictures in this folder	Nincs kép ebben a mappában
+# SignLink/UI/Sources/PictureSource.cs:515
+Empty: Open folder	Üres: Mappa megnyitása
+# SignLink/UI/Sources/PictureSource.cs:538
+up	fel
+# SignLink/UI/Sources/PictureSource.cs:538
+folder	mappa
+# SignLink/UI/Sources/PictureSource.cs:575
+Resolution	Felbontás
+# SignLink/UI/Sources/PictureSource.cs:593
+Multiplayer max: {0}	Többjátékos max.: {0}
+# SignLink/UI/Sources/PictureSource.cs:608
+Max for this size	Max. ehhez a mérethez
+# SignLink/UI/Sources/PictureSource.cs:622
+px wide	px széles
+# SignLink/UI/Sources/PictureSource.cs:625
+Multiplayer max: {0} px	Többjátékos max.: {0} px
+# SignLink/UI/Sources/PictureSource.cs:656
+Seamless pixels	Hézagmentes pixelek
+# SignLink/UI/Sources/PictureSource.cs:679
+One frame: it does not move.	Egy képkocka: nem mozog.
+# SignLink/UI/Sources/PictureSource.cs:683
+Too big to move: {0} MB of frames, at most {1} MB; a lower Resolution helps	Túl nagy a mozgáshoz: {0} MB képkocka, legfeljebb {1} MB; kisebb Felbontás segít
+# SignLink/UI/Sources/PictureSource.cs:685
+Still for now: other GIFs here hold {0} MB of {1} MB; it needs {2} MB	Egyelőre áll: a többi GIF itt {0} / {1} MB-ot foglal; ennek {2} MB kell
+# SignLink/UI/Sources/PictureSource.cs:701
+Native pixels	Eredeti pixelek
+# SignLink/UI/Sources/PictureSource.cs:702
+Resolution pixels	Felbontás pixelei
+# SignLink/UI/Sources/PictureSource.cs:704
+file is {0} px wide	a fájl {0} px széles
+# SignLink/UI/Sources/PictureSource.cs:706
+{0} k pixel limit	{0} ezer pixeles korlát
+# SignLink/UI/Sources/PictureSource.cs:707
+counting ...	számolás ...
+# SignLink/UI/Sources/PictureSource.cs:709
+Cost	Költség
+# SignLink/UI/Sources/PictureSource.cs:709
+error	hiba
+# SignLink/UI/Sources/PictureSource.cs:714
+See-through	Átlátszó
+# SignLink/UI/Sources/PictureSource.cs:714
+{0} pixels, free	{0} pixel, ingyenes
+# SignLink/UI/Sources/PictureSource.cs:715
+about {0} (counting ...)	kb. {0} (számolás ...)
+# SignLink/UI/Sources/PictureSource.cs:725
+Made with PNG transparency	PNG-átlátszósággal készült
+# SignLink/UI/Sources/PictureSource.cs:725
+Made without PNG transparency	PNG-átlátszóság nélkül készült
+# SignLink/UI/Sources/Source.cs:104
+This	Ez
+# SignLink/UI/Sources/Source.cs:122
+{0}. {1}	{0}. {1}
+# SignLink/UI/Sources/Source.cs:122
+{0}.	{0}.
+# SignLink/UI/Sources/Source.cs:163
+Select a sign first	Előbb jelölj ki egy táblát
+# SignLink/UI/Sources/Source.cs:163
+Locked	Zárolva
+# SignLink/UI/Sources/Source.cs:187
+{0} is over the {1} SignLink stores on one sign	{0}: több, mint a SignLink táblánkénti korlátja ({1})
+# SignLink/UI/Sources/Source.cs:188
+Multiplayer	Többjátékos
+# SignLink/UI/Sources/Source.cs:189
+fits the limits	belefér a korlátokba
+# SignLink/UI/Sources/Source.cs:192
+Arriving	Érkezéskor
+# SignLink/UI/Sources/Source.cs:192
+under 0.1 s download	0.1 s alatti letöltés
+# SignLink/UI/Sources/Source.cs:192
+{0:0.#} s download	{0:0.#} s letöltés
+# SignLink/UI/Sources/TextSource.cs:211
+Insert	Beszúrás
+# SignLink/UI/Sources/TextSource.cs:218
+Reset	Visszaállítás
+# SignLink/UI/Sources/TextSource.cs:229
+Clear	Ürítés
+# SignLink/UI/Sources/TextSource.cs:231
+Undo	Visszavonás
+# SignLink/UI/Sources/TextSource.cs:233
+Redo	Újra
+# SignLink/UI/Sources/TextSource.cs:252
+Holds a piece	Rajz van rajta
+# SignLink/UI/Sources/TextSource.cs:252
+Holds a piece (unreadable)	Rajz van rajta (olvashatatlan)
+# SignLink/UI/Sources/TextSource.cs:254
+{0} characters: too long	{0} karakter: túl hosszú
+# SignLink/UI/Sources/TextSource.cs:428
+Type a text above	Írj fent egy szöveget
+# SignLink/UI/Sources/TextSource.cs:430
+This text	Ez a szöveg
+# SignLink/UI/Sources/TextSource.cs:471
+the text is on the sign{0}.	a szöveg felkerült a táblára{0}.
+# SignLink/UI/Tabs/ContentTab.cs:159
+Calculating ...	Számolás ...
+# SignLink/UI/Tabs/ContentTab.cs:160
+Next ▸	Tovább ▸
+# SignLink/UI/Tabs/ContentTab.cs:168
+Preview: only you	Előnézet: csak te látod
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update sign and content	Tábla és tartalom frissítése
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update content	Tartalom frissítése
+# SignLink/UI/Tabs/ContentTab.cs:182
+Update sign	Tábla frissítése
+# SignLink/UI/Tabs/ContentTab.cs:208
+As it is	Nincs változás
+# SignLink/UI/Tabs/ContentTab.cs:225
+Put it on anyway	Mégis felrakom
+# SignLink/UI/Tabs/ContentTab.cs:295
+The sign cannot take this pose: {0}.	A tábla nem állhat így: {0}.
+# SignLink/UI/Tabs/ContentTab.cs:379
+now {0}.	mostantól {0}.
+# SignLink/UI/Tabs/ContentTab.cs:379
+back as made.	újra az eredeti állapotában.
+# SignLink/UI/Tabs/PlaceTab.cs:109
+Fixed place	Rögzített hely
+# SignLink/UI/Tabs/PlaceTab.cs:110
+Fixed size and place	Rögzített méret és hely
+# SignLink/UI/Tabs/PlaceTab.cs:136
+size	méret
+# SignLink/UI/Tabs/PlaceTab.cs:137
+place	hely
+# SignLink/UI/Tabs/PlaceTab.cs:138
+light	fény
+# SignLink/UI/Tabs/PlaceTab.cs:139
+settings	beállítások
+# SignLink/UI/Tabs/PlaceTab.cs:151
+{0} changed · only you see it	módosult: {0} · csak te látod
+# SignLink/UI/Tabs/PlaceTab.cs:151
+apply Sign first	előbb a Táblát alkalmazd
+# SignLink/UI/Tabs/PlaceTab.cs:152
+new item · the button below puts it on	új tartalom · a lenti gomb rakja fel
+# SignLink/UI/Tabs/PlaceTab.cs:160
+Apply content changes	Tartalomváltozások alkalmazása
+# SignLink/UI/Tabs/PlaceTab.cs:174
+to the middle	középre
+# SignLink/UI/Tabs/PlaceTab.cs:227
+Undo changes	Változások elvetése
+# SignLink/UI/Tabs/PlaceTab.cs:71
+Content	Tartalom
+# SignLink/UI/Tabs/PlaceTab.cs:74
+Positioning	Helyzet
+# SignLink/UI/Tabs/PlaceTab.cs:91
+Sign	Tábla
+# SignLink/UI/Tabs/PlaceTab.cs:94
+Rotations	Forgatás
+# SignLink/UI/Tabs/PlaceTab.cs:97
+Positioning fine-tune	Finom mozgatás
+# SignLink/UI/Tabs/PlayingTab.cs:108
+the GIF moves again, for every SignLink player who has its file.	a GIF újra mozog minden SignLinkes játékosnál, akinél megvan a fájlja.
+# SignLink/UI/Tabs/PlayingTab.cs:113
+the GIF moves no more, for anyone: its sign keeps the still picture, as players without SignLink see it.	a GIF senkinél sem mozog többé: a táblán az állókép marad, ahogy a SignLink nélküli játékosok is látják.
+# SignLink/UI/Tabs/PlayingTab.cs:139
+warded	Védőkő védi
+# SignLink/UI/Tabs/PlayingTab.cs:142
+Play	Lejátszás
+# SignLink/UI/Tabs/PlayingTab.cs:142
+Pause	Szünet
+# SignLink/UI/Tabs/PlayingTab.cs:170
+here only	csak nálad
+# SignLink/UI/Tabs/PlayingTab.cs:187
+Pause all GIFs	Összes GIF szüneteltetése
+# SignLink/UI/Tabs/PlayingTab.cs:187
+Play all GIFs	Összes GIF lejátszása
+# SignLink/UI/Tabs/PlayingTab.cs:187
+paused: frozen	szünetel: állókép
+# SignLink/UI/Tabs/PlayingTab.cs:19
+Playing	Lejátszás
+# SignLink/UI/Tabs/PlayingTab.cs:190
+None nearby	Nincs a közelben
+# SignLink/UI/Tabs/PlayingTab.cs:198
+paused the GIF: its still picture shows; Play moves it again.	a GIF szünetel: az állóképe látszik; a Lejátszás újra elindítja.
+# SignLink/UI/Tabs/PlayingTab.cs:198
+the GIF moves again.	a GIF újra mozog.
+# SignLink/UI/Tabs/PlayingTab.cs:199
+that GIF is gone.	az a GIF már nincs meg.
+# SignLink/UI/Tabs/PlayingTab.cs:212
+Glyph animations	Betűanimációk
+# SignLink/UI/Tabs/PlayingTab.cs:213
+Pause all glyph animations	Összes betűanimáció szüneteltetése
+# SignLink/UI/Tabs/PlayingTab.cs:213
+Play all glyph animations	Összes betűanimáció lejátszása
+# SignLink/UI/Tabs/PlayingTab.cs:213
+paused: first frame	szünetel: első képkocka
+# SignLink/UI/Tabs/PlayingTab.cs:216
+Paused	Szüneteltetve
+# SignLink/UI/Tabs/PlayingTab.cs:223
+paused: the sign shows its first frame here; Play moves it again.	szünetel: a tábla nálad az első képkockát mutatja; a Lejátszás újra elindítja.
+# SignLink/UI/Tabs/PlayingTab.cs:223
+the animation moves again.	az animáció újra mozog.
+# SignLink/UI/Tabs/PlayingTab.cs:23
+its sign is no longer loaded	a táblája már nincs betöltve
+# SignLink/UI/Tabs/PlayingTab.cs:68
+not moving	nem mozog
+# SignLink/UI/Tabs/PlayingTab.cs:68
+paused here (Play all)	nálad szünetel (Összes lejátszása)
+# SignLink/UI/Tabs/PlayingTab.cs:69
+not playing here	nálad nem fut
+# SignLink/UI/Tabs/PlayingTab.cs:83
+not moving here (no room: other GIFs play)	nálad nem mozog (nincs hely: más GIF-ek futnak)
+# SignLink/UI/Tabs/PlayingTab.cs:84
+not moving here (no file)	nálad nem mozog (nincs meg a fájl)
+# SignLink/UI/Tabs/PlayingTab.cs:85
+not moving here	nálad nem mozog
+# SignLink/UI/Tabs/PlayingTab.cs:85
+not moving here yet (starting)	nálad még nem mozog (indul)
+# SignLink/UI/Tabs/PlayingTab.cs:99
+that sign holds no GIF picture any more.	azon a táblán már nincs GIF-kép.
+# SignLink/UI/Tabs/SettingsTab.cs:118
+Settings	Beállítások
+# SignLink/UI/Tabs/SettingsTab.cs:136
+Window	Ablak
+# SignLink/UI/Tabs/SettingsTab.cs:145
+Language	Nyelv
+# SignLink/UI/Tabs/SettingsTab.cs:150
+Theme	Téma
+# SignLink/UI/Tabs/SettingsTab.cs:154
+Text size	Szövegméret
+# SignLink/UI/Tabs/SettingsTab.cs:175
+Window size	Ablakméret
+# SignLink/UI/Tabs/SettingsTab.cs:179
+Default size	Alapméret
+# SignLink/UI/Tabs/SettingsTab.cs:193
+Hotkey	Gyorsbillentyű
+# SignLink/UI/Tabs/SettingsTab.cs:195
+press a key ...	nyomj meg egy billentyűt ...
+# SignLink/UI/Tabs/SettingsTab.cs:195
+no key	nincs billentyű
+# SignLink/UI/Tabs/SettingsTab.cs:205
+Unbind	Billentyű törlése
+# SignLink/UI/Tabs/SettingsTab.cs:212
+Press a key · Esc keeps the old	Nyomj meg egy billentyűt · Esc: marad a régi
+# SignLink/UI/Tabs/SettingsTab.cs:216
+Sign options	Tábla-beállítások
+# SignLink/UI/Tabs/SettingsTab.cs:221
+Highlight signs	Táblák kiemelése
+# SignLink/UI/Tabs/SettingsTab.cs:226
+Highlight sign contents	Táblatartalom kiemelése
+# SignLink/UI/Tabs/SettingsTab.cs:230
+Pictures	Képek
+# SignLink/UI/Tabs/SettingsTab.cs:234
+PNG transparency	PNG-átlátszóság
+# SignLink/UI/Tabs/SettingsTab.cs:236
+Fine Width steps: exact sizes, your Resolution kept	Finom Szélesség-lépések: pontos méretek, a Felbontás marad
+# SignLink/UI/Tabs/SettingsTab.cs:241
+Playback	Lejátszás
+# SignLink/UI/Tabs/SettingsTab.cs:255
+Pause beyond	Megáll ezen túl
+# SignLink/UI/Tabs/SettingsTab.cs:263
+GIF memory	GIF-memória
+# SignLink/UI/Tabs/SettingsTab.cs:265
+RAM for moving GIFs; 1024 wants 16 GB	RAM a mozgó GIF-eknek; az 1024-hez 16 GB kell
+# SignLink/UI/Tabs/SettingsTab.cs:275
+Reset to defaults	Alapértékek visszaállítása
+# SignLink/UI/Tabs/SettingsTab.cs:275
+Sure? Click again	Biztos? Kattints újra
+# SignLink/UI/Tabs/SettingsTab.cs:284
+every setting is at its default already.	már minden beállítás alapértéken van.
+# SignLink/UI/Tabs/SettingsTab.cs:285
+1 setting back to the default.	1 beállítás visszaállt alapértékre.
+# SignLink/UI/Tabs/SettingsTab.cs:285
+{0} settings back to the default.	{0} beállítás visszaállt alapértékre.
+# SignLink/UI/Tabs/SettingsTab.cs:290
+About	Névjegy
+# SignLink/UI/Tabs/SettingsTab.cs:296
+Steps	Lépések
+# SignLink/UI/Tabs/SettingsTab.cs:299
+Open it	Megnyitás
+# SignLink/UI/Tabs/SettingsTab.cs:299
+no hotkey	nincs gyorsbillentyű
+# SignLink/UI/Tabs/SettingsTab.cs:300
+/signlink in the chat	/signlink a csetben
+# SignLink/UI/Tabs/SettingsTab.cs:301
+E on a picture sign	E egy képes táblán
+# SignLink/UI/Tabs/SettingsTab.cs:302
+Open in SignLink (sign editor)	Megnyitás a SignLinkben (táblaszerkesztő)
+# SignLink/UI/Tabs/SettingsTab.cs:304
+Fine-tune	Finomhangolás
+# SignLink/UI/Tabs/SettingsTab.cs:304
+Shift+wheel on a slider	Shift+görgő egy csúszkán
+# SignLink/UI/Tabs/SettingsTab.cs:305
+arrow keys (3 Place)	nyílbillentyűk (3 Elhelyezés)
+# SignLink/UI/Tabs/SettingsTab.cs:307
+Look around	Körülnézés
+# SignLink/UI/Tabs/SettingsTab.cs:307
+hold the right mouse button	jobb egérgomb nyomva tartva
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Graphics tip	Grafikai tipp
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Bloom off: sharper pictures	Bloom ki: élesebb képek
+# SignLink/UI/Tabs/SettingsTab.cs:92
+Classic	Klasszikus
+# SignLink/UI/Tabs/SettingsTab.cs:92
+Nordic	Északi
+# SignLink/UI/Tabs/SignTab.cs:105
+Actions	Műveletek
+# SignLink/UI/Tabs/SignTab.cs:123
+the sign is empty.	a tábla üres.
+# SignLink/UI/Tabs/SignTab.cs:123
+the sign is empty, and its {0} stacked copies are gone.	a tábla üres, és a rá rakott {0} további példány is eltűnt.
+# SignLink/UI/Tabs/SignTab.cs:127
+Clears the sign's content	Kiüríti a tábla tartalmát
+# SignLink/UI/Tabs/SignTab.cs:133
+Copy	Másolás
+# SignLink/UI/Tabs/SignTab.cs:138
+copied the moving piece: Paste puts it on another sign, moving.	a mozgó rajz kimásolva: a Beillesztés mozogva rakja egy másik táblára.
+# SignLink/UI/Tabs/SignTab.cs:139
+copied the picture ({0} signs): Paste puts it on another sign.	a kép kimásolva ({0} tábla): a Beillesztés egy másik táblára rakja.
+# SignLink/UI/Tabs/SignTab.cs:140
+copied the sign's text: Paste puts it on another sign.	a tábla szövege kimásolva: a Beillesztés egy másik táblára rakja.
+# SignLink/UI/Tabs/SignTab.cs:143
+Copies all it holds, moving art and GIFs too	Mindent másol, a mozgó rajzokat és a GIF-eket is
+# SignLink/UI/Tabs/SignTab.cs:150
+Paste	Beillesztés
+# SignLink/UI/Tabs/SignTab.cs:156
+the clipboard holds no text (Copy a sign first)	a vágólapon nincs szöveg (előbb másolj ki egy táblát)
+# SignLink/UI/Tabs/SignTab.cs:159
+the moving piece is on the sign.	a mozgó rajz felkerült a táblára.
+# SignLink/UI/Tabs/SignTab.cs:160
+the piece is on the sign, not moving (Playing › Moving starts it).	a rajz felkerült a táblára, de nem mozog (Lejátszás › Mozgás indítja el).
+# SignLink/UI/Tabs/SignTab.cs:161
+a picture over {0} signs is on the sign.	{0} táblás kép felkerült a táblára.
+# SignLink/UI/Tabs/SignTab.cs:161
+the text is on the sign.	a szöveg felkerült a táblára.
+# SignLink/UI/Tabs/SignTab.cs:164
+Pastes a copied sign's content onto this sign	Egy kimásolt tábla tartalmát rakja erre a táblára
+# SignLink/UI/Tabs/SignTab.cs:171
+Delete	Törlés
+# SignLink/UI/Tabs/SignTab.cs:176
+the sign is gone: select it again	a tábla eltűnt: jelöld ki újra
+# SignLink/UI/Tabs/SignTab.cs:179
+signs here cannot be removed: a place where nothing may be built or removed	itt nem bonthatók le táblák: ezen a helyen semmit sem lehet építeni vagy bontani
+# SignLink/UI/Tabs/SignTab.cs:182
+nothing was deleted: a ward you have no access to protects the sign	semmi sem törlődött: a táblát egy Védőkő védi, amihez nincs hozzáférésed
+# SignLink/UI/Tabs/SignTab.cs:183
+deleted the sign and the {0} copies stacked on it (nothing drops).	a tábla és a rá rakott {0} példány törölve (nem esik ki belőlük semmi).
+# SignLink/UI/Tabs/SignTab.cs:183
+deleted the sign (nothing drops).	a tábla törölve (nem esik ki belőle semmi).
+# SignLink/UI/Tabs/SignTab.cs:186
+Deletes the sign completely	Teljesen törli a táblát
+# SignLink/UI/Tabs/SignTab.cs:202
+the game hides this sign's content here (a blocked or muted author, or user content off)	a játék itt elrejti a tábla tartalmát (letiltott vagy némított szerző, vagy kikapcsolt felhasználói tartalom)
+# SignLink/UI/Tabs/SignTab.cs:31
+What the sign holds	Mi van a táblán
+# SignLink/UI/Tabs/SignTab.cs:49
+Holds	Tartalom
+# SignLink/UI/Tabs/SignTab.cs:49
+nothing	semmi
+# SignLink/UI/Tabs/SignTab.cs:50
+a picture or glyph art	kép vagy betűrajz
+# SignLink/UI/Tabs/SignTab.cs:50
+text or a small picture	szöveg vagy kis kép
+# SignLink/UI/Tabs/SignTab.cs:51
+Made with	Készítő
+# SignLink/UI/Tabs/SignTab.cs:54
+Fit	Elhelyezés
+# SignLink/UI/Tabs/SignTab.cs:61
+too big: {0} on a sign	túl nagy: {0} egy táblán
+# SignLink/UI/Tabs/SignTab.cs:62
+over {0}	{0} fölött
+# SignLink/UI/Tabs/SignTab.cs:62
+fits	belefér
+# SignLink/UI/Tabs/SignTab.cs:65
+Animation	Animáció
+# SignLink/UI/Tabs/SignTab.cs:65
+{0} frames, {1:0.#} fps	{0} képkocka, {1:0.#} fps
+# SignLink/UI/Tabs/SignTab.cs:98
+as made	ahogy készült
+# SignLink/UI/TemplateRows.cs:107
+Width	Szélesség
+# SignLink/UI/TemplateRows.cs:108
+Height	Magasság
+# SignLink/UI/TemplateRows.cs:109
+Colour	Szín
+# SignLink/UI/TemplateRows.cs:114
+Text	Szöveg
+# SignLink/UI/TemplateRows.cs:117
+Letter height	Betűmagasság
+# SignLink/UI/TemplateRows.cs:125
+Glyph	Karakter
+# SignLink/UI/TemplateRows.cs:128
+Columns	Oszlopok
+# SignLink/UI/TemplateRows.cs:129
+Rows	Sorok
+# SignLink/UI/TemplateRows.cs:130
+Cell	Cella
+# SignLink/UI/TemplateRows.cs:131
+Colour A	A szín
+# SignLink/UI/TemplateRows.cs:132
+Colour B	B szín
+# SignLink/UI/TemplateRows.cs:133
+Chessboard	Sakktábla
+# SignLink/UI/TemplateRows.cs:152
+Pick a template	Válassz sablont
+# SignLink/UI/TemplateRows.cs:153
+Pick a symbol	Válassz szimbólumot
+# SignLink/UI/TemplateRows.cs:168
+Too long: {0:0.#} k characters, {1:0.#} k left	Túl hosszú: {0:0.#} ezer karakter, {1:0.#} ezer fér még
+# SignLink/UI/TemplateRows.cs:17
+Block	Blokk
+# SignLink/UI/TemplateRows.cs:17
+Label	Felirat
+# SignLink/UI/TemplateRows.cs:17
+Symbol	Szimbólum
+# SignLink/UI/TemplateRows.cs:17
+Pattern	Minta
+# SignLink/UI/TemplateRows.cs:17
+QR	QR
+# SignLink/UI/TemplateRows.cs:178
+Link or text	Link vagy szöveg
+# SignLink/UI/TemplateRows.cs:181
+Error correction	Hibajavítás
+# SignLink/UI/TemplateRows.cs:183
+Size	Méret
+# SignLink/UI/TemplateRows.cs:184
+qr colour|Dark	Sötét
+# SignLink/UI/TemplateRows.cs:185
+qr colour|Light	Világos
+# SignLink/UI/TemplateRows.cs:194
+Making the code ...	Kód készítése ...
+# SignLink/UI/TemplateRows.cs:202
+Palette	Paletta
+# SignLink/UI/TemplateRows.cs:216
+Pick one	Válassz egyet
+# SignLink/UI/TemplateRows.cs:218
+Rotate	Forgatás
+# SignLink/UI/TemplateRows.cs:219
+Mirror (flip left to right)	Tükrözés (balról jobbra)
+# SignLink/UI/TemplateRows.cs:255
+Opacity	Átlátszatlanság
+# SignLink/UI/TemplateRows.cs:292
+a {0:0.##} x {1:0.##} m block, {2}{3}, in the sign's middle	{0:0.##} x {1:0.##} m-es blokk, {2}{3}, a tábla közepén
+# SignLink/UI/TemplateRows.cs:293
+'{0}' with {1:0} cm capitals, {2}{3}, in the middle	'{0}' {1:0} cm-es nagybetűkkel, {2}{3}, középen
+# SignLink/UI/TemplateRows.cs:294
+{0} {1:0} cm tall	{0} {1:0} cm magas
+# SignLink/UI/TemplateRows.cs:295
+rotated {0:0}°	{0:0}°-kal elforgatva
+# SignLink/UI/TemplateRows.cs:295
+mirrored	tükrözve
+# SignLink/UI/TemplateRows.cs:297
+{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5} and {6}{7}	{0} x {1} darab {2:0} cm-es cella ({3:0.##} x {4:0.##} m), {5} és {6}{7}
+# SignLink/UI/TemplateRows.cs:298
+{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5}{6}	{0} x {1} darab {2:0} cm-es cella ({3:0.##} x {4:0.##} m), {5}{6}
+# SignLink/UI/TemplateRows.cs:68
+Type a link	Írj be egy linket
+# SignLink/UI/TemplateRows.cs:76
+{0} x {0}, version {1}, {2:0.#} k characters	{0} x {0}, {1}. verzió, {2:0.#} ezer karakter
+# SignLink/UI/TemplateRows.cs:90
+Templates	Sablonok
+# SignLink/UI/Thumb.cs:52
+no quick view: {0} x {1} pixels is too big to show	nincs gyorsnézet: {0} x {1} pixel túl nagy a megjelenítéshez

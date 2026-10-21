@@ -28,7 +28,7 @@ namespace SignLink.Pictures
         public static readonly Font Norsebold = new Font("norsebold", 0.9199999999999999, -0.18000000000000002, 0.0);
 
         /// <summary>The Symbol palette's groups, in the order shown.</summary>
-        public static readonly string[] GroupNames = { "Arrows", "Shapes", "Frames", "Runes", "Symbols", "Emoji" };
+        public static readonly string[] GroupNames = { "Arrows", "Shapes", "Frames", "Runes", "Symbols", "Emoji" };   // lang:keys palette
         public static readonly string[][] Groups =
         {
             new[] { "←", "↑", "→", "↓", "↔", "↕", "⇦", "⇧", "⇨", "⇩", "⬅", "⬆", "⬇" },

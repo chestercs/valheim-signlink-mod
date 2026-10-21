@@ -14,7 +14,8 @@ namespace SignLink.UI
     /// truth, and 3 Place moves it as a whole.</summary>
     internal sealed class TemplateRows
     {
-        static readonly string[] Names = { "Block", "Label", "Symbol", "Pattern", "QR" };
+        static readonly ChoiceNames Names = new ChoiceNames("Block", "Label", "Symbol", "Pattern", "QR");   // lang:keys
+        static readonly ChoiceNames Groups = ChoiceNames.In("palette", GlyphData.GroupNames);   // "Frames": the box glyphs, not an animation's
         /// <summary>White, the sign's own dark brown, red, orange, yellow, green, cyan, blue, purple, pink, brown, grey.</summary>
         static readonly int[] Swatches = { 0xFFFFFF, 0x1E1A12, 0xD92B2B, 0xF08A24, 0xF2D43D, 0x4CAF50, 0x2BB5C9, 0x2F6FD9,
                                            0x8E44AD, 0xE86FA6, 0x8B5A2B, 0x8A8A8A };
@@ -57,14 +58,14 @@ namespace SignLink.UI
 
         void MakeQr()
         {
-            string key = $"{qrText}|{qrLevel}|{qrM}|{qrDark.Rgb}|{qrLight.Rgb}";
+            string key = $"{qrText}|{qrLevel}|{qrM}|{qrDark.Rgb}|{qrLight.Rgb}|{Lang.Current}";   // its words in the language in use
             if (key == qrFor) return;
             qrFor = key;
             qrLines = null;
             qrWhy = null;
             if (qrText.Length == 0)
             {
-                qrWhy = "Type a link";
+                qrWhy = Lang.T("Type a link");
                 return;
             }
             try
@@ -72,7 +73,7 @@ namespace SignLink.UI
                 QrCode q = QrCode.Encode(qrText, (QrCode.Ecc)qrLevel);
                 qrLines = Snippets.Qr(q.Modules, qrM, qrDark.Rgb, qrLight.Rgb);
                 qrChars = Snippets.Compose(qrLines).Length;
-                qrWhat = $"{q.Size} x {q.Size}, version {q.Version}, {qrChars / 1000.0:0.#} k characters";
+                qrWhat = Lang.F("{0} x {0}, version {1}, {2:0.#} k characters", q.Size, q.Version, qrChars / 1000.0);
             }
             catch (ArgumentException e)
             {
@@ -86,11 +87,12 @@ namespace SignLink.UI
         {
             using (Widgets.Horizontal())
             {
-                GUILayout.Label("Templates", Theme.Label, Widgets.W(Widgets.LabelW));
-                float each = Widgets.RestW / Names.Length;
-                for (int i = 0; i < Names.Length; i++)                      // toggles, so the lit one closes on a click
+                GUILayout.Label(Lang.T("Templates"), Theme.Label, Widgets.W(Widgets.LabelW));
+                string[] names = Names.Shown;
+                float each = Widgets.RestW / names.Length;
+                for (int i = 0; i < names.Length; i++)                     // toggles, so the lit one closes on a click
                 {
-                    bool on = Widgets.Toggle(picked == i, Names[i], Theme.Chip, Widgets.W(each));   // small (0.20.85)
+                    bool on = Widgets.Toggle(picked == i, names[i], Theme.Chip, Widgets.W(each));   // small (0.20.85)
                     int pick = i;
                     if (on != (picked == i)) w.Later(() => picked = picked == pick ? -1 : pick);   // the rows change: at a Layout
                 }
@@ -102,33 +104,33 @@ namespace SignLink.UI
                 switch (picked)
                 {
                     case 0:
-                        wM = Widgets.Number("tpl.w", "Width", wM, 0.05f, 30f, 0.05f, "m");
-                        hM = Widgets.Number("tpl.h", "Height", hM, 0.05f, 30f, 0.05f, "m");
-                        ColourRows(w, "Colour", a, "tpl.a");
+                        wM = Widgets.Number("tpl.w", Lang.T("Width"), wM, 0.05f, 30f, 0.05f, "m");
+                        hM = Widgets.Number("tpl.h", Lang.T("Height"), hM, 0.05f, 30f, 0.05f, "m");
+                        ColourRows(w, Lang.T("Colour"), a, "tpl.a");
                         break;
                     case 1:
                         using (Widgets.Horizontal())
                         {
-                            GUILayout.Label("Text", Theme.Label, Widgets.W(Widgets.LabelW));
+                            GUILayout.Label(Lang.T("Text"), Theme.Label, Widgets.W(Widgets.LabelW));
                             label = GUILayout.TextField(label, 200, Theme.Field, Widgets.W(Widgets.RestW));
                         }
-                        letterM = Widgets.Number("tpl.letter", "Letter height", letterM, 0.05f, 10f, 0.05f, "m");
-                        ColourRows(w, "Colour", a, "tpl.a");
+                        letterM = Widgets.Number("tpl.letter", Lang.T("Letter height"), letterM, 0.05f, 10f, 0.05f, "m");
+                        ColourRows(w, Lang.T("Colour"), a, "tpl.a");
                         break;
                     case 2:
                         SymbolRows(w);
                         break;
                     case 3:
                         {
-                            int g = Widgets.Choice("Glyph", patternGlyph, GlyphData.PatternGlyphs);
+                            int g = Widgets.Choice(Lang.T("Glyph"), patternGlyph, GlyphData.PatternGlyphs);
                             if (g != patternGlyph) w.Later(() => patternGlyph = g);
                         }
-                        cols = (int)Widgets.Number("tpl.cols", "Columns", cols, 1f, MaxCells, 1f, "", "0");
-                        rows = (int)Widgets.Number("tpl.rows", "Rows", rows, 1f, MaxCells, 1f, "", "0");
-                        cellCm = Widgets.Number("tpl.cell", "Cell", cellCm, 2f, 200f, 1f, "cm", "0");
-                        ColourRows(w, "Colour A", a, "tpl.a");
-                        ColourRows(w, "Colour B", b, "tpl.b");
-                        alternate = Widgets.Check(alternate, "Chessboard");
+                        cols = (int)Widgets.Number("tpl.cols", Lang.T("Columns"), cols, 1f, MaxCells, 1f, "", "0");
+                        rows = (int)Widgets.Number("tpl.rows", Lang.T("Rows"), rows, 1f, MaxCells, 1f, "", "0");
+                        cellCm = Widgets.Number("tpl.cell", Lang.T("Cell"), cellCm, 2f, 200f, 1f, "cm", "0");
+                        ColourRows(w, Lang.T("Colour A"), a, "tpl.a");
+                        ColourRows(w, Lang.T("Colour B"), b, "tpl.b");
+                        alternate = Widgets.Check(alternate, Lang.T("Chessboard"));
                         break;
                     case 4:
                         QrRows(w);
@@ -147,8 +149,8 @@ namespace SignLink.UI
         /// problem (QrProblem).</summary>
         public string Problem(int room)
         {
-            if (picked < 0) return "Pick a template";
-            if (picked == 2 && GlyphData.Find(symbol) == null) return "Pick a symbol";
+            if (picked < 0) return Lang.T("Pick a template");
+            if (picked == 2 && GlyphData.Find(symbol) == null) return Lang.T("Pick a symbol");
             return picked == 4 ? QrProblem(room) : TooLong(room);
         }
 
@@ -163,7 +165,7 @@ namespace SignLink.UI
                 List<Snippets.Line> lines = Lines();
                 longChars = lines == null ? 0 : Snippets.Compose(lines).Length;
             }
-            return longChars > room ? $"Too long: {longChars / 1000.0:0.#} k characters, {Math.Max(0, room) / 1000.0:0.#} k left" : null;
+            return longChars > room ? Lang.F("Too long: {0:0.#} k characters, {1:0.#} k left", longChars / 1000.0, Math.Max(0, room) / 1000.0) : null;
         }
         string longFor;
         int longChars;
@@ -173,14 +175,14 @@ namespace SignLink.UI
         {
             using (Widgets.Horizontal())
             {
-                GUILayout.Label("Link or text", Theme.Label, Widgets.W(Widgets.LabelW));
+                GUILayout.Label(Lang.T("Link or text"), Theme.Label, Widgets.W(Widgets.LabelW));
                 qrText = GUILayout.TextField(qrText, 1000, Theme.Field, Widgets.W(Widgets.RestW));
             }
-            int l = Widgets.Choice("Error correction", qrLevel, Levels);
+            int l = Widgets.Choice(Lang.T("Error correction"), qrLevel, Levels);
             if (l != qrLevel) w.Later(() => qrLevel = l);
-            qrM = Widgets.Number("tpl.qr", "Size", qrM, 0.2f, 10f, 0.05f, "m");
-            ColourRows(w, "Dark", qrDark, "tpl.qrdark", opacity: false);
-            ColourRows(w, "Light", qrLight, "tpl.qrlight", opacity: false);
+            qrM = Widgets.Number("tpl.qr", Lang.T("Size"), qrM, 0.2f, 10f, 0.05f, "m");
+            ColourRows(w, Lang.C("qr colour", "Dark"), qrDark, "tpl.qrdark", opacity: false);
+            ColourRows(w, Lang.C("qr colour", "Light"), qrLight, "tpl.qrlight", opacity: false);
             if (Event.current.type == EventType.Layout) MakeQr();
         }
 
@@ -189,15 +191,15 @@ namespace SignLink.UI
         string QrProblem(int room)
         {
             if (qrWhy != null) return qrWhy;
-            if (qrLines == null) return "Making the code ...";
+            if (qrLines == null) return Lang.T("Making the code ...");
             if (qrChars > room)
-                return $"Too long: {qrChars / 1000.0:0.#} k characters, {Math.Max(0, room) / 1000.0:0.#} k left";
+                return Lang.F("Too long: {0:0.#} k characters, {1:0.#} k left", qrChars / 1000.0, Math.Max(0, room) / 1000.0);
             return null;
         }
 
         void SymbolRows(SignLinkWindow w)
         {
-            int g = Widgets.Choice("Palette", group, GlyphData.GroupNames);
+            int g = Widgets.Choice(Lang.T("Palette"), group, Groups.Shown);
             if (g != group) w.Later(() => group = g);
             string[] glyphs = GlyphData.Groups[Mathf.Clamp(group, 0, GlyphData.Groups.Length - 1)];
             for (int i = 0; i < glyphs.Length; i += PerRow)
@@ -211,11 +213,11 @@ namespace SignLink.UI
                     }
                 }
             GlyphData.Glyph found = GlyphData.Find(symbol);
-            Widgets.Hint(found != null ? $"{symbol}  {found.Name}" : "Pick one");
-            symbolM = Widgets.Number("tpl.symbol", "Size", symbolM, 0.05f, 30f, 0.05f, "m");
-            rotate = Widgets.Number("tpl.rotate", "Rotate", rotate, -180f, 180f, 15f, "°", "0");
-            mirror = Widgets.Check(mirror, "Mirror (flip left to right)");
-            ColourRows(w, "Colour", a, "tpl.a");
+            Widgets.Hint(found != null ? $"{symbol}  {found.Name}" : Lang.T("Pick one"));
+            symbolM = Widgets.Number("tpl.symbol", Lang.T("Size"), symbolM, 0.05f, 30f, 0.05f, "m");
+            rotate = Widgets.Number("tpl.rotate", Lang.T("Rotate"), rotate, -180f, 180f, 15f, "°", "0");
+            mirror = Widgets.Check(mirror, Lang.T("Mirror (flip left to right)"));
+            ColourRows(w, Lang.T("Colour"), a, "tpl.a");
         }
 
         /// <summary>The swatches, a hex field and the opacity of one colour.</summary>
@@ -250,7 +252,7 @@ namespace SignLink.UI
                     if (TryHex(typed, out int v)) c.Rgb = v;
                 }
             }
-            if (opacity) c.Alpha = Widgets.Number(key + ".alpha", "Opacity", c.Alpha, 10f, 100f, 5f, "%", "0");
+            if (opacity) c.Alpha = Widgets.Number(key + ".alpha", Lang.T("Opacity"), c.Alpha, 10f, 100f, 5f, "%", "0");
         }
 
         static Color Of(int rgb) => new Color(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f, 1f);
@@ -287,11 +289,13 @@ namespace SignLink.UI
             string op = a.Alpha < 99.5f ? $", {a.Alpha:0} %" : "";
             switch (picked)
             {
-                case 0: return $"a {wM:0.##} x {hM:0.##} m block, {Hex(a.Rgb)}{op}, in the sign's middle";
-                case 1: return $"'{label}' with {letterM * 100:0} cm capitals, {Hex(a.Rgb)}{op}, in the middle";
-                case 2: return $"{symbol} {symbolM * 100:0} cm tall, {Hex(a.Rgb)}{op}{(rotate != 0 ? $", rotated {rotate:0}°" : "")}{(mirror ? ", mirrored" : "")}";
-                case 3: return $"{cols} x {rows} cells of {cellCm:0} cm ({cols * cellCm / 100:0.##} x {rows * cellCm / 100:0.##} m), {Hex(a.Rgb)}" +
-                               (alternate ? $" and {Hex(b.Rgb)}" : "") + op;
+                case 0: return Lang.F("a {0:0.##} x {1:0.##} m block, {2}{3}, in the sign's middle", wM, hM, Hex(a.Rgb), op);
+                case 1: return Lang.F("'{0}' with {1:0} cm capitals, {2}{3}, in the middle", label, letterM * 100, Hex(a.Rgb), op);
+                case 2: return Lang.F("{0} {1:0} cm tall", symbol, symbolM * 100) + Lang.Comma + Hex(a.Rgb) + op +   // a list: each part a phrase
+                               (rotate != 0 ? Lang.Comma + Lang.F("rotated {0:0}°", rotate) : "") + (mirror ? Lang.Comma + Lang.T("mirrored") : "");
+                case 3: return alternate
+                    ? Lang.F("{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5} and {6}{7}", cols, rows, cellCm, cols * cellCm / 100, rows * cellCm / 100, Hex(a.Rgb), Hex(b.Rgb), op)
+                    : Lang.F("{0} x {1} cells of {2:0} cm ({3:0.##} x {4:0.##} m), {5}{6}", cols, rows, cellCm, cols * cellCm / 100, rows * cellCm / 100, Hex(a.Rgb), op);
                 case 4: return qrWhat;
                 default: return "";
             }

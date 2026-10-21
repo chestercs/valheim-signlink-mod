@@ -98,7 +98,7 @@ def main() -> int:
         w(f"        public static readonly Font {fn.capitalize()} = new Font({cs_str(fn)}, {fd['A']!r}, {fd['D']!r}, {fd['bold']!r});")
     w("")
     w("        /// <summary>The Symbol palette's groups, in the order shown.</summary>")
-    w("        public static readonly string[] GroupNames = { " + ", ".join(cs_str(n) for n, _ in groups_out) + " };")
+    w("        public static readonly string[] GroupNames = { " + ", ".join(cs_str(n) for n, _ in groups_out) + " };   // lang:keys")
     w("        public static readonly string[][] Groups =")
     w("        {")
     for name, have in groups_out:

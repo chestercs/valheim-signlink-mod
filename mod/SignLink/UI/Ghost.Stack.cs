@@ -51,7 +51,7 @@ namespace SignLink.UI
         /// the first sign's plane, in front of the frontmost band, with the top mark, and the board's outline, at the
         /// sign's own pose. Built like the selection's frame (0.20.21 dropped the board from this one and the author lost
         /// track of which rectangle was which): the content green and red in both, the board neon lime when selected and
-        /// cool white under the cursor (Pick in view, a row of Signs nearby), so a click's target shows before the click.
+        /// cool white under the cursor (Select sign, a row of Signs nearby), so a click's target shows before the click.
         /// An empty sign gets its board alone.</summary>
         public void ShowStack(Sign target, Sign host, List<Sign> stack)
         {
@@ -63,11 +63,14 @@ namespace SignLink.UI
             // the first sign's data revision too (0.20.90, review): a stack put on again or refit by another player keeps its
             // place, and Show all kept the frame of what it held before
             Transform screen = Plugin.Screens.ScreenOver(stack);            // a moving GIF's screen (0.20.116)
+            // the two switches as for the selection (1.1.0, the author): the board's outline Highlight signs', the content's
+            // frame Highlight sign contents'; Show all and the hover alike
+            bool boardOn = PluginConfig.Highlight.Value, contentOn = PluginConfig.HighlightContent.Value;
             ZDO tz = SignFinder.Zdo(target);
             var inputs = new Inputs
             {
                 Stack = true, Count = stack.Count, Position = target.transform.position, Rotation = target.transform.rotation,
-                HasRevision = tz != null, Revision = tz != null ? tz.DataRevision : 0u, Content = PluginConfig.HighlightContent.Value, Screen = screen != null,
+                HasRevision = tz != null, Revision = tz != null ? tz.DataRevision : 0u, Content = contentOn, Screen = screen != null, Board = boardOn,
             };
             inputs.Target = Uid(target, out inputs.HasTarget);
             inputs.Host = Uid(host, out inputs.HasHost);
@@ -78,7 +81,7 @@ namespace SignLink.UI
                 return;
             }
             string key = $"stack|{SignFinder.Id(target)}|{SignFinder.Id(host)}|{stack.Count}|{target.transform.position}|{target.transform.rotation}|" +
-                         $"{SignFinder.Zdo(target)?.DataRevision}|{PluginConfig.HighlightContent.Value}|{screen != null}";
+                         $"{SignFinder.Zdo(target)?.DataRevision}|{contentOn}|{screen != null}|{boardOn}";
             shownInputs = inputs;                                           // what the key below is made of
             if (key == shownKey && root && ReferenceEquals(sign, target))
             {
@@ -151,10 +154,10 @@ namespace SignLink.UI
                 if (front == float.MinValue) front = pc.z;                 // no text measured: the first sign's text plane
                 texts = true;
             }
-            bool has = maxX > minX && maxY > minY && PluginConfig.HighlightContent.Value;   // the content's frame: a setting of its own
+            bool has = maxX > minX && maxY > minY && contentOn;              // the content's frame: a setting of its own
             // text the game has not laid out yet (a sign that just loaded): measured again at the next look, not kept as
             // a frame without its content (0.20.90, review)
-            if (!has && texts && PluginConfig.HighlightContent.Value) shownKey = null;
+            if (!has && texts && contentOn) shownKey = null;
             if (stale) shownKey = null;                                     // a sign's text not laid out as its data says yet: measured again
             Vector3 centre = has ? new Vector3((minX + maxX) / 2, (minY + maxY) / 2, front + OnText) : Vector3.zero;
             float w = has ? maxX - minX : 0f, h = has ? maxY - minY : 0f;
@@ -165,7 +168,7 @@ namespace SignLink.UI
             Place(edge[2], centre - Vector3.right * (w / 2), Vector3.up, Thick, h, has);
             Place(edge[3], centre + Vector3.right * (w / 2), Vector3.up, Thick, h, has);
             Place(mark, centre + Vector3.up * (h / 2 + 0.03f), Vector3.up, 0.12f, 0.02f, has);   // the same frame as the selection's
-            PlaceBoard(target);                                              // the board's outline too, as the selection's: one language
+            PlaceBoard(target, boardOn);                                     // the board's outline too, as the selection's: one language
             root.SetActive(true);
             Side();
         }

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace SignLink.Patches
 {
     /// <summary>Times the game's work on a sign that SignLink cannot see from outside: its hover text (every frame the
-    /// crosshair is on it) and its text refresh (every 2 s, Sign.UpdateText). Only while 9 - Developer API / LogSlowSigns
+    /// crosshair is on it) and its text refresh (every 2 s, Sign.UpdateText). Only while 9 - Diagnostics / LogSlowSigns
     /// is on: it is a diagnostic, not a warning (a big picture takes seconds to build on every visitor's game by
     /// design). Anything over 30 ms goes to the log at Info with the sign, how much text it holds and whether SignLink's
     /// own hover line handled it (the measurement wraps SignLink's prefix too), at most every 10 s. No object per call

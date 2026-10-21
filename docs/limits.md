@@ -50,7 +50,7 @@ picture into bands of whole rows, each under 400 KB, and puts every band on its 
 clones the sign at the same rotation, 0.5 mm further along its normal each. All bands are drawn in one plane,
 with no parallax and no seam. In game:
 - the Starry Night at 499 x 395 = 197 105 pixels, 12.5 x 9.9 m, on 7 signs;
-- the GIF's first frame at its native 360 x 640 = 230 400 pixels, 6.75 x 12 m, on 7 signs.
+- a test GIF's first frame at its native 360 x 640 = 230 400 pixels, 6.75 x 12 m, on 7 signs.
 
 The pictures are ordinary sign text, saved in the world, so they need no mod to be seen.
 
@@ -71,8 +71,16 @@ The pictures are ordinary sign text, saved in the world, so they need no mod to 
 put three very large pictures (the red level of 0.20.30) on their own dedicated server; after logging in next to
 them their base did not show for about 2 minutes, until the pictures had arrived. It is the same for vanilla
 players and on every login; within one session a sign that did not change is not sent again
-(`ZDOPeer.ShouldSend`). Single player has no download. SignLink 0.20.31 counts the wait as download plus build
-(`SaveCost.WaitSeconds`, red above 10 s); on a server the area limit is 600 KB for SignLink signs within 100 m (`SaveCost.AreaLimit`).
+(`ZDOPeer.ShouldSend`). Single player has no download.
+
+SignLink counts an arriving player's wait as the download alone (`SaveCost.DownloadSeconds`, at 150 KB/s; yellow above
+3 s, red above 10 s). The mesh build on the player's computer is left out: it depends on that computer, and within the
+multiplayer limits it stays under half a second. The multiplayer limits (`SaveCost.SignLimit`, `AreaLimit`) are 300 KB
+for one SignLink sign stack and 600 KB for all SignLink signs within 100 m together; vanilla signs do not count. The
+window shows the area bar only in multiplayer. The limits are checked when content is written in a shared world
+(`SignText.Shared`): a world built in single player can hold bigger signs (over 512 KiB on one sign, or over the area
+limit), and if such a world is later moved to a dedicated server, arriving players wait for those signs, and a sign
+over 512 KiB cannot be sent at all.
 
 **Opacity.** Pixel glyphs only a few screen pixels wide are drawn half transparent: the SDF shader's edge
 ramp covers the whole glyph, and the Starry Night looked see-through from a distance. With `--cover 2`
@@ -96,14 +104,14 @@ Unverified in game.
 | `<#rgba>`, `<#rrggbbaa>` | plus 16 / 256 alpha levels | 7 / 11 |
 
 The unlit font path (`<font=valheim_fonts/valheim-norse>`) shows the colours as written. Without it,
-the scene light shades them. SignLink writes it by default and leaves it out when *Glowing pixels* is off
-(`vanilla_hq.bands(font=None)`, `PixelText.ColumnText(glow: false)`): the ■ comes from NotoSansJP either way, so the
+the scene light shades them. SignLink writes it by default (*Light*: *Glowing*) and leaves it out for *Lit by the
+scene* (`vanilla_hq.bands(font=None)`, `PixelText.ColumnText(glow: false)`): the ■ comes from NotoSansJP either way, so the
 picture should sit in the same place (unverified in game). A colour tag is written only when the colour changes, so
 flat pixel art is cheaper than dithered pictures.
 
 **Size in the world save.** Sign objects are saved in the `.chunk` files, which are not compressed: a sign
 costs its text in UTF-8 (with a length prefix) plus about 100 bytes for the object (position, rotation, prefab,
-author). A picture over 7 signs of about 390 KB adds about 2.7 MB. SignLink shows this as "in the world save"
+author). A picture over 7 signs of about 390 KB adds about 2.7 MB. SignLink shows this as the *Content size*
 (`SaveCost`).
 
 **Float precision: the line height must be a multiple of 1/4.** TMP reads tag numbers in float32, the
@@ -120,7 +128,8 @@ of 0.5 wu.
 
 ## Cost of drawing a frame
 
-Measured with SignLink (local mode, 2026-10-08), the time to set a text and rebuild its TMP mesh:
+Measured with SignLink on 2026-10-08 (the text set on this client only, no network), the time to set a text and rebuild
+its TMP mesh:
 
 | Pixels | Characters | Apply time (avg / max) | Per pixel |
 |---|---|---|---|
@@ -144,9 +153,9 @@ what costs. The game pays the same once whenever a sign's text appears: a 50 000
 
 ## GIFs: what reads and what moves
 
-The checks run before any frame is decoded (`Pictures/GifDecoder.cs`, from the GIF's blocks), and 2 Content's Moving row
-says the outcome before the put (`GifDecoder.Motion` for the frames; the room, from the screen's size at the sign's
-Resolution, `PictureSource.RoomForGif`).
+The checks run before any frame is decoded (`GifDecoder.Inspect`, from the GIF's blocks), and the Picture source on 2
+Content says the outcome under *Moving* before anything goes on the sign (`PictureSource.RoomForGif`: the frames kept,
+`GifDecoder.Stride`, and the room, from the screen's size at the sign's *Resolution*).
 
 | Limit | Value | When over it |
 |---|---|---|
@@ -163,8 +172,8 @@ each). The 35 MB GIF a player could not put on (2026-10-16, measured 2026-10-17:
 its full size, more than another GIF playing nearby left; sized to its 214 px sign it takes 46 MB.
 
 **Measured at 1024 MB (2026-10-18, a 32 GB PC).** Two 1024 x 576 screens (300 and 200 frames, 844 MB) beside three
-small ones, 959 MB held: 85-119 FPS, a frame upload 0.15 ms; a GIF decodes in 4-5 s on the worker. Away over the
-Playback Distance the screens idle but keep their frames while the signs' zone is loaded; out of the zone all park, and
+small ones, 959 MB held: 85-119 FPS, a frame upload 0.15 ms; a GIF decodes in 4-5 s on the worker. Farther away than
+Settings › Playback › *Pause beyond*, the screens idle but keep their frames while the signs' zone is loaded; out of the zone all park, and
 coming back the four from memory start 2 s apart. 1024 lowered to 256: the two big screens stop within a frame, their
 parked sets go, and the signs wait quietly (one log line each, no retries) until the memory is raised, when they decode
 again in 4-5 s. A 600-frame GIF (1062 MB at the screen's size) keeps every 2nd frame (506 MB) at the same speed. Nothing
@@ -176,9 +185,9 @@ game's working set went 4.5 → 7.3 GB), which is why 1024 wants a 16 GB PC.
 | Path | Who sees it | Ceiling | What limits it |
 |---|---|---|---|
 | Local (SignLink sets the mesh) | this client | the game's frame rate | main-thread budget: pixels x fps x 13.5 µs |
-| Networked (`zdo`, `Sign.SetText`) | everyone | 20 frames/s sent (`ZDOMan.cs:909-915`) | bandwidth (Steam caps a connection at 150 KB/s, `ZSteamSocket.cs:79-83`, shared with all game traffic); the viewer's refresh |
+| Networked (`Sign.SetText` per frame) | everyone | 20 frames/s sent (`ZDOMan.cs:909-915`) | bandwidth (Steam caps a connection at 150 KB/s, `ZSteamSocket.cs:79-83`, shared with all game traffic); the viewer's refresh |
 | ... seen by vanilla clients | | 0.5 frames/s, random phase per client | `Sign.cs:39`: texts are re-read every 2 s |
-| ... seen by SignLink clients | | 0.5 frames/s by default; up to 10 frames/s with a lower RefreshSeconds | FastRefresh every RefreshSeconds (2 s by default, 0.1 s at the least) |
+| ... seen by SignLink clients | | 0.5 frames/s, as vanilla | the game's own 2 s refresh |
 | Vanilla `<sprite anim>` | everyone, no mod | any | only the 16 EmojiOne faces |
 
 **Budget rule.** Keep animations to about 10 % of the main thread (100 ms per second): `pixels x fps <= ~7 500`.

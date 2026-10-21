@@ -15,9 +15,11 @@ namespace SignLink.UI.Sources
         /// of its empty box (a photo too large to decode for its row alone) and whether it can be picked.</summary>
         void RowWords()
         {
-            if (ReferenceEquals(rowFiles, files) && rowHeaders == headersChanged) return;
+            string lang = Lang.Current;                                     // the words follow a change of language
+            if (ReferenceEquals(rowFiles, files) && rowHeaders == headersChanged && lang == rowLang) return;
             rowFiles = files;
             rowHeaders = headersChanged;
+            rowLang = lang;
             int n = files.Count;
             rowWords = new string[n];
             rowKey = new string[n];
@@ -28,17 +30,17 @@ namespace SignLink.UI.Sources
                 string f = files[i];
                 Header h = headers.TryGetValue(f, out Header hh) ? hh : null;
                 bool bad = h != null && h.Error != null;
-                string size = h == null ? "" : bad ? "   " + h.Error : $"   {h.W} x {h.H}";
+                string size = h == null ? "" : bad ? "   " + Lang.T(h.Error) : $"   {h.W} x {h.H}";   // Error: Unreadable
                 bool gif = f.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
                 long px = h != null && !bad ? (long)h.W * h.H : 0;
-                rowWords[i] = $"{Path.GetFileName(f)}{size}{(gif && !bad ? "   moving" : "")}";
+                rowWords[i] = $"{Path.GetFileName(f)}{size}{(gif && !bad ? "   " + Lang.T("moving") : "")}";
                 rowKey[i] = h != null && !bad ? f + "|" + h.Stamp : null;
                 rowBox[i] = px > Thumbs.MaxDecodePixels ? $"{px / 1000000} MP" : "";
                 rowBad[i] = bad;
             }
         }
 
-        // PlanFor's inputs when plan, fineShift and fineLimited were made last (0.20.132, review: the plan's pitch search,
+        // PlanFor's inputs when the plan was made last (0.20.132, review: the plan's pitch search,
         // with its string work, and three keys with their numbers written out, every Layout on every tab)
         int planSrcW = -1, planSrcH, planDetail, planFineCap, planPixels;
         float planWidth, planPitch;
@@ -48,14 +50,13 @@ namespace SignLink.UI.Sources
         static bool Same(float a, float b) => a == b ? a != 0f || 1f / a == 1f / b : float.IsNaN(a) && float.IsNaN(b);
 
         /// <summary>The plan for the header and the options (PictureOptions.PlanFor: a function of exactly these inputs)
-        /// and what Fine Width made of the Resolution, made again only when one of them changed.</summary>
+        /// made again only when one of them changed.</summary>
         void Plan()
         {
             if (!known)
             {
                 plan = default;
-                fineShift = 0;
-                fineLimited = false;
+                maxForSizeW = 0;
                 planSrcW = -1;                                              // made again when it is known again
                 return;
             }
@@ -70,18 +71,10 @@ namespace SignLink.UI.Sources
             planPitch = o.Pitch;
             planPixels = o.Pixels;
             plan = o.PlanFor(header.W, header.H);
-            // a new size with the same pixels makes no new grid: its caption follows here (0.20.191, test: it kept the old
-            // metres after a Width change with Fine Width)
-            if (thumb.Has && thumb.Texture.width == plan.W && thumb.Texture.height == plan.H) thumb.Info = Caption(plan);
-            int most = MostDetail(header), chosen = Math.Min(o.Detail, most);   // Fine Width: the pixels the size took
-            fineShift = o.Fine && !plan.Coarsened && !plan.Capped ? plan.W - chosen : 0;
-            // the cap held it, not the size's own fewer pixels (0.20.189, review)
-            int fineWant = PictureOptions.FineDetail(o.WidthM, chosen, most, out _);
-            fineLimited = fineShift != 0 && o.FineCap > 0 && fineWant > plan.W && fineWant > Math.Max(o.FineCap, chosen) &&
-                          fineWant - chosen <= Math.Max(2, chosen * PictureOptions.FineSpread);
+            PictureOptions most = o.Clone();                                // Max for this size: every pixel the file has asked
+            most.Detail = MostDetail(header);
+            maxForSizeW = most.PlanFor(header.W, header.H).W;
         }
-
-        static string Caption(PicturePlan p) => $"{p.W} x {p.H} px, {p.WidthM:0.##} x {p.HeightM:0.##} m";
 
         // the keys' inputs when they were made last
         string keyFile, keyStamp, keyDecode, keyWant;
@@ -154,7 +147,7 @@ namespace SignLink.UI.Sources
                 () =>
                 {
                     string f = file, stamp = header.Stamp;
-                    thumb.Info = (long)header.W * header.H > LargePhoto ? "reading a large photo ..." : $"reading {name} ...";
+                    thumb.Info = (long)header.W * header.H > LargePhoto ? Lang.T("reading a large photo ...") : Lang.F("reading {0} ...", name);
                     readErrorKey = null;
                     return stale => DecodeFile(f, stamp, stale);
                 },
@@ -171,9 +164,9 @@ namespace SignLink.UI.Sources
                 },
                 e =>
                 {
-                    readError = "cannot read: " + e.Message;
+                    readError = Lang.F("cannot read: {0}", e.Message);
                     readErrorKey = decodeJob.Done;
-                    thumb.Info = "no quick view: " + e.Message;
+                    thumb.Info = Lang.F("no quick view: {0}", e.Message);
                 });
         }
 
@@ -182,13 +175,13 @@ namespace SignLink.UI.Sources
         /// would run (0.20.132, review: a 24-50 MP photo froze the game for a second after the window had closed).</summary>
         static Decoded DecodeFile(string file, string stamp, Func<bool> stale)
         {
-            byte[] bytes = File.ReadAllBytes(file);
+            byte[] bytes = PictureImporter.ReadFile(file);
             var d = new Decoded { File = file, Stamp = stamp };
             if (GifDecoder.IsGif(bytes))
             {
                 GifImage g = GifDecoder.Decode(bytes, maxFrames: 1, cancelled: stale);   // its first frame
                 // what moving does, the frames' memory left to the row: it follows the Resolution (the screen is sized to the sign)
-                d.Motion = g.SourceFrames < 2 ? "One frame: it does not move." : null;   // a long one's stride: RoomForGif
+                d.OneFrame = g.SourceFrames < 2;                            // its words in the row; a long one's stride: RoomForGif
                 d.MW = g.Width;
                 d.MH = g.Height;
                 d.Count = g.SourceFrames;
@@ -229,7 +222,7 @@ namespace SignLink.UI.Sources
                     Decoded d = source;
                     PictureOptions opts = o.Clone();
                     string key = wantKey;
-                    thumb.Info = "drawing the quick view ...";
+                    thumb.Info = Lang.T("drawing the quick view ...");
                     return stale =>                                         // a grid nobody waits for stops (0.20.132)
                     {
                         PicturePlan p = opts.PlanFor(d.SrcW, d.SrcH);
@@ -242,11 +235,10 @@ namespace SignLink.UI.Sources
                     thumb.Set(g.Plan.W, g.Plan.H, new[] { g.Rows }, 0);
                     gridPx = g.Px;
                     gridKey = g.Key;
-                    thumb.Info = Caption(g.Plan);
                 },
                 e =>
                 {
-                    thumb.Info = "no quick view: " + e.Message;
+                    thumb.Info = Lang.F("no quick view: {0}", e.Message);
                     gridError = e.Message;                                  // these settings: said by Problem (0.20.130, review:
                     gridErrorKey = gridJob.Done;                            // "Counting ..." for ever)
                 });
@@ -266,7 +258,7 @@ namespace SignLink.UI.Sources
                     PicturePlan p = plan;
                     string nm = name, stamp = header.Stamp, f = file;
                     int sw = header.W, sh = header.H;
-                    if (px == null || px.Length != (long)p.W * p.H) throw new InvalidOperationException("the quick view is not this grid");
+                    if (px == null || px.Length != (long)p.W * p.H) throw new InvalidOperationException(Lang.T("the quick view is not this grid"));   // main thread: said in the Summary
                     return stale =>                                         // a count nobody waits for stops (0.20.132)
                     {
                         EncodedPicture pic = PictureImporter.EncodeGrid(px, p, opts, stale);
@@ -311,10 +303,6 @@ namespace SignLink.UI.Sources
 
         /// <summary>The bytes it stores: counted, else estimated (Estimated), else -1.</summary>
         long SaveBytes() => Have ? cost.Bytes : Estimated ? Est(cost.Bytes) : -1;
-
-        /// <summary>Seconds every player's game spends building it: its counted glyphs (see-through pixels are none),
-        /// estimated while a new count comes, else every pixel of the plan.</summary>
-        double Load() => Have ? SaveCost.LoadSeconds(cost.Glyphs) : Estimated ? SaveCost.LoadSeconds(Est(cost.Glyphs)) : plan.LoadSeconds;
 
         /// <summary>The button pressed while the numbers were estimated: it goes on once they are counted (the texts Place
         /// writes, the limits checked on the counted bytes), the button saying "Working ..." meanwhile (Busy).</summary>

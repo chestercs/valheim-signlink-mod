@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PetyusPolisz.Kit;
 using SignLink.Pictures;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -96,7 +97,7 @@ namespace SignLink.Signs
         public static string Describe(float tilt, float turn)
         {
             string t = Fit.TiltWords(tilt);
-            return (t.Length > 0 ? t : "standing") + (Mathf.Abs(turn) > 0.05f ? $", rotated {turn:0.#}°" : "");
+            return (t.Length > 0 ? t : Lang.T("standing")) + (Mathf.Abs(turn) > 0.05f ? Lang.Comma + Lang.F("rotated {0:0.#}°", turn) : "");
         }
 
         /// <summary>The tipping as a rotation in the sign's frame as built: about its x axis, + turning its face up.</summary>
@@ -351,7 +352,7 @@ namespace SignLink.Signs
             tilt = Mathf.Clamp(Normalize(tilt), -90f, 90f);
             turn = Normalize(turn);
             Sign root = SignFinder.Root(any);
-            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             SignText.RequireEdit(root);
             Base(root, out Vector3 bp, out Quaternion br);
             Place(root, bp, br, tilt, turn, shift, PivotFor(root, tilt, turn, edge), out Vector3 pos, out Vector3 euler);
@@ -361,7 +362,7 @@ namespace SignLink.Signs
             if (Vector3.Distance(t.position, pos) < far && Quaternion.Angle(t.rotation, Quaternion.Euler(euler)) < angle) return false;
             SignBuilder.Guard();                                            // the signs are made again
             SignFinder.RequireLoaded(root);
-            if (!PrivateArea.CheckAccess(pos, 0f, false)) throw new InvalidOperationException("a ward you have no access to protects that spot");
+            if (!PrivateArea.CheckAccess(pos, 0f, false)) throw new InvalidOperationException(Lang.T("a ward you have no access to protects that spot"));
             // a new pose is held up as a move is (0.20.130, review: a sign laid face up on a floor stood off it, and the
             // game broke it after its first half minute)
             List<Sign> stack = SignFinder.Stack(root);
@@ -390,9 +391,9 @@ namespace SignLink.Signs
             }
 
             // the signs are made again with these texts (or their own): stored anew, so the multiplayer limit applies
-            SignText.RequireRoom(root, texts != null ? SaveCost.Bytes(texts) : Stored(root), texts != null ? "this content" : "this sign");
+            SignText.RequireRoom(root, texts != null ? SaveCost.Bytes(texts) : Stored(root), texts != null ? Lang.T("this content") : Lang.T("this sign"));
             if (texts != null && texts.Count * (Mathf.Abs(tilt) > 0.05f ? (float)FloorPlan.Step : SignBuilder.DefaultStep) >= SignFinder.StackDepth)
-                throw new ArgumentException($"too many copies for one sign ({texts.Count})");
+                throw new ArgumentException(Lang.F("too many copies for one sign ({0})", texts.Count));
             int pivot = PivotFor(root, tilt, turn, edge);
             SignMove.WriteFor(root);                                        // allowed: moves not applied go into the data copied
             Base(root, out Vector3 bp, out Quaternion br);
@@ -493,11 +494,11 @@ namespace SignLink.Signs
         {
             List<Sign> stack = SignFinder.Stack(any);
             Sign root = stack.Count > 0 ? stack[0] : any;
-            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!root || SignFinder.Zdo(root) == null) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             SignText.RequireEdit(root);
             SignBuilder.Guard();                                            // the signs are made again
             SignFinder.RequireLoaded(root);
-            SignText.RequireRoom(root, Stored(root), "this sign");          // stored anew: the multiplayer limits apply
+            SignText.RequireRoom(root, Stored(root), Lang.T("this sign"));       // stored anew: the multiplayer limits apply
             SignMove.WriteFor(root);                                        // allowed: moves not applied are made with them
             var made = new List<Sign>();
             try
@@ -556,7 +557,7 @@ namespace SignLink.Signs
         /// leaves nothing behind: an orphan ZDO would become an extra sign a frame later.</summary>
         static Sign Create(int prefab, Vector3 pos, Vector3 euler, Data d)
         {
-            GameObject go = ZNetScene.instance.GetPrefab(prefab) ?? throw new InvalidOperationException("prefab not found");
+            GameObject go = ZNetScene.instance.GetPrefab(prefab) ?? throw new InvalidOperationException(Lang.T("prefab not found"));
             ZNetView nv = go.GetComponent<ZNetView>();
             ZDO zdo = ZDOMan.instance.CreateNewZDO(pos, prefab);
             Sign s = null;

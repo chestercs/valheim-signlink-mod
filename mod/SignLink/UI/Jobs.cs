@@ -108,6 +108,8 @@ namespace SignLink.UI
                     busy = false;
                     if (mine != wanted) return;                         // moved on: the next Want starts the new key
                     if (error is OperationCanceledException) return;    // stopped as stale: dropped, runs again if wanted
+                    if (error is TimeoutException) return;              // the game did not answer (a loading screen): tried again,
+                                                                        // not "cannot read" for good (1.1.0, review)
                     done = mine;
                     if (error != null) fail?.Invoke(error);
                     else deliver(result);

@@ -5,13 +5,12 @@ client in `valheim-world-tool/decompiled`. Anything not confirmed is marked unve
 
 ## Layout
 
-The plan of this section became the code; `mod/README.md` lists the layout as built (0.4.0). The package is
-ready too:
+The plan of this section became the code; `mod/README.md` (Layout) lists the layout as built. The package:
 - `mod/package/` holds manifest.json, icon.png (256x256, from make_icon.py), the README for the site and
   the LICENSE (MIT) and LICENSE-ART (CC BY 4.0);
-- `./sign.sh package` checks that Plugin.Version, the csproj, the manifest, the top CHANGELOG entry and docs/openapi.yaml agree, then
-  writes `mod/out/SignLink-<version>.zip`;
-- publishing (website or `tcli publish`, AI Generated category) is the author's step, under the team
+- `./sign.sh package` checks that Plugin.Version, the csproj, the manifest and the top CHANGELOG entry agree and that
+  entry is dated, then writes `mod/out/SignLink-<version>.zip` and `SignLink-<version>-nexus.zip`;
+- publishing (`docs/release-checklist.md`, AI Generated category) is the author's step, under the team
   PetyusPolisz (the package is `PetyusPolisz-SignLink`); the author is ChesTeRcs.
 
 ## Conventions adopted
@@ -54,6 +53,20 @@ true without the window (`InputBlockPatch.Bypass` for that one call: chat, conso
 and map search still stop it) and no SignLink field has the keyboard (`GUIUtility.keyboardControl`). Attacks, block,
 the hotbar, crouch, dodge and the mouse look stay off: a click on the window must not swing a weapon.
 
+**Looking around with the window open** (`Patches/LookPatch.cs`, 1.1.0, the author: while the right mouse button is
+held outside the window, the camera turns; the right-click that cancelled picking a sign went for it, Esc or the
+window's key ends picking): a right press off the window (`SignLinkWindow.PointerOver` false, no control held, no field focused, the game
+would take input: `TakeInput(look: true)` with the window's block lifted) starts it. Until the button is let go (read
+every frame, so a release the game missed ends it too) a postfix on `PlayerController.LateUpdate` turns the view as the
+game does (`ZInput.GetMouseDelta` x the player's `m_mouseSens`, `m_invertMouse`), and a prefix on
+`GameCamera.UpdateMouseCapture` keeps the cursor locked and hidden instead of the game's capture: the game frees it
+every frame while the window is open, and a lock after a free recentres the cursor each time, which the first try
+read as mouse moves (the view spun) and which also lost a release. The first two frames' move is the lock's own and
+is dropped. Let go, the game frees the cursor and it is warped back where it was (`Mouse.current.WarpCursorPosition`,
+the game's own Unity.InputSystem, referenced, not shipped). Tested with real OS input: a 300 px drag turns 15° at
+sensitivity 1, a still mouse turns nothing, the cursor comes back to the pixel, a press over the window does not
+start it, during Select sign the picking goes on.
+
 `TextInput.IsVisible` does not cover two things, and each has its own small patch:
 - the mouse wheel: a postfix makes `ZInput.GetMouseScrollWheel` return 0 while the mouse is over the window or a
   row is dragged (`SignLinkWindow.PointerOver`); away from it the camera zooms (`GameCamera.cs:254`, 0.20.166);
@@ -61,7 +74,67 @@ the hotbar, crouch, dodge and the mouse look stay off: a click on the window mus
   a prefix skips `InventoryGui.Show`.
 
 The window draws its own styles (`Kit/Theme.cs`; the window kit in `mod/Kit`, its parts in `mod/Kit/README.md`: Unity's default skin draws windows half transparent), as solid as
-its opacity (0.8 by default; **Opacity** below), and scales with the screen height.
+its opacity (0.85 by default since 1.1.0; **Opacity** below), and scales with the screen height.
+
+**Two colour themes, one look** (1.1.0, the author: keep both, with a theme picker in Settings; then: one theme system,
+only the colours differ; `1 - Menu / Theme`, Classic by default since the author's word of 2026-10-21, Nordic before). The look comes from the author's Claude Design round
+(`.private/design/`, option 1c and its handoff); `Theme.Ensure` builds the flat base as before and `Theme.PaintLook`
+paints the look over it in a `Palette` (`Theme.Looks.cs`; the flat base stays if painting fails, `LookError`): Nordic's
+colours (`Theme.Nordic.cs`, the handoff's tokens) or Classic's (`Theme.Classic.cs`, the round's option 1b "longhouse dark
+with gold leaf", its colours read from the design page). An earlier Classic with its own shapes (a studded double frame,
+a rune line of ticks under the title, a rule after each header, a gilded gradient button, solid gold chips) was dropped
+the same day: the author wanted the two themes alike, Nordic's headers (capitals, a diamond before, no rule) and its check
+box, and Classic's framed tracks, which keep tabs and chips apart (now in both). The look uses the game's Averia Serif
+Libre (found as a dynamic `Font` among the loaded ones; else the skin's) and textures painted in code at the window's
+pixel scale (`Kit/Paint.cs`: rounded boxes, frames, clipped bands, a diamond, a tick, 4 x 4 samples a pixel), so corners
+and frames stay crisp at 4K, with the backgrounds at the window's opacity. Its parts: tabs and chips in a framed `Track`
+(`Widgets.Strip`, `Widgets.Toggle`), the armed button in red (`Theme.Armed`), the meter with round ends, a vertical
+scrollbar of its own (IMGUI finds a scrollbar's thumb by name in the current skin, so the window function draws with a
+copy of the game's skin, `Theme.Skin`, set around `GUILayout.Window` only), the check box drawn at its own size in the
+middle of the row with the tick over it (`Widgets.CheckBox`; the toggle style keeps only the row's room: a box
+nine-sliced into its texture stretched with the row, and the tick sat off its middle), and a meter's words in white
+(`Theme.MeterWords`: a grey small label tinted turned amber into brown). A group's heading (the `Widgets.Foldout`s and
+the Art list's groups) draws a painted arrow (`Theme.FoldArrow`, `Widgets.FoldHead`) in its left padding that turns: right
+while closed, down while open, and while the mouse is over it to the other way (what a click would do), 90° in 0.15 s, back
+when the mouse leaves, after a click only once the mouse has left (the author, 1.1.0); the focused heading's amber line has
+air under the words, and every heading has the same padding, so moving the focus never moves a row. The text editor's
+frame holds its scroll (`Theme.AreaBox` around `Widgets.Scroll`, the text in `Theme.AreaText` without a frame), so the
+bar stands inside the editor (the author, 1.1.0: not the wrapper's scroll); amber while the text has the keys.
+
+**The window's language** (`Kit/Lang.cs`, 1.1.0; a Nexus player asked for Russian, the author: Hungarian, Chinese and
+Russian, the setting reading Game default, English, Magyar, 简体中文, Русский): `Lang.T("Close")` and
+`Lang.F("Loading {0} ...", name)`; English is the key and the fallback, so the code reads as before. A language is a
+table in the DLL, `mod/SignLink/Lang/<Language>.txt` by the game's name for it (`Localization.GetSelectedLanguage`:
+"Hungarian", "Chinese" = Simplified, "Russian"), lines `english<TAB>translation` (# comments; `\n`, `\t`, `\\` escaped),
+its key `@language` the language's own name for the setting's list; `Lang.Order` sets the order after English.
+*Game default* first, so a value not in the list becomes it. Rules: every new or changed player-facing text goes
+through `T` / `F` with a literal key (a ternary of literals is fine; an array or constant of keys carries the comment
+`lang:keys` on its line), whole sentences with `{0}` places, never glued pieces (word order differs); a button leaves
+room (`Theme.Fitted` shrinks a longer word to its button). Logs and the .cfg descriptions stay English, and so does the
+`error: ` mark a failed status starts with. The game's language is read on the main thread (Plugin.ReadGameLanguage):
+picture jobs word texts on workers. `./sign.sh lang keys` lists the keys with where they are used, `./sign.sh lang stub
+LANG` makes or completes a table, `./sign.sh lang check` fails on a key missing from a table, a placeholder that differs
+or a stray brace. The translations follow the meaning, not the words (the author: think about why the English says
+what it says); the game's own words where it has them (Védőkő, 守护石, Оберег; a sign is "tábla", 标牌, табличка).
+
+**Nothing jumps** (1.1.0, the author): a quick view keeps its box (and stays closed, its title grey, while it has nothing
+to show: no pick, no sign or an empty one; `Foldout(..., usable:)`) (`Thumb.DrawBox`: the same size with the picture, with
+"Loading ..." in its middle, or a sign's words; the caption's line kept), the sign bar keeps its small view's place while
+it loads, and a tab without a footer (`Tab.HasFooter`: Playing, Settings) draws no footer box, only the status line, as
+high as before. 3 Place's *Changes* boxes sit inside their groups (closed with them; the footer's button applies too).
+
+**Drop-down lists** (`Kit/Widgets.Dropdown.cs`, 1.1.0, the author: Theme and Language as drop-down lists, Text size
+too): `Widgets.Dropdown` / `DropChoice` draw a button with the choice and the look's arrow turned down (`Theme.Drop`); a
+click opens its list under it. IMGUI has no layers, so the list is drawn last in the window function
+(`KitWindow.EndDraw` -> `Widgets.DropList`, on an opaque `Theme.PopupBack`, the rows as list items) and takes the
+mouse first (`KitWindow.BeginDraw` -> `Widgets.DropInput`): a press on a row picks it, a press anywhere else (its button
+too) closes it and is spent, the wheel closes it and scrolls on; a list whose button was not drawn (another tab) closes.
+The button's place is kept in screen space (`GUIUtility.GUIToScreenPoint`), so a scroll view under it does not matter.
+
+**Settings › Window** (1.1.0, the author: reorder the group): Language, Theme, Text size (drop-down lists), Opacity,
+Window size with *Default size* at the row's right, Hotkey: the key in its frame is the button that changes it
+(`Widgets.KeyCapButtons`, `Theme.KeyButton`; the author: the *Change key* button was bad UX), *Unbind* at the right.
+Every row stays one row in the narrowest window.
 
 **Words in the window** (1.0.2, the author: no long texts, one word for every explanation): a control says what it is
 by its own label; the grey lines under rows are a word or two, or only what stops a button (a limit, no support, a
@@ -70,7 +143,8 @@ ward). Every hotkey shows where it works, in small dim frames at the right of it
 Picture lists (← → too beside Art's: they shut and open the pick's group), Ctrl+Z / Ctrl+Y beside Undo and Redo, the
 window's key and Esc beside Close.
 
-The window opens only when no other UI is open (menu, inventory, map, console, text input, chat). Esc closes it. With a
+The window opens only when no other UI is open (menu, inventory, map, console, text input, chat, a trader's store, the
+build menu, a radial menu, a popup, a text viewer). Esc closes it. With a
 sign picked it opens on 3 Place when SignLink made what the sign holds (an edit), on 2 Content when the sign is empty or
 the game's editor wrote it, else on 1 Sign to pick one; E on a SignLink sign and Open in SignLink pick the sign first
 (`OpeningTab`, 0.20.110-0.20.118: before, the tab it was closed on, and 1 Sign for those two).
@@ -93,9 +167,9 @@ so the frame shows whole on any stack and for a sign under a floor. `Sprites/Def
 hidden by walls), the RawImage bars the last (the fill over a single sign only); the log says which.
 
 **The tilt's pivot** (`Fit.Edge`, `SignPose` PivotKey, 0.20.30): a pose tips the sign over its bottom edge (the
-edge stays put: a sign on the floor lies on it face up; every pose before 0.20.30, and the API's way) or about its
+edge stays put: a sign on the floor lies on it face up; every pose before 0.20.30) or about its
 middle (the centre stays put, as a hammer turns a piece). Since 0.20.78 the window has no choice of pivot (the author
-called it legacy: Move the sign sets where it rests): a tilt changed in the window turns about the middle, and a sign
+called it legacy: moving the sign sets where it rests): a tilt changed in the window turns about the middle, and a sign
 posed over its edge keeps that pose until its tilt changes. Since 0.20.83 that middle is the middle of the **text's
 plane** (PivotKey 3, `FloorPlan.FaceTip`), not the board's (2): the text sits 7 cm in front of the board's centre, so
 about the board's middle a picture went 7 cm over it face up and 7 cm under it face down; now it stays where it is
@@ -104,16 +178,17 @@ pose changes (`SignPose.PivotFor`). The pivot is part of the pose only while til
 first sign (1 edge, 2 middle; unset reads as edge), and `Place`/`Unplace` skip `FloorPlan.Tip` for the middle. The GIF
 screens get away with the first sign's canvas because they hide the whole stack's text, which needs the sign list to
 hold the copies made in the same frame (`SignFinder.Loaded` rebuilds when a sign awoke, not only once per frame).
-Pick in view draws a second `Ghost` (its board in white since 0.20.88) around the sign under the cursor (`Ghost.ShowStack`, 0.20.16): the
+Select sign draws a second `Ghost` (its board in white since 0.20.88) around the sign under the cursor (`Ghost.ShowStack`, 0.20.16): the
 content's rectangle is the union of the stack's texts' `TMP_Text.textBounds` in the first sign's plane (what is drawn,
 no reading of the sign), in front of the frontmost band, plus the board; the same ray as the click (`AlongRay`), every
 frame while picking. The selected stack gets no hover frame while it wears the selection's (`Ghost.Frames`, 0.20.92):
 under the cursor or under a row of Signs nearby it showed both frames at once.
 
 **Nothing moves under the mouse** (0.20.75, 0.20.84): while a control is held or a field has the keys, the window's
-top and body keep at least their height (`SignLinkWindow.Steady`); the footer only grows while the same tab shows the
-same chosen sign at the same width (`FooterLeast`: a hint under its button comes and goes with the verb); the body is
-never shorter than what its scroll shows (`BodyLeast`: no pull-back when it shrinks while scrolled to its end); a hint
+top and body keep at least their height (`KitWindow`, `steady`); the footer only grows while a control is held (or a
+wheel step or a key came within 0.75 s) and it shows the same thing at the same width (`KitWindow.Footer`: a hint under
+its button comes and goes with the verb), and let go it is as tall as its rows (1.1.0); the body is
+never shorter than what its scroll shows (`WindowSizing.BodyLeast`: no pull-back when it shrinks while scrolled to its end); a hint
 above a slider never changes its line count with the slider's value (put the value's words on a line of their own).
 
 **No pick of before on a sign that holds something** (0.20.89): a sign whose content no source loads (no record, or
@@ -179,7 +254,8 @@ render queue 3150 (after the veil, no depth test), a neon lime, opaque, and thei
 times brighter in linear space: over 1 the game's bloom makes them glow where the camera renders in HDR (the log says
 "camera HDR" once), else they show at full strength. The hover frame's board keeps its cool white, unlit.
 While nothing would hold the sign where its steps or the pose to come put it (`ContentTab.PoseProblem`), the selection's
-board bars take `Ghost.Unheld` (a hot scarlet, apart from the content's crimson) at the same glow (`Ghost.Hold`, 1.0.2).
+board bars take `Ghost.Unheld` (a hot scarlet, apart from the content's crimson) at a lower glow (`UnheldGlow`, 1.4:
+at 2.2 the bloom turned it coral; `Ghost.Hold`, 1.0.2).
 
 **The content's bars lie on the text's plane** (`Ghost.OnText`, 0.20.101): green and red are decided by depth where the
 bars are, so the bars sit a millimetre in front of the text (the text itself is 2 cm in front of the board's face:
@@ -256,16 +332,17 @@ size takes). Measured over 1-8 m (2026-10-12) that moves the pixels 2.5-8 % on a
 across on small pictures, near the smallest exact pixel; so a size may move them at most `PictureOptions.FineSpread`
 (10 %, the data by about a fifth), and a size further off keeps the Resolution's pixels and steps as without Fine
 Width (0-22 % of sizes 1-8 m, more with more pixels; Shift + wheel then goes to the next step). `Detail` itself is never written by a size: 2 Content's Resolution
-row shows it, Max and Native set it, and the Summary says "Resolution 200: +4 across for exactly this size". A cap
-(`PictureOptions.FineCap`, `PictureSource.FineCapFor`) keeps a size from going over what Max aims at (`MaxTarget`,
+row shows it, Multiplayer max and Max for this size set it, and the Summary's Resolution pixels row shows what the size made
+of it (a "+4 px for this size" line said it until 1.1.0). A cap
+(`PictureOptions.FineCap`, `PictureSource.FineCapFor`) keeps a size from going over what Multiplayer max aims at (`MaxTarget`,
 2 % short) by this picture's counts (`PictureOptions.MostWithin`: the data grows with the pixels; since 0.20.134 the
 first count sets it and later ones may only lower it, `PictureOptions.NextCap`, kept per picture, Resolution and aim:
 made fresh from every count, the cap and the plan fed each other, 109, 110, 109, ... for good at some sizes, and a
 press waiting for its count never went on, the author: the bug is back: I cannot save onto it because the button is grey; it notices neither the small width change nor my density change and the button stays grey), never under the
 Resolution itself (over the limit, `Source.Limit` says so): past the cap `FineDetail` takes the next bigger exact
 pixel, so the size stays exact with a few fewer pixels ("fewer to stay within the limit"), or steps when that is more
-than 10 % fewer. Max therefore stays Max
-at any size. A placed picture's recipe keeps the plan's width and pixel, so an edit starts from the pixels on the
+than 10 % fewer. Multiplayer max therefore stays
+within the limits at any size. A placed picture's recipe keeps the plan's width and pixel, so an edit starts from the pixels on the
 sign (the Resolution then). The slider moves about 10 cm per screen pixel (0.25-30 m); centimetres are Shift + wheel
 or a typed value. Fine Width off: the Resolution is the pixels and the size snaps to the sizes they take exactly.
 The row moves only where the density does (0.20.133; the author: the slider should skip the dead stretches where the density does not change, and round a number typed in): at a
@@ -273,8 +350,8 @@ size, the exact pixels lie some pixels apart (a pixel is a multiple of 3.125 mm)
 them made the same picture ("Resolution 100: -1 across"). The slider, a typed number and Shift + wheel now go to the
 pixels a Resolution really makes there (`PictureOptions.Achievable`: PlanFor's pixels, taken again until they make
 themselves; tested to be a fixed point that never gives fewer pixels for more), so the thumb jumps over the dead
-stretch and a typed number shows as the pixels it makes. Max, Native and a size change leave the Resolution as it is (the
-Summary's shift line says what a size made of it).
+stretch and a typed number shows as the pixels it makes. Multiplayer max, Max for this size and a size change leave the
+Resolution as it is (the Summary's Resolution pixels row shows what a size made of it).
 
 **The live preview shows the result** (0.20.129; the author: it would be good if it reacted to the content too and
 updated on every change, so we see the end result instead of the half-done old picture; useful when creating a new
@@ -298,8 +375,8 @@ their canvases the same way. The Text source measures its frame off the preview'
 world: others see the sign as it is until the button; live apply of small stacks is unchanged and ends the preview by
 itself (nothing new to put on).
 
-**Deep review 0.20.130** (the author: let's do a bug hunt and a deep review of it from several angles; six reviews:
-world writes, the picture pipeline, the window, visual layers, the API, the live preview). What it settled:
+**Deep review 0.20.130** (the author: let's do a bug hunt and a deep review of it from several angles; six reviews,
+among them world writes, the picture pipeline, the window, visual layers and the live preview). What it settled:
 - *A new pose is held up and lands on no other sign*: `SignPose.Check` weighs a tilt or a rotation as a move is weighed
   (`SignMove.Holds(..., remade: true)`: the signs are made again, their boxes anew), and every move, turn and pose is
   refused where the game builds nothing (`Location.IsInsideNoBuildLocation`) or where another sign would join the
@@ -314,16 +391,12 @@ world writes, the picture pipeline, the window, visual layers, the API, the live
 - *A GIF's screen ends when its sign is written elsewhere* (`ScreenPlayer.Step`: the root's data revision, then its
   recipe and text compared; ScreenRestore brings it back if it still moves); screens and stored animations are dropped
   when the world is left; a veiled screen uploads no frames; parked frames are kept when new ones could not fit anyway.
-- *The picture pipeline*: a press made on an estimate waits for Max's last count, is said when it cannot go on, and
-  asks the red-level question when the count turns out very large; another choice stops Max; a failed grid is said
+- *The picture pipeline*: a press made on an estimate waits for Multiplayer max's last count, is said when it cannot go
+  on, and asks the red-level question when the count turns out very large; another choice stops Multiplayer max's count; a failed grid is said
   ("These settings do not work"), not counted for ever; a file changed on disk since it was counted is read again,
   not placed unseen; the player's own options come back as they were (not the plan's pixels); a full area caps a fine
   size at the Resolution.
-- *The API*: an animation written to the world (mode=zdo) sends at most 16 KB/s in a shared world
-  (`TextAnimator.SharedBytesPerSecond`); a stopped server serves no queued request, and a waiting connection holds no
-  pool thread; `host.docker.internal` counts as this computer only when the hosts file names it; `POST /signs/clone`
-  spaces copies as the window does and writes the stack's count; E on a long text never opens the game's editor, even
-  after an error turned the patch off.
+- E on a long text never opens the game's editor, even after an error turned the patch off.
 - *The window*: an edge drag sizes the window at the frame's last event; Settings flush typed values on close; a tab
   change stops a key capture and drops keyboard focus; a step queued before a remake finds the new stack; the
   session's read is guarded and retried; Close drains actions queued by queued ones; the thumbnail cache never drops
@@ -332,26 +405,24 @@ world writes, the picture pipeline, the window, visual layers, the API, the live
   `Session.First` (the stack's first sign), `Session.PendingPose` (the frame's and the preview's pose), `Fit.PoseOnly`
   and `Fit.WithPose`, `Change.LightOf(SignRecipe)`; one `ArtSource` (no `PresetSource`); `TextReadback` (was
   `TextPreview`: it reads pixel pictures back, it previews nothing).
-- Left as they are (rulings): `POST /sign` writes one sign (a stack's copies keep theirs: documented); a Turn's raw
-  rotation is not snapped to the save grid (`SignPose.Savable` loses digits at ±90°; a later same-pose refit remakes
+- Left as they are (rulings): a Turn's raw rotation is not snapped to the save grid (`SignPose.Savable` loses digits at ±90°; a later same-pose refit remakes
   the stack once); a piece's or held animation's preview snaps by its first frame.
 
-**Optimisation and security review 0.20.132** (the author: let's do an optimisation and a security review too; six reviews: the window's
-per-frame cost, the runtime in the world, the picture pipeline and memory, the local API, data from the world and
-files, Unity objects and threads; fixed in three parallel branches and merged, then one review of the whole). What it
+**Optimisation and security review 0.20.132** (the author: let's do an optimisation and a security review too; six reviews, among them the window's
+per-frame cost, the runtime in the world, the picture pipeline and memory, data from the world and files, Unity
+objects and threads; fixed in three parallel branches and merged, then one review of the whole). What it
 settled:
 - *Nothing keeps a destroyed sign*: caches keyed by `Sign` drop the destroyed ones when `SignFinder.Gone` rises
   (`SignFinder.Prune`). A destroyed sign stays a C# object while anything holds it, and with it its TMP buffers
   (megabytes for a picture's band): the caches piled up 70-80 MB with every return to a big base.
-- *Work only when something changed*: FastRefresh builds a mesh again only when the shown text changed, 20 ms a step
-  at most; the frame (`Ghost.Inputs`, compared before its key is made), the hover frame (the mouse and the camera
+- *Work only when something changed*: the frame (`Ghost.Inputs`, compared before its key is made), the hover frame (the mouse and the camera
   still), the text's red level, the area count (every 2 s) and a stack found whole are not worked out again for
   nothing; Show all stacks only from SignLink's marked signs; the far list reads the zones within 100 m
   (`FindSectorObjects`: `GetAllZDOsWithPrefabIterative` reads the sector it pauses at twice, "2 signs"); a long list
   draws the rows in view (`ListRows`); `Widgets.W`/`H` make an option once per size; `useGUILayout` stays on (an Open
   from inside OnGUI would miss its Layout pass; 0.20.0 turned it back on for that).
 - *The picture pipeline holds less*: `Resampler.Grid` makes each channel's rows from the RGBA bytes as it reads them
-  (no full-size float planes: some 190 MB less for a 12 MP photo at Native); a GIF's frames are shrunk as they are
+  (no full-size float planes: some 190 MB less for a 12 MP photo at its full pixel count); a GIF's frames are shrunk as they are
   decoded (one set, not two), its Update reuses the frames playing or parked (`ScreenPlayer.FramesFor`), parked frames
   go after `ParkSeconds` (10 min); work nobody waits for stops (`Job.WantStoppable`: a staleness test the work asks,
   a photo's main-thread decode included); `TextTransform` scans tags by hand, once (the regex passes allocated per tag).
@@ -363,20 +434,16 @@ settled:
   `CopyDropPatch` acts on signs only; a GIF named by another player's recipe is decoded at most once a minute and
   never a Windows device name; an EXIF preview over 1 MP is not decoded; a sign whose text the game hides
   (`m_isViewable`: a muted or blocked author) shows none of it in the window either.
-- *The local API* (`HttpRules`, tested): exact routes take a body (413 elsewhere, 411 without a Content-Length), heads
-  and bodies have hard deadlines, a clone's step is 0 or 0.3-2 mm and its copies must fit one stack before anything
-  runs, `/anim` takes 20000 frames at most, the network mode answers local networks only, this computer is never
-  locked out, the page forgets a remembered password the API refuses, a copied password leaves the clipboard after
-  30 s and Paste refuses it.
 - Left as they are (rulings): the far list's names show for muted authors (no sign loaded to ask the game); saved
   animation frames skip the game's word filter (Known limits); EXIF orientation's extra copy, `TextReadback`'s
   per-line allocations, a second encode of big bands in single player and main-thread list thumbnails (small or rare).
 
 **Where a setting lives**: a setting of the content (a picture's glow, a piece's light) sits with the content on
 2 Content (`UI/LightRow.cs`), one of the sign's pose or the content's place on 3 Place (`FitPanel`); a text's light is
-its own tags, so the Text source rewrites the text instead of keeping a mode. Where the sign itself stands (Move the sign) is *Sign
-positioning* on 3 Place, how it turns (its pose, Turn, Rotate: 0.20.66) *Sign rotations*, how the content sits on it
-*Content positioning* (0.20.8: the author stood an emptied sign up again and found the pose rows greyed without
+its own tags, so the Text source rewrites the text instead of keeping a mode. 3 Place has two groups (0.20.180):
+*Sign*, with how the sign turns (its pose, Tilt, Turn, Rotate: *Rotations*, 0.20.66) and where it stands (*Positioning
+fine-tune*), and *Content*, with how the content sits on it (*Positioning*, *Size*); each group ends in its own
+*Changes* box (1.1.0). The Sign group works on an empty sign too (0.20.8: the author stood an emptied sign up again and found the pose rows greyed without
 content; an empty sign's pose change is an *Apply*). A preference (Highlight signs, the window's size, text size and opacity) is on Settings, not on
 a step. 2 Content never puts anything on the sign:
 its footer leads to 3 Place, where the one verb button is (`ContentTab.DrawVerbButton`), so the pose, the place and
@@ -386,9 +453,9 @@ the frame in the world are seen first and nothing is placed twice.
 (`Source.Calculating`: the folder, the picture, its count, a piece; a press waiting for its count), the verb button and
 2 Content's way on say "Calculating ..." (the line under it what is counted); 20 s of it puts the reason in the log.
 
-**SignLink and the dev tool** (the author, 2026-10-13: here, though, I would draw the line between what the SignLink mod is and what our developer tool is; SignLink having its own API is already overpowered, I would not go further ... when we publish, I do not want this loader approach in my mod, I want it as a pure mod): SignLink is a pure mod. What it ships
-is the plugin and its own sign API, and that API is the limit: it gets no screenshots, no driving of its window, no
-access to other objects. Everything for developing it (ScriptEngine's reload, screenshots, a window driven by a test,
+**SignLink and the dev tool** (the author, 2026-10-13: here, though, I would draw the line between what the SignLink mod is and what our developer tool is ... when we publish, I do not want this loader approach in my mod, I want it as a pure mod): SignLink is a pure mod. What it ships
+is the plugin and its window, and they are the limit: it gets no screenshots, no driving of its window, no
+access to other objects (the developer bridge drives a test game instead). Everything for developing it (ScriptEngine's reload, screenshots, a window driven by a test,
 UnityExplorer, the developer bridge and its MCP server) belongs to a separate dev-tool mod and project, never to
 SignLink's package. The clean unload below stays in SignLink: every mod should undo what it changed when it unloads,
 and it names no loader.
@@ -397,13 +464,13 @@ and it names no loader.
 loads plugins from `BepInEx/scripts` under a new assembly name each time and, on a reload (its file watcher, or F6),
 destroys the old copy's GameObject first: `Plugin.OnDestroy` and `SignLinkWindow.OnDisable`/`OnDestroy` run, and the new
 copy's `Awake` a frame later. So everything SignLink changes in the game is undone there: the window is shut as a
-player shuts it (moves written; not while the game quits, `Application.quitting`), the API's and stored animations give
-their signs their saved texts back, screens stop, the HTTP server closes its port, the patches go, and every Unity
+player shuts it (moves written; not while the game quits, `Application.quitting`), stored animations give
+their signs their saved texts back, screens stop, the patches go, and every Unity
 object it made is destroyed (selection and hover frames, Show all's frames, the preview's copies, quick views and list
 thumbnails, the frames' shared materials and meshes `Ghost.ReleaseShared`, the window's textures `Theme.Release`). The
 new copy's registry starts empty while the signs awoke long ago: `SignFinder.Seed` adds every loaded sign as long
 arrived. Statics are the old assembly's and stay with it (Mono never unloads an assembly), so a new rule: whatever a
-feature creates in the game (objects, patches, subscriptions to the game's events, threads, ports) gets its undo in
+feature creates in the game (objects, patches, subscriptions to the game's events, threads) gets its undo in
 these OnDestroy paths. Only one copy may load (the same GUID is refused): `./sign.sh dev` puts it in `scripts/` and
 takes it out of `plugins/`, `./sign.sh plugin` the other way.
 
@@ -413,35 +480,35 @@ names it, under the bar). Making and removing signs is allowed everywhere since 
 
 | Where | Control | Enabled when |
 |---|---|---|
-| target bar | Pick in view, Signs nearby, the list's rows | always |
+| target bar (1 Sign) | Select sign, Signs nearby, the list's rows | always |
+| target bar | Clear selection (at the bar's right, 1.1.0) | a sign is selected |
 | 1 Sign | Clear | a sign, editable, holds something |
 | 1 Sign | Copy | a sign that holds something |
 | 1 Sign | Paste | a sign, editable (over content: asks twice; over a multiplayer limit it fails and says why) |
 | 1 Sign | Delete | a sign, editable |
 | 1 Sign | Next ▸ (to 2 Content; 1.0.2: "Next", the clearest word) | a sign |
-| 1 Sign | Stop the tool's animation (a GIF's Pause / Play is on Playing since 0.20.117) | a tool's animation playing on the stack |
 | 2 Content | the source strip, every list, Reload, Open folder | always |
 | the tab strip | 2 Content, 3 Place | a selected sign (`SignLinkWindow.NeedsSign`, 0.20.73); the picker is on 1 Sign only |
 | 2 Content | Light (every source's last group, under its own title, 0.20.69), a picture's pixel options, the text box, Reset (the sign's text) | `Source.Ready`: a sign, editable (`Source.NotReady` says so under the rows) |
 | 2 Content | Hide list (Picture, Art) | something picked: with nothing picked the list is all there is (0.20.69) |
 | 2 Content | Next ▸ (to 3 Place) | a sign, nothing picked wrong (`Source.Problem`), within the multiplayer limits (`Source.Limit`), no `Reason` |
-| 3 Place | the pose rows, Move the sign, the content rows | a sign and no `Reason` (the content rows also need content, picked or held) |
-| 3 Place | Undo changes | the chosen fit or light differs from the sign's (0.20.40: a new pick or new picture settings are not its to undo) |
-| 3 Place | Content positioning, Content size (sections) | content that can move or be resized: otherwise shown closed, the title grey (0.20.77) |
-| 3 Place | Reset to default (Content positioning) | content that can move, off the sign's middle (Right, Up; the size and the pose stay) |
+| 3 Place | Sign › Rotations and Positioning fine-tune, the content rows | a sign and no `Reason` (the content rows also need content, picked or held) |
+| 3 Place | Undo changes (the footer) | the chosen fit or light differs from the sign's, the source holds something else than the sign (`Source.Reverts`: a picture's width or Resolution, a typed text), or steps not applied: it undoes both groups' changes at once (0.20.186) |
+| 3 Place | the Content group | content that can move or be resized: otherwise shown closed, the title grey (0.20.77) |
+| 3 Place | Apply content changes, Undo (Content › Changes) | a size, place, light or setting changed and not put on; Apply also waits while a tilt or rotation waits ("apply Sign first") |
+| 3 Place | Reset to default (Content › Changes) | content that can move, off the sign's middle (Right, Up; the size and the pose stay) |
 | 3 Place | Right / Up | with the content rows: along the sign's face as you read it (no third direction: a sign's content has no depth, 0.20.27) |
-| 3 Place | Apply sign coord changes, Undo steps (the Sign group) | steps or turns not applied yet (`SignMove.HasPending`), or a tilt or rotation waiting (refused while `SignMove.Unheld` or `ContentTab.PoseProblem` says why; a pose goes on through `SignFit.Refit` with the content's place along the face kept, `Fit.Laid`); Apply writes them and makes the signs again where they stand (`SignPose.Remake`, 0.20.72: every player sees it at once); closing the window or selecting another sign undoes them (`SignMove.Revert`) |
-| 3 Place | Reset to default (Changes) | moved, turned, tilted or rotated since it was built, or steps not applied (at once, for everyone: the signs made again where and as built; steps never applied are dropped) |
-| 3 Place | Rotate, Tilt, the pose buttons (Sign rotations) | a sign (an empty one too: its pose changes with an *Apply*) |
+| 3 Place | Apply sign coord changes, Undo steps (Sign › Changes) | steps or turns not applied yet (`SignMove.HasPending`), or a tilt or rotation waiting (refused while `SignMove.Unheld` or `ContentTab.PoseProblem` says why; a pose goes on through `SignFit.Refit` with the content's place along the face kept, `Fit.Laid`); Apply writes them and makes the signs again where they stand (`SignPose.Remake`, 0.20.72: every player sees it at once); closing the window or selecting another sign undoes them (`SignMove.Revert`) |
+| 3 Place | Reset to default (Sign › Changes) | moved, turned, tilted or rotated since it was built, or steps not applied (at once, for everyone: the signs made again where and as built; steps never applied are dropped) |
+| 3 Place | Rotate, Tilt, the pose buttons (Sign › Rotations) | a sign (an empty one too: its pose changes with an *Apply*) |
 | 3 Place | the verb button | per `Change.Decide`: greyed as "Select a sign first", "As it is", the problem or the multiplayer limit; "Working ..." while busy |
 | Playing | Moving off and on, for everyone (a saved animation: `signlink_anim_still`, the mark of the frames kept; a GIF: its recipe's Animate) | the sign is editable (a ward) |
 | Playing | Pause / Play (both kinds, here only) | always |
 | Settings | Playback: Pause beyond (from Playing, 0.20.54) | always |
 | Playing | Pause all GIFs, Pause all glyph animations (0.20.163) | always |
-| Settings | Sign options › Highlight signs (On / Off) | always; when off, the window says so under the selected sign (0.20.36, renamed 0.20.45) |
-| 1 Sign | Show all SignLink signs (On / Off) | always; while on, no sign is selected; Pick in view, Signs nearby, E and Open in SignLink switch it off and pick (0.20.88) |
-| Settings | Sign options › Highlight sign contents (On / Off) | Highlight signs on (the content's frame: an even green veil over what shows (0.20.112), the same in deep red where something stands in front of it (0.20.113), 25 % since 0.20.136 (45 % before), grey stripes from behind; 0.20.86, colours 0.20.88-0.20.89, 0.20.94; off: the board alone; 0.20.76) |
-| Settings | the API's network switch, password buttons | the API is on (the password buttons: a password exists) |
+| Settings | Sign options › Highlight signs (On / Off) | always; every board outline: the selected sign, Show all, the hover, the faint ones while choosing (0.20.36, renamed 0.20.45; since 1.1.0 the boards alone, the content's frames are the next row's); with both off the window says so under the selected sign |
+| last row, every tab | Show all SignLink signs (a check box since 1.1.0; On / Off on 1 Sign before) | Highlight signs or Highlight sign contents on (both off: grey and switched off, 1.1.0); while on, no sign is selected; Select sign, Signs nearby, E and Open in SignLink switch it off and pick (0.20.88) |
+| Settings | Sign options › Highlight sign contents (On / Off) | always since 1.1.0 (the author: two switches, one does this, the other that; it needed Highlight signs on before) (the content's frame: an even green veil over what shows (0.20.112), the same in deep red where something stands in front of it (0.20.113), 25 % since 0.20.136 (45 % before), grey stripes from behind; 0.20.86, colours 0.20.88-0.20.89, 0.20.94; off: the board alone; 0.20.76) |
 
 **The multiplayer limits** (0.20.32, 0.20.33; the author after three large pictures froze a client on a dedicated
 server: in multiplayer the limit should be 600 KB in an area and 300 KB on one sign). In a shared world
@@ -449,14 +516,15 @@ server: in multiplayer the limit should be 600 KB in an area and 300 KB on one s
 `SaveCost.SignLimit` (300 KB, as `SaveCost.Bytes` counts: texts, 100 bytes a sign, a saved animation) on one sign
 stack, and SignLink's signs within `SaveCost.AreaRadiusM` (100 m) of it hold at most `SaveCost.AreaLimit` (600 KB)
 together, every player's (`SignArea.Others`, by SignLink's marks, `SignMarks.IsSignLinks`; vanilla signs do not count
-since 0.20.67, the game's editor keeps each small; only signs loaded here count: about 128 m around the player at the classic view distance, about 64-90 m at the lower ones (`client/SimulationDistance.cs:41-49`, `client/ZNetScene.cs:360-367`), so a sign far from the player, or a low view distance, can miss signs at the area's edge (0.20.152 review; how to handle it is open).
+since 0.20.67, the game's editor keeps each small; only signs loaded here count: about 128 m around the player at the classic view distance, about 64-90 m at the lower ones (`client/SimulationDistance.cs:41-49`, `client/ZNetScene.cs:360-367`), so a sign far from the player, or a low view distance, can miss signs at the area's edge (0.20.152 review; kept as it is after the 2026-10-16 multiplayer test, `docs/release-checklist.md`).
 `SaveCost.Allowed` decides both; content no bigger than what the sign holds now is always allowed, so a full area
 can still be made lighter. The window greys the button with the reason (`Source.Limit`) and shows the area as a bar
-on 2 Content (`AreaMeter`: "250 KB / 600 KB multiplayer limit within 100 m; with this: 370 KB") and in the window's
-title (0.20.34, `SignLinkWindow.AreaTitle`: around the selected sign, else around the player); every
-write refuses it as well (`SignText.RequireRoom` in `SignBuilder.SetContent`, `SignPose.Set` when it makes the signs
-again, `SignPose.Remake`, `StoredAnims.Store`, the API's text write, clone and synced animations). Removing is
-always allowed; single player has no limit, and its Area bar only informs (grey and amber, against a server's 600 KB).
+in the footers of 2 Content and 3 Place (`AreaMeter`: "370 KB / 600 KB within 100 m · already 250 KB · 3 SignLink
+signs") and in the window's title (0.20.34, `SignLinkWindow.AreaTitle`: around the selected sign, else around the
+player); every write refuses it as well (`SignText.RequireRoom` in `SignBuilder.SetContent`, `SignPose.Set` when it
+makes the signs again, `SignPose.Remake`, `StoredAnims.Store`). Removing is
+always allowed. Single player has no limit: no Area bar there (1.1.0; it informed against a server's 600 KB since 1.0.2),
+and the title says what the signs around hold, without the limit.
 
 **A picture's cost is estimated while it is counted again** (0.20.125; the author: the calculation runs 3-4 times or keeps
 flicking the button below, which flashes yellow ... let's make a smooth solution). A Width, Height or Resolution step changes the
@@ -464,7 +532,7 @@ picture's options key, so its texts are counted again (`PictureSource.Count`, ha
 then the last count of the same file (and stamp) scaled to the pixels now (`SaveCost.Scaled`, `PictureSource.Estimated`)
 stands in: the rows read "about ... (counting ...)", the area meter and the limits use it, and the button does not go
 grey and light up again after every step. A press on the estimate waits for the count (the button says "Working ...")
-and then goes on only if the counted bytes pass `Problem` and `Source.Limit`; Max, Place's texts and every write use
+and then goes on only if the counted bytes pass `Problem` and `Source.Limit`; Multiplayer max, Place's texts and every write use
 the counted numbers only (`Have`), and `SignText.RequireRoom` still guards every write.
 
 **Pieces are put centred** (0.20.38; the author: the glyph art pieces are not centred by default at 0-0-0). A
@@ -493,7 +561,7 @@ alignment centres the block on the first line's ascender and the last line's des
 7c), so the anchors make that a constant and every content line lands where asked by the engine's formulas; the
 glyph metrics come from the game's font assets (`signart/palette.py` → `GlyphData.cs`, `./sign.sh palette`). The
 output stays within what `TextTransform` scales, so 3 Place moves and resizes it. **The text in the live preview**
-(`ContentPreview`, 0.20.129; a local one-frame animation on the selected sign itself before, `TextAnimator.Preview`):
+(`ContentPreview`, 0.20.129; a local one-frame animation on the selected sign itself before):
 the Text source works out the text as `FitTexts.ForPut` writes it a third of a second after the last change
 (`TextSource.WorkOutPreview`), and the preview shows it for this computer only; it ends when the text empties, the
 sign changes, the source closes or the text is written.
@@ -504,7 +572,7 @@ buttons, fields' insides, the toggle's inside); text, frames and the toggle's ma
 the dragged value (`SettingsTab.PreviewOpacity`, read by `SignLinkWindow.Layout`) and writes the config once the
 slider is let go (`hotControl` and `keyboardControl` both 0) or the window closes.
 
-**Move the sign writes late, the base reads early** (`Signs/SignMove.cs`, `SignPose.Base`): a nudge or a turn moves
+**A move of the sign writes late, the base reads early** (`Signs/SignMove.cs`, `SignPose.Base`): a nudge or a turn moves
 the signs at once and writes their ZDOs half a second after the last step (one update for a run of clicks). The pose
 as built (`BaseP`, `BaseR` on the first sign) moves and turns with the stack at that write (`MoveBase`); until then
 `SignPose.Base` applies the pending move and turn (`SignMove.Pending`, `PendingTurn`) to the stored base itself, so
@@ -519,9 +587,9 @@ nearest loaded first sign whose recipe (`SignMarks.Source`, `SignRecipe.Animate`
 images folder and that has no screen is decoded again on a worker (one at a time, `GifDecoder` as the import) and its
 screen started as the import did (`PictureImporter.PlayOver`: the plan from the recipe and the GIF's size, centre and
 bottom from the fit on the sign, `SignFit.Read`). So it moves on every computer that has the file, and the frames
-stay out of the world (a GIF's frames are megabytes, `docs/limits.md`). A sign passed over (no file,
-a bad file, or stopped on the Playing tab or through the API) is remembered by its ZDO and recipe until the recipe
-changes or the game restarts; one whose frames find no room in the screens' budget is tried again after a minute (0.20.152). The plan comes from the recipe's width and pixel, not its Resolution, which Fine Width may miss by a few pixels (0.20.152).
+stay out of the world (a GIF's frames are megabytes, `docs/limits.md`). A sign passed over (a name that
+is no file name here, a bad file) is remembered by its ZDO and recipe until the recipe changes or the game restarts; a
+file not in the images folder is looked for again every minute (1.0.2); one whose frames find no room in the screens' budget is tried again after a minute (0.20.152). The plan comes from the recipe's width and pixel, not its Resolution, which Fine Width may miss by a few pixels (0.20.152).
 
 **A GIF is decoded once** (`ScreenPlayer.Park`, 0.20.14): a screen whose sign goes (the stack rewritten by
 `SignBuilder.SetContent`, made again by `SignPose.Set`, or unloaded) parks its frames under the file's stamp
@@ -532,15 +600,15 @@ make room for a nearer one (`ScreenPlayer.MakeRoom`); its file's size and frame 
 the wait reads nothing. `ScreenRestore` takes parked frames before it reads the file, and the
 window asks for a scan at once after any change (`Restore.Soon` on `Session.Changed`), so a moving GIF refits like a
 still (its texts moved in place, `Change.Decide` → *Refit*; 0.20.7-0.20.13 forced an *Update* because a refit lost the
-screen) and plays on within a frame or two. A screen the player stops drops its frames. What really needs a new
+screen) and plays on within a frame or two. A GIF switched off on the Playing tab (Moving) parks its frames too, so switched on
+it moves at once (1.0.2). What really needs a new
 encode is a change of the still's pixels: width, pixel size, transparency, seamless pixels. From the author's log a
 still's encode is cheap (the grid 90 ms, the texts 0.2-0.4 s for 360x640 over 7 signs); the costly parts are the GIF
 decode (seconds, on a worker; 90 MB of frames for 137 frames at 360x640) and a rebuild of the stack when its pose
 changes (about 4 s: every sign is made again, because the game places a sign only when it loads). Screens log their
 start and stop and, after 3 s without a new frame, why (`ScreenPlayer.Idle`). The player pauses a screen rather than
 stopping it (`ScreenPlayer.Pause`, 0.20.15): the frames and the row stay, Play goes on from the same frame, and
-`ScreenRestore` keeps the pause for a screen restored after an unload (by ZDO and recipe). A real stop with no
-restart is for tools only (`/screen/stop`, `ScreenRestore.Stopped`). The shown/s figure is a two-second window
+`ScreenRestore` keeps the pause for a screen restored after an unload (by ZDO and recipe). The shown/s figure is a two-second window
 (`RateWindow`); a figure since the start crept down while playback was off and never recovered.
 
 **Moving GIFs for players without the file** (frozen 2026-10-11): the frames are not in the world, and putting a
@@ -572,15 +640,19 @@ which `SignLinkWindow.OnGUI` applies at a Layout event with `GUIUtility.hotContr
 - **Where.** The frames go into a byte array on the sign's ZDO (`ZDO.Set(int, byte[])`, `ZDO.cs:454`). Vanilla
   stores the gzipped map data the same way (`MapTable.cs:122`). Custom keys persist on dedicated servers
   (`ZDOExtraData.cs:94-103`).
-- **Format.** A versioned header (fps, frame count, start time, hash of the static text), then
-  `Utils.Compress` of the frames.
-  - The vanilla `text` keeps one frame as the static picture for clients without the mod.
-  - If the text no longer matches the stored hash, the animation is ignored: someone edited the sign by hand.
-- **Size.** Write once, never per frame: every `Set` resends the whole ZDO. Keep a blob far below the 512 KiB
-  network limit (`docs/limits.md`); the cap is to be set from measurements.
+- **Format** (`Animation/AnimBlob.cs`, the key `signlink_anim`). A versioned header (the magic `SLA1`, the frame rate,
+  the frame count, the packed length), then the frames joined with U+001E and gzipped.
+  - The vanilla `text` holds the first frame: the still picture for clients without the mod.
+  - A blob whose first frame is no longer the sign's text is not played: someone edited the sign by hand.
+- **Size.** Write once, never per frame: every `Set` resends the whole ZDO. Text and blob together stay under
+  `AnimBlob.MaxBytes` (400 KiB), below the 512 KiB network limit (`docs/limits.md`); the frames under
+  `AnimBlob.MaxChars` (16M characters).
 - **Playback.** Every SignLink client plays what it finds on a sign within range. The frame comes from the
-  synchronised world time (`ZNet.GetTimeSeconds()`), so all players see the same frame. Playback is
-  culled by distance, a global frame budget limits the cost, and a menu toggle turns all of it off.
+  synchronised world time (`ZNet.GetTimeSeconds()`), so all players see the same frame. A blob from another player's
+  sign is judged on a worker first (unpacked within `AnimBlob`'s caps, its frames' cost counted) and refused when a
+  frame would take too long to show. Playback is culled by distance (Settings › Playback › Pause beyond), a global
+  frame budget limits the cost, and the Playing tab's *Pause all glyph animations* (`4 - Playback / PlayAnimations`)
+  turns all of it off.
 - **Moving off, for everyone.** The Playing tab's Moving switch sets the int `signlink_anim_still` on the sign: the
   mark of the frames switched off (`StoredAnims.Mark`, a hash of the blob's length and ends), so frames a SignLink 1.0.1
   player puts there later, unaware of the key, move (1.0.2, review). No SignLink client plays the frames it marks, and the sign shows its first frame. The frames stay, so Moving
@@ -590,12 +662,12 @@ which `SignLinkWindow.OnGUI` applies at a Layout event with `GUIUtility.hotContr
   it (the clip's `still=1`). A GIF's Moving is its recipe's
   Animate. SignLink 1.0.1 knows neither: its players still see a glyph animation switched off move (a GIF follows the
   recipe there too).
-- **Text refresh.** Vanilla rewrites the text widget every 2 s (`Sign.cs:39`, `:141-163`). Patch it so an
-  animated sign is left alone; animate only when the sign is viewable (`m_isViewable`). `Signs/FastRefresh.cs`
-  re-reads changed signs sooner for animations a tool writes over the network (`/anim` in `zdo` mode); since
-  0.20.17 its pace is `3 - Sign options / RefreshSeconds` (0.1-2 s), 2 s by default, which is the game's own pace and
-  runs nothing: the author called the switch legacy, and the direction is one local-playback module for art
-  animations and GIFs alike, with nothing animated in the world.
+- **Text refresh.** Vanilla refreshes the text every 2 s (`client/Sign.cs:39`): while the ZDO's data revision is
+  unchanged it writes `m_currentText` into the text widget again (`client/Sign.cs:95-101`, `:127-162`). A frame
+  therefore sets `m_currentText` along with the widget (`SignText.Apply(..., local: true)`), and no patch is needed;
+  frames play only while the sign is viewable (`m_isViewable`). Changed signs are re-read at the game's own 2 s pace
+  (a faster re-read, `3 - Sign options / RefreshSeconds`, went in 1.1.0: no use in the mod). The direction is one
+  local-playback module for art animations and GIFs alike, with no frame written to the world while it plays.
 
 ## Packaging (Thunderstore)
 
@@ -604,24 +676,63 @@ which `SignLinkWindow.OnGUI` applies at a Layout event with `GUIUtility.hotContr
   - `version_number` is semver with no suffix, and an uploaded version cannot change;
   - `description` is at most 250 characters;
   - `dependencies` is `["denikson-BepInExPack_Valheim-5.4.2351"]`;
-  - `website_url` is the repo URL or `""`.
+  - `website_url` is the repo URL (the GitHub repository).
 - **Package files:**
   - `icon.png` exactly 256 x 256;
   - `README.md` (UTF-8, shown on the site);
-  - `CHANGELOG.md`;
+  - `CHANGELOG.md`, `LICENSE`, `LICENSE-ART`;
   - the zip holds these files and `plugins/SignLink.dll`, with no game or BepInEx DLLs.
-- **Categories:** the one list is in `docs/release-checklist.md` (Upload).
 - **Team and categories:**
   - the team (namespace) is set on Thunderstore, not in the manifest;
-  - categories: client-side, tools/building, and **AI Generated**, which the global rules require for
-    AI-written code;
+  - the categories are listed once, in `docs/release-checklist.md` (A release); **AI Generated** is among them, which
+    the global rules require for AI-written code;
   - the rules also forbid obfuscated code and code downloaded at runtime, and require tested builds and an
     accurate README.
-- **Build and publish.** `tcli build` from `thunderstore.toml` with copy entries for the DLL and the CHANGELOG;
-  `tcli publish` with `TCLI_AUTH_TOKEN`.
+- **Build and publish.** `./sign.sh package` (`mod/package/package.py`) builds and checks the zips; the upload is made
+  on the website. `tcli build` / `tcli publish` (a `thunderstore.toml`, `TCLI_AUTH_TOKEN`) would also do; not used.
 - **CI (later).** A GitHub Actions build against the dedicated server's Managed folder (SteamCMD app 896660,
   anonymous) and the BepInEx pack.
 - **License.** MIT is the norm (Jotunn, ServerSync, Azumatt).
+
+## Thunderstore review (what gets a package hidden)
+
+Learned from SignLink 1.0.2 (hidden as "Invalid submission", back with 1.0.3) and 27 threads of the Thunderstore
+Discord's rejected-uploads forum read on 2026-10-19. An upload is scanned, and a flagged one is hidden at once: the
+package page answers 404 and mod managers drop it until a reviewer looks. The reason shown is always the generic
+"Invalid submission". Reviewers read the decompiled DLL, which the package's *Analysis* tab
+(`/c/<community>/p/<team>/<name>/source`) shows to everyone.
+
+- **Code that gets flagged:**
+  - `Assembly.Load` or any DLL loaded or downloaded at runtime; nothing may be downloaded without the player's consent;
+  - starting processes: `cmd`, PowerShell, `Process.Start`, even a file dialog or a game restart done that way;
+  - network code: a listening port (SignLink 1.0.2's web server), calls to one's own server or to outside APIs;
+  - obfuscation (never allowed);
+  - debug and developer tools: build them out of the release (`#if DEBUG` or a build switch), or better, keep them in
+    a separate tool (SignLink is tested through a private developer bridge).
+- **Package contents that get flagged:**
+  - DLLs of other mods, common libraries bundled in (Newtonsoft.Json, Microsoft.Extensions.* and their dozens of
+    DLLs): depend on their own package instead, or do without;
+  - source code, development files or leftover builds in the zip;
+  - zip entries with backslashes (Windows PowerShell's zip tool writes `plugins\x.dll`).
+- **Files the mod writes:** nothing big and nothing secret under `BepInEx/config`. Mod managers pack the config
+  folder into every exported profile and profile code (about 50 MB at most), so pictures, caches and secrets go to
+  `Application.persistentDataPath` (the game's own data folder) or the cache folder, moved over once from an old
+  place.
+- **The README:** accurate, for players; no development or verification notes (a Valheim mod was asked to remove a
+  "Development verification" section). AI-written code carries the *AI Generated* category wherever the community has it.
+- **The build:** a `.csproj` and `dotnet build`, not a script feeding files to `csc`; publicised game assemblies
+  instead of reflection where possible.
+- **The mod's scope:** keep a mod to what its name says; unrelated extras draw questions.
+- **Attitudes differ by community.** Valheim approves AI-written mods that are tagged and clean. The Balatro community
+  rejected one outright as AI-generated ("a lack of understanding of the ecosystem"). Members of the forum also hunt for
+  signs of AI-written code; the reviewers judge by the rules above.
+- **When it happens:**
+  - post in the rejected-uploads forum with the package link, what the mod does and the source link; answer
+    questions briefly and factually;
+  - fix what is named, upload a new version, and reply in the same thread;
+  - a package that was flagged once may need a manual approval on every update: say so in the thread before uploading,
+    so it is hidden for as short a time as possible;
+  - never delete a package to upload it again.
 
 ## Sources
 

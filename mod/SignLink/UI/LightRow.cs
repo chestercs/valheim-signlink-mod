@@ -14,8 +14,11 @@ namespace SignLink.UI
     {
         public static readonly GlowMode[] PictureLights = { GlowMode.Glowing, GlowMode.Lit },
                                           PieceLights = { GlowMode.AsMade, GlowMode.Glowing, GlowMode.Lit };
-        public static readonly string[] PictureNames = { "Glowing", "Lit by the scene" },
-                                        PieceNames = { "As made", "Glowing", "Lit by the scene" };
+        static readonly ChoiceNames pictureNames = new ChoiceNames("Glowing", "Lit by the scene"),   // lang:keys
+                                    pieceNames = new ChoiceNames("As made", "Glowing", "Lit by the scene");   // lang:keys
+        /// <summary>The choices' names in the language in use (made again when it changes).</summary>
+        public static string[] PictureNames => pictureNames.Shown;
+        public static string[] PieceNames => pieceNames.Shown;
 
         /// <summary>Draws the group: its title and the row (no hint under it since 1.0.2, the author: no long texts), the last group of a source (0.20.69, the author: in
         /// 2 Content the light goes to the very bottom everywhere after all; not into the footer, just the last of the
@@ -24,11 +27,11 @@ namespace SignLink.UI
         public static void Draw(Session s, SignLinkWindow w, GlowMode[] lights, string[] names)
         {
             int at = Math.Max(0, Array.IndexOf(lights, s.Chosen.Light));
-            Widgets.Header("Light");
+            Widgets.Header(Lang.T("Light"));
             using (Widgets.Vertical(Theme.Section))
             {
                 {
-                    int pick = Widgets.Choice("Light", at, names, names.Length * 140f);   // small (0.20.85)
+                    int pick = Widgets.Choice(Lang.T("Light"), at, names, names.Length * 140f);   // small (0.20.85)
                     if (pick != at)
                     {
                         GlowMode m = lights[pick];

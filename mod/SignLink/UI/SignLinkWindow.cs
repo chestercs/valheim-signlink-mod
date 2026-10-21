@@ -12,13 +12,13 @@ namespace SignLink.UI
     /// Settings). Above the tabs' bodies sits the target sign bar (the sign you looked at when opening it, or picked
     /// later); below them each tab's footer (its main button, always in view) and the one status line. IMGUI with its own
     /// styles (Theme, at the player's Opacity): no assets, no dependencies; sizes are logical units drawn through Widgets.U at the text scale.
-    /// While it is open the game takes no input (InputBlockPatch, ScrollBlockPatch, InventoryBlockPatch); Pick in view
+    /// While it is open the game takes no input (InputBlockPatch, ScrollBlockPatch, InventoryBlockPatch); Select sign
     /// hides it until a click on a sign.</summary>
     internal sealed partial class SignLinkWindow : MonoBehaviour, IDeferred
     {
         public static bool IsOpen { get; private set; }
 
-        /// <summary>Pick in view: the window is hidden and the next click selects the sign under the cursor (the game's
+        /// <summary>Select sign: the window is hidden and the next click selects the sign under the cursor (the game's
         /// input stays blocked, so the cursor is free).</summary>
         public static bool Picking { get; private set; }
 
@@ -51,7 +51,7 @@ namespace SignLink.UI
 
         /// <summary>The frame in the world where the chosen content goes (Settings › Sign options › Highlight signs).</summary>
         readonly Ghost ghost = new Ghost();
-        /// <summary>The frame around the sign under the cursor (Pick in view, a row of Signs nearby): the content green
+        /// <summary>The frame around the sign under the cursor (Select sign, a row of Signs nearby): the content green
         /// and red as the selection's, the board cool white instead of neon lime.</summary>
         readonly Ghost hover = new Ghost(Ghost.Fill, Ghost.Line, Ghost.HoverBoard);
         bool hovering;
@@ -65,7 +65,7 @@ namespace SignLink.UI
 
         bool ListHovering => IsOpen && showNearby && listHover && Time.frameCount - listHoverAt <= 2;
 
-        /// <summary>The sign the tabs work on: for a stack, its rearmost sign (SignFinder.Hovered).</summary>
+        /// <summary>The sign the tabs work on: for a stack, its rearmost sign (SignFinder.Root).</summary>
         public Sign Target => Session.Target;
 
         /// <summary>An action is queued and not yet run: the footer's button says "Working ..." for the pass it was
@@ -88,7 +88,7 @@ namespace SignLink.UI
             Session.Changed += () =>
             {
                 barAt = -1f;                                                // the bar reads the sign again at once
-                LookAgain();                                                // the hover frame looks again (Pick in view, the list)
+                LookAgain();                                                // the hover frame looks again (Select sign, the list)
                 Plugin.Restore.Soon();                                      // a moving GIF's screen comes back at once after a change
             };
             try
@@ -96,7 +96,7 @@ namespace SignLink.UI
                 content = new ContentTab(this);
                 tabs = new Tab[] { new SignTab(this, content), content, new PlaceTab(this, content), new PlayingTab(this), new SettingsTab(this) };
                 if (!Plugin.Patched(typeof(Patches.InputBlockPatch)))
-                    Broken = "the input blocker did not apply (a game update?)";   // a window the game plays through is worse than none
+                    Broken = Lang.T("the input blocker did not apply (a game update?)");   // a window the game plays through is worse than none
             }
             catch (Exception e)
             {
@@ -164,7 +164,7 @@ namespace SignLink.UI
             if (cut > 0) said = said.Substring(0, cut);                     // the first part: what went where
             said = said.TrimEnd('.', ' ');
             if (said.Length > 0) said = char.ToUpperInvariant(said[0]) + said.Substring(1);
-            try { MessageHud.instance?.ShowMessage(MessageHud.MessageType.TopLeft, "SignLink: " + said); }
+            try { MessageHud.instance?.ShowMessage(MessageHud.MessageType.TopLeft, Lang.F("SignLink: {0}", said)); }
             catch (Exception) { }                                           // the corner message is a courtesy
             closeNow = true;                                                // at the next OnGUI, outside whatever said it
         }
@@ -190,32 +190,45 @@ namespace SignLink.UI
         float closeArmedAt = -100f;
 
         int updateFailures;
+        float retryAt;                                                      // after a failed Update: not again before this
         float lastUpdateWarning = -100f;
         float pickingAt;
 
         /// <summary>Guarded: a game update that breaks one of the UI checks (CanOpen) must not throw once a frame for
-        /// 30 s; three failures in a row mark the window Broken, which the command and the main menu say.</summary>
+        /// 30 s. After a failure it waits a second; ten in a row (some ten seconds of nothing working) mark the window
+        /// Broken, which the command and the main menu say (1.1.0, review: three failed frames, a burst while a zone
+        /// loaded, ended the window for the session). Broken or waiting, an open window still closes, so the game's input
+        /// is never left blocked.</summary>
         void Update()
         {
-            if (Broken != null) return;
+            if (Broken != null || Time.unscaledTime < retryAt)
+            {
+                if (IsOpen && (Broken != null || !Player.m_localPlayer))
+                {
+                    try { Close(); }
+                    catch (Exception e) { Plugin.Log.LogDebug($"window: close: {e.Message}"); }
+                }
+                return;
+            }
             try
             {
                 if (IsOpen && !Player.m_localPlayer) Close();              // died, logged out, lost the connection
                 showAll.Step(Time.unscaledTime);                            // Show all SignLink signs: open or shut
-                // every sign's board in faint grey while a click could select one (0.20.172, the author)
-                boards.Step(Time.unscaledTime, IsOpen && (Picking || !HasTarget) && !ShowAll.On);
+                // every sign's board in faint grey while a click could select one (0.20.172, the author); a board outline, so only
+                // with Highlight signs on (1.1.0, the author: each switch its own part)
+                boards.Step(Time.unscaledTime, IsOpen && (Picking || !HasTarget) && !ShowAll.On && PluginConfig.Highlight.Value);
                 // a click on a sign selects it, without Pick in view (0.20.172, the author: whenever I click a sign, select
                 // it, without Pick in view); a click on the window, or off any sign, does nothing here
-                if (IsOpen && !Picking && !ShowAll.On && Input.GetMouseButtonDown(0) && !PointerOver && GUIUtility.hotControl == 0)
+                if (IsOpen && !Picking && Input.GetMouseButtonDown(0) && !PointerOver && GUIUtility.hotControl == 0)   // Show all too (1.1.0)
                     ClickAt(Input.mousePosition);
                 if (IsOpen && Picking)
                 {
                     if (Input.GetMouseButtonDown(0) && Time.unscaledTime - pickingAt > 0.2f) PickAt(Input.mousePosition);
-                    else if (Input.GetMouseButtonDown(1)) Picking = false;
-                    else HoverAt(Input.mousePosition);
+                    else HoverAt(Input.mousePosition);                    // the right button turns the view (RightLook, 1.1.0)
                 }
                 else if (IsOpen && tabs[tab] is PlaceTab placeTab) placeTab.Keys();   // arrow keys move the sign
                 else if (IsOpen && tabs[tab] is ContentTab contentTab) contentTab.Keys(Session);   // up and down step the list
+                else if (IsOpen && showNearby && tabs[tab] is SignTab) NearbyKeys();         // ... and Signs nearby (1.1.0)
                 // nothing selected: the sign under the mouse wears the hover frame, as while picking (0.20.173, the author:
                 // the sign under my mouse has no hover state now ... it could work as with Pick in view when nothing is
                 // selected); a click selects it (ClickAt)
@@ -230,7 +243,8 @@ namespace SignLink.UI
                 // not while a new key is being chosen, nor while a text field takes the keys (a letter bound as the key)
                 if (!SettingsTab.CapturingKey && !(IsOpen && GUIUtility.keyboardControl != 0) && Pressed(PluginConfig.MenuKey.Value))
                 {
-                    if (IsOpen) Close();
+                    if (IsOpen && Picking) Picking = false;                  // ends Select sign, as Esc does (1.1.0, the author)
+                    else if (IsOpen) Close();
                     else if (CanOpen()) Open();
                 }
                 if (openAt >= 0f)
@@ -254,7 +268,8 @@ namespace SignLink.UI
             catch (Exception e)
             {
                 openAt = -1f;
-                if (++updateFailures >= 3) Broken = $"{e.GetType().Name}: {e.Message}";
+                if (++updateFailures >= 10) Broken = $"{e.GetType().Name}: {e.Message}";
+                else retryAt = Time.unscaledTime + 1f;
                 if (Time.unscaledTime - lastUpdateWarning > 10f)
                 {
                     lastUpdateWarning = Time.unscaledTime;
@@ -305,19 +320,26 @@ namespace SignLink.UI
             ShowTab(OpeningTab(Session.HasTarget ? Target : null));        // clears the status line too
         }
 
-        /// <summary>The sign whose board a ray hits (its stack's first sign), else the flat sign whose spot it meets; the
-        /// stack found on the way, or null (ShowHover finds it then).</summary>
+        /// <summary>The sign whose shown content (a picture, a text: ContentHit, 1.1.0) or board a ray meets first, nothing
+        /// solid in front of it (its stack's first sign), else the flat sign whose spot it meets; the stack found on the way,
+        /// or null (ShowHover finds it then).</summary>
         static Sign AlongRay(Vector3 origin, Vector3 direction, out List<Sign> stack)
         {
             stack = null;
-            if (Physics.Raycast(origin, direction, out RaycastHit hit, 60f, SignPose.Mask, QueryTriggerInteraction.Ignore))
+            const float Reach = 60f;
+            Sign board = null;
+            float solid = Reach;
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, Reach, SignPose.Mask, QueryTriggerInteraction.Ignore))
             {
-                Sign s = hit.collider ? hit.collider.GetComponentInParent<Sign>() : null;
-                if (s)
-                {
-                    stack = SignFinder.Stack(s);                            // its first sign, as SignFinder.Root finds it
-                    return stack.Count > 0 ? stack[0] : s;
-                }
+                solid = hit.distance;                                       // a wall, the ground or a board: what lies behind is hidden
+                board = hit.collider ? hit.collider.GetComponentInParent<Sign>() : null;
+            }
+            Sign shown = ContentHit.Nearest(origin, direction.normalized, solid, out _);
+            Sign s = shown ? shown : board;
+            if (s)
+            {
+                stack = SignFinder.Stack(s);                                // its first sign, as SignFinder.Root finds it
+                return stack.Count > 0 ? stack[0] : s;
             }
             return SignPose.Looked(origin, direction);
         }
@@ -328,21 +350,21 @@ namespace SignLink.UI
         /// SignLink that already has content); 1 Sign with none picked.</summary>
         static string OpeningTab(Sign picked)
         {
-            if (!picked) return "1 Sign";
+            if (!picked) return Lang.T("1 Sign");
             List<Sign> stack = SignFinder.Stack(picked);
             Sign root = stack.Count > 0 ? stack[0] : picked;
             bool edit = SignMarks.IsSignLinks(stack.Count > 0 ? stack : new List<Sign> { root }) && SignText.SavedText(root).Length > 0;
-            return edit ? "3 Place" : "2 Content";
+            return edit ? Lang.T("3 Place") : Lang.T("2 Content");
         }
 
         /// <summary>The body's scroll back to the top (a tab's content changed under it).</summary>
         public void ScrollToTop() => kit.Scroll = Vector2.zero;
 
-        /// <summary>Shows the tab with this title ("2 Content").</summary>
+        /// <summary>Shows the tab with this title, as Title says it in the language in use (Lang.T("2 Content")).</summary>
         public void ShowTab(string title)
         {
             for (int i = 0; i < tabs.Length; i++)
-                if (tabs[i].Title == title)
+                if (tabs[i].Title == title || tabs[i].Title == Lang.T(title))   // the English name too: one call works in every language
                 {
                     tab = i;
                     kit.Scroll = Vector2.zero;
@@ -374,7 +396,9 @@ namespace SignLink.UI
                     catch (Exception e) { Plugin.Log.LogWarning($"window: {e}"); }
                 }
             Thumbs.Clear();                                                 // the lists' textures go with the window
-            try { veil.End(); }                                             // the sign as it is, the window shut
+            ContentHit.Forget();                                            // no sign kept alive by the hover's measures
+            Widgets.DropClose();                                            // an open drop-down list with it
+            try { veil.End(); }                                           // the sign as it is, the window shut
             catch (Exception e) { Plugin.Log.LogWarning($"window: {e}"); }
             try { boardDouble.End(); }
             catch (Exception e) { Plugin.Log.LogWarning($"window: {e}"); }
@@ -439,7 +463,7 @@ namespace SignLink.UI
             if (!s) return;
             if (Broken != null)
             {
-                Player.m_localPlayer?.Message(MessageHud.MessageType.Center, $"SignLink {Plugin.Version} could not load: see BepInEx/LogOutput.log");
+                Player.m_localPlayer?.Message(MessageHud.MessageType.Center, Lang.F("SignLink {0} could not load: see BepInEx/LogOutput.log", Plugin.Version));
                 return;
             }
             List<Sign> stack = SignFinder.Stack(s);
@@ -451,7 +475,7 @@ namespace SignLink.UI
             if (ShowAll.On) SetShowAll(false);                              // a pick switches Show all off (0.20.88)
             SelectSign(stack.Count > 0 ? stack[0] : s);
             ShowTab(OpeningTab(stack.Count > 0 ? stack[0] : s));
-            Say(stack.Count > 1 ? $"opened ({stack.Count} signs)." : "opened.");
+            Say(stack.Count > 1 ? Lang.F("opened ({0} signs).", stack.Count) : Lang.T("opened."));
         }
 
         /// <summary>Selects what an action just made (a stack made again in a new pose); nothing if it is the target
@@ -468,22 +492,32 @@ namespace SignLink.UI
 
         /// <summary>The multiplayer area limit in the title (author, 2026-10-11: put it in the title when we are on a
         /// multiplayer server): what SignLink's signs within SaveCost.AreaRadiusM of the selected sign hold, or of the
-        /// player with none selected, against SaveCost.AreaLimit; nothing in single player. Read twice a second. The ways
-        /// to say it, longest first: the title takes the longest its room holds (TitleBar).</summary>
+        /// player with none selected, against SaveCost.AreaLimit; in single player what they hold alone (1.1.0, the author:
+        /// there too, without the limit, which means nothing there). Read twice a second. The ways to say it, longest
+        /// first: the title takes the longest its room holds (TitleBar).</summary>
         string[] AreaTitle()
         {
             if (Time.unscaledTime - areaTitleAt < 0.5f) return areaTitle;
             areaTitleAt = Time.unscaledTime;
-            if (!SignText.Shared()) return areaTitle = new string[0];
             long used;
             if (Session.HasTarget) used = Session.AreaNow;                 // SignLink's signs only, everyone's (0.20.67)
             else used = Player.m_localPlayer ? SignArea.Others(Player.m_localPlayer.transform.position, null, out _) : 0;
-            areaOver = used > SaveCost.AreaLimit;
             string u = SaveCost.Label(used), l = SaveCost.Label(SaveCost.AreaLimit);
+            if (!SignText.Shared())
+            {
+                areaOver = false;
+                return areaTitle = new[]
+                {
+                    Lang.F("{0} of SignLink signs within {1} m", u, SaveCost.AreaRadiusM),
+                    Lang.F("{0} within {1} m", u, SaveCost.AreaRadiusM),
+                    u,
+                };
+            }
+            areaOver = used > SaveCost.AreaLimit;
             return areaTitle = new[]
             {
-                $"{u} / {l} multiplayer area limit" + (areaOver ? " (over: only lighter content)" : ""),   // 0.20.108, the author
-                $"{u} / {l} area limit" + (areaOver ? " (over)" : ""),
+                areaOver ? Lang.F("{0} / {1} multiplayer area limit (over: only lighter content)", u, l) : Lang.F("{0} / {1} multiplayer area limit", u, l),   // 0.20.108, the author
+                areaOver ? Lang.F("{0} / {1} area limit (over)", u, l) : Lang.F("{0} / {1} area limit", u, l),
                 $"{u} / {l}",
             };
         }
@@ -549,6 +583,7 @@ namespace SignLink.UI
         public Vector2 Size => kit.Size;
 
         string[] names;
+        string namesFor;
         bool[] usable;
 
         readonly ShowAll showAll = new ShowAll();
@@ -584,10 +619,12 @@ namespace SignLink.UI
         {
             kit.BeginDraw();
             TitleBar();
-            if (names == null)
+            string lang = Lang.Current;
+            if (names == null || namesFor != lang)                          // the titles (in the language in use) again when it changes
             {
                 names = new string[tabs.Length];
                 for (int i = 0; i < tabs.Length; i++) names[i] = tabs[i].Title;
+                namesFor = lang;
             }
             // 2 Content and 3 Place work on a selected sign: greyed and closed without one (0.20.73, the author: until a sign
             // is picked, the 2 Content and 3 Place tabs are grey and disabled; they cannot even be looked at)
@@ -643,8 +680,9 @@ namespace SignLink.UI
                     if (picker) TargetBar();
                     if (Session.HasTarget && Session.Reason != null) GUILayout.Label(Session.Reason, Theme.Warn);
                     if (Session.HasTarget && Session.Missing != null) Widgets.Hint(Session.Missing);
-                    if (Session.HasTarget && !PluginConfig.Highlight.Value)   // a selected sign without its frame says why
-                        GUILayout.Label("Highlight off (Settings)", Theme.Notice);
+                    // a selected sign without any frame says why (both switches off: each is a part of its own since 1.1.0)
+                    if (Session.HasTarget && !PluginConfig.Highlight.Value && !PluginConfig.HighlightContent.Value)
+                        GUILayout.Label(Lang.T("Highlight off (Settings)"), Theme.Notice);
                     if (picker && showNearby) NearbyPanel();
                 }
                 catch (Exception e) when (!(e is ExitGUIException))
@@ -660,12 +698,13 @@ namespace SignLink.UI
             kit.EndTop();
             Widgets.Space(4);
             kit.Body(drawBody ?? (drawBody = DrawBody));                   // made once: no delegate an event (0.20.132)
-            kit.Footer(tab * 1000003 + choices, drawFooter ?? (drawFooter = DrawFooter));   // as tall as it was for this tab and choice
-            if (kit.CloseRow(CloseKeys())) Close();
+            // as tall as it was for this tab and choice; no box for a tab with no footer (the status line alone)
+            kit.Footer(tab * 1000003 + choices, drawFooter ?? (drawFooter = DrawFooter), t.HasFooter);
+            if (kit.CloseRow(CloseKeys(), drawShowAll ?? (drawShowAll = ShowAllBox))) Close();   // Show all at its start (1.1.0)
             kit.EndDraw();
         }
 
-        Action drawBody, drawFooter;
+        Action drawBody, drawFooter, drawShowAll;
 
         /// <summary>The tab's body, inside the kit's scroll.</summary>
         void DrawBody()
@@ -685,12 +724,19 @@ namespace SignLink.UI
             {
                 Failed(e);
             }
-            bool fresh = status.Length > 0 && Time.unscaledTime - statusAt < StatusSeconds;
+            // decided at the Layout: the time runs on between it and the Repaint, and a line that came or went in
+            // between would throw the layout
+            if (Event.current.type == EventType.Layout) statusFresh = status.Length > 0 && Time.unscaledTime - statusAt < StatusSeconds;
+            bool fresh = statusFresh;
             bool failed = status.StartsWith("error", StringComparison.Ordinal);
-            GUILayout.Label(!fresh ? " " : failed ? "Could not: " + status.Substring(Math.Min(status.Length, 7)) : "Done: " + status,
+            // in a footer box only while it says something (1.1.0, the author: an empty grey line stayed under the
+            // button); alone, on a tab with no footer, it keeps its line so the Close row stays put
+            if (!fresh && tabs[tab].HasFooter) return;
+            GUILayout.Label(!fresh ? " " : failed ? Lang.F("Could not: {0}", status.Substring(Math.Min(status.Length, 7))) : Lang.F("Done: {0}", status),
                             failed ? Theme.Warn : Theme.Good);
         }
 
+        bool statusFresh;                                                   // DrawFooter's status line, decided at the Layout
         string lastFailure;
 
         /// <summary>A tab threw while drawing: the status line says so, the log has the details (once per message), and

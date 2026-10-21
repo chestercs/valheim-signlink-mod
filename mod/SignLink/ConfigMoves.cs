@@ -6,8 +6,8 @@ namespace SignLink
 {
     /// <summary>0.19's config sections were named otherwise (1 - API, 2 - Playback, 3 - Viewer, 4 - Menu, 5 - Building),
     /// and 0.20.45 put the sign settings under 3 - Sign options with clearer names. BepInEx keys an entry by its section
-    /// and name, so an older file's values are orphans under the new names: the API would start with a new password and
-    /// switched off. Plan says where each goes; PluginConfig moves them once, at start. Stale names the entries later versions dropped, so they leave the file too. MoveFile carries the file
+    /// and name, so an older file's values are orphans under the new names: the settings would start from their defaults
+    /// again. Plan says where each goes; PluginConfig moves them once, at start. Stale names the entries later versions dropped, so they leave the file too. MoveFile carries the file
     /// itself over the new GUID of 0.20.43. No Unity here (mod/SignLink.Tests).</summary>
     internal static class ConfigMoves
     {
@@ -22,10 +22,8 @@ namespace SignLink
         /// <summary>Old section, new section, then the keys that moved between them.</summary>
         static readonly string[][] Moves =
         {
-            new[] { "1 - API", "9 - Developer API", "Enabled", "Port", "Password", "AllowNetwork" },
             new[] { "2 - Playback", "4 - Playback", "PlayAnimations", "Distance" },
             new[] { "4 - Menu", "1 - Menu", "Toggle", "Scale" },
-            new[] { "4 - Playback", "3 - Sign options", "RefreshSeconds" },                     // 0.20.45
         };
 
         /// <summary>Entries that took a new name ("Section|Key", old then new), a setting's newest old home first: the
@@ -40,8 +38,8 @@ namespace SignLink
 
         /// <summary>Entries no version keeps any more, under every section they ever had ("Section|Key"): HoverSprites
         /// (0.20.4: emoji sprites always leave sign hover texts, since the game leaves an animated one stuck by the
-        /// crosshair; the switch only let the bug back in), FastRefresh (0.20.17: the re-read pace is RefreshSeconds,
-        /// 2 s by default, which is the game's own pace; the switch was on by default for a networked animation mode
+        /// crosshair; the switch only let the bug back in), FastRefresh (0.20.17: the re-read pace became RefreshSeconds,
+        /// 2 s by default, which is the game's own pace, itself dropped in 1.1.0; the switch was on by default for a networked animation mode
         /// nobody uses from the window), MultiplayerSafe (0.20.39: every sign of a picture stays under 400 KB, always;
         /// the author: remove Multiplayer-safe? yes), AllowOnServers (0.20.44: SignLink makes and removes signs in
         /// multiplayer too; the multiplayer limits keep the content small, a ward still protects, and the switch was the
@@ -49,12 +47,14 @@ namespace SignLink
         /// its size), PreventEditor and its older names PictureSigns (1.0.2: the short hover line on a picture sign and E
         /// opening SignLink are always on; off, the game read a picture's whole text by the crosshair with a stutter, and a
         /// file that said off kept it off once the switch left the window), the developer API's entries (1.0.3: a released
-        /// SignLink has no web server, the Thunderstore moderators asked; a developer build binds them, so there they are no
-        /// orphans and stay, and its password with them).</summary>
+        /// SignLink has no web server, the Thunderstore moderators asked; 1.1.0: no build has it, the author: the game's
+        /// developer bridge does what it did), RefreshSeconds in both its homes (1.1.0, the author: the
+        /// re-read pace went, the mod no longer goes the way of animations a tool writes into signs; 2 s, the game's own
+        /// pace, is what remains).</summary>
         static readonly string[] Dropped =
         {
             "3 - Viewer|HoverSprites", "3 - Signs in the world|HoverSprites", "Viewer|HoverSprites",
-            "3 - Viewer|FastRefresh", "4 - Playback|FastRefresh",
+            "3 - Viewer|FastRefresh", "4 - Playback|FastRefresh", "Viewer|FastRefresh",   // the last a 0.1x section
             "5 - Pictures|MultiplayerSafe",
             "5 - Building|AllowOnServers", "2 - Building|AllowOnServers",
             "1 - Menu|WindowSize", "4 - Menu|WindowSize",
@@ -62,7 +62,9 @@ namespace SignLink
             "5 - Pictures|FineWidthSteps",                                  // FineWidth, on by default (0.20.124)
             "3 - Sign options|PreventEditor", "3 - Signs in the world|PictureSigns", "3 - Viewer|PictureSigns",   // always on (1.0.2)
             "9 - Developer API|Enabled", "9 - Developer API|Port", "9 - Developer API|AllowNetwork", "9 - Developer API|Password",
-            "1 - API|Enabled", "1 - API|Port", "1 - API|AllowNetwork", "1 - API|Password",          // a release: no API (1.0.3)
+            "1 - API|Enabled", "1 - API|Port", "1 - API|AllowNetwork", "1 - API|Password",          // no API (1.0.3; dev builds 1.1.0)
+            "Server|Port",                                                  // the API's port in 0.1x (1.1.0, review)
+            "3 - Sign options|RefreshSeconds", "4 - Playback|RefreshSeconds",                       // the re-read pace went (1.1.0)
         };
 
         /// <summary>For the orphaned entries ("Section|Key" to the value as written) that have a new home: the move, in

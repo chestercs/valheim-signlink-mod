@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using PetyusPolisz.Kit;
 using SignLink.Signs;
 using SignLink.UI;
 using UnityEngine;
@@ -72,8 +73,10 @@ namespace SignLink.Patches
             bool ours = marked && SignMarks.IsSignLinks(stack);
             // a piece of glyph art says so (0.20.191, test: Midnight light read "A long text")
             bool art = marked && SignMarks.Source(stack[0]).StartsWith("art|", StringComparison.Ordinal);
-            string what = picture ? "A picture" : art ? "Glyph art" : "A long text";
-            string line = (n > 1 ? $"{what} on {n} stacked signs" : what) + (ours ? " (SignLink)" : "");
+            string what = n > 1
+                ? (picture ? Lang.F("A picture on {0} stacked signs", n) : art ? Lang.F("Glyph art on {0} stacked signs", n) : Lang.F("A long text on {0} stacked signs", n))
+                : (picture ? Lang.T("A picture") : art ? Lang.T("Glyph art") : Lang.T("A long text"));
+            string line = what + (ours ? " (SignLink)" : "");
             e = new Entry { Revision = rev, At = Time.unscaledTime, Count = n, Ours = ours, Opens = marked || pictureLike, Picture = picture,
                             Line = line };
             lines[s] = e;
@@ -96,7 +99,7 @@ namespace SignLink.Patches
                 if (!PictureSign.Hovers(__instance)) return true;
                 string line = PictureSign.Line(__instance);
                 __result = !PictureSign.Opens(__instance) || !PrivateArea.CheckAccess(__instance.transform.position, 0f, false) ? line
-                    : line + "\n" + Localization.instance.Localize("[<color=yellow><b>$KEY_Use</b></color>]") + " Open in SignLink";
+                    : line + "\n" + Localization.instance.Localize("[<color=yellow><b>$KEY_Use</b></color>]") + " " + Lang.T("Open in SignLink");
                 return false;
             }
             catch (Exception e)
@@ -118,7 +121,9 @@ namespace SignLink.Patches
             if (off) return !Long(__instance, ref __result);
             try
             {
-                if (hold || !PictureSign.Opens(__instance) || !SignLinkWindow.Instance) return true;
+                if (hold || !PictureSign.Opens(__instance)) return true;
+                // no window (the plugin's start failed): the game's editor would cut the picture on Enter (1.1.0, review)
+                if (!SignLinkWindow.Instance) return !Long(__instance, ref __result);
                 __result = PrivateArea.CheckAccess(__instance.transform.position);    // flashes the ward, as the game does
                 if (__result) SignLinkWindow.Instance.OpenFor(__instance);
                 return false;

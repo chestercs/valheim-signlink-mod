@@ -8,7 +8,7 @@ using PetyusPolisz.Kit;
 
 namespace SignLink.UI
 {
-    /// <summary>The sign bar on 1 Sign (the selected sign, Pick in view, Signs nearby, Show all) and the nearby list.</summary>
+    /// <summary>The sign bar on 1 Sign (the selected sign, Select sign, Signs nearby, Clear selection) and the nearby list.</summary>
     internal partial class SignLinkWindow
     {
         void TargetBar()
@@ -23,11 +23,17 @@ namespace SignLink.UI
                     barPose = Mathf.Abs(Session.SignTilt) > 0.05f || Mathf.Abs(Session.SignTurn) > 0.05f
                         ? " · " + SignPose.Describe(Session.SignTilt, Session.SignTurn) : "";
                     barName = Session.Name;
+                    // the whole line once here, not on every event (1.1.0, review); its words whole for the translations
+                    string name = barName.Length > 0 ? barName : Lang.T("A sign");
+                    barLine = (barCount > 1 ? Lang.F("{0} · {1} · {2} signs", name, SignWords.Distance(Target), barCount)
+                                            : Lang.F("{0} · {1}", name, SignWords.Distance(Target))) + barPose;
                 }
-                bool view = has && Session.View.Has;                        // changes between frames only (Session)
-                if (view)
+                // the small view's place is kept while the view loads, so the buttons beside it stay put (1.1.0, the author:
+                // nothing should jump when it goes and comes back)
+                if (has)
                 {
-                    Session.View.DrawSmall(72, 40);
+                    if (Session.View.Has) Session.View.DrawSmall(72, 40);   // changes between frames only (Session)
+                    else Thumb.DrawEmpty("", 72, 40);
                     Widgets.Space(12);                                      // air between the picture and the rest
                 }
                 using (Widgets.Vertical())
@@ -37,25 +43,17 @@ namespace SignLink.UI
                     using (Widgets.Horizontal())
                     {
                         // picking switches Show all off (0.20.88, the author: the pick buttons should not be grey, they
-                        // switch Show all SignLink off by themselves)
-                        if (Widgets.Button("Pick in view", Theme.Button, Widgets.W(110)))
+                        // switch Show all SignLink off by themselves); "Select sign" (1.1.0, the author: was Pick in view)
+                        if (Widgets.Button(Lang.T("Select sign"), Theme.Button, Widgets.W(120)))
                             Later(() =>
                             {
                                 if (ShowAll.On) SetShowAll(false);
                                 StartPicking();
                             });
-                        // the selection dropped (0.20.173, the author: a Clear selection button beside Pick in view too):
-                        // the sign as it is, steps not applied dropped as picking another sign drops them
-                        bool was = GUI.enabled;
-                        GUI.enabled = was && has;
-                        if (Widgets.Button("Clear selection", Theme.Button, Widgets.W(140)))
-                            Later(() =>
-                            {
-                                SelectSign(null);
-                                Say("no sign selected.");
-                            });
-                        GUI.enabled = was;
-                        bool list = Widgets.Toggle(showNearby, showNearby ? "Hide list" : "Signs nearby", Theme.Tab, Widgets.W(140));   // lit while the list shows; bold needs the room
+                        // the same grey button as Select sign (1.1.0, the author), its words saying which way it goes (a button, not a
+                        // toggle: the look gives a button no "on" face, and the skin's bright one showed)
+                        bool list = showNearby;
+                        if (Widgets.Button(showNearby ? Lang.T("Hide list") : Lang.T("Signs nearby"), Theme.Button, Widgets.W(140))) list = !showNearby;
                         if (list != showNearby)
                             Later(() =>
                             {
@@ -63,18 +61,43 @@ namespace SignLink.UI
                                 showNearby = list;
                                 nearbyAt = -1f;
                             });
+                        if (showNearby) Widgets.KeysHere(Theme.Button, UpDownKeys);             // the arrows step the list (1.1.0): shown while it is open
                         GUILayout.FlexibleSpace();
+                        // the selection dropped (0.20.173, the author: a Clear selection button too), at the row's right end
+                        // in the tabs' look (1.1.0, the author): the sign as it is, steps not applied dropped as picking another
+                        // sign drops them
+                        bool was = GUI.enabled;
+                        GUI.enabled = was && has;
+                        if (Widgets.TabButton(Lang.T("Clear selection"), Widgets.W(150)))
+                            Later(() =>
+                            {
+                                SelectSign(null);
+                                Say(Lang.T("no sign selected."));
+                            });
+                        GUI.enabled = was;
                     }
-                    float nameW = Widgets.ContentWidth - 40 - (view ? 92 : 0);
+                    float nameW = Widgets.ContentWidth - 40 - (has ? 92 : 0);
                     if (has)
-                        GUILayout.Label((barName.Length > 0 ? barName : "A sign") + $" · {SignWords.Distance(Target)}" + (barCount > 1 ? $" · {barCount} signs" : "") + barPose,
-                                        Theme.Header, Widgets.W(nameW));
-                    else GUILayout.Label(ShowAll.On ? "All shown" : "No sign", Theme.Warn, Widgets.W(nameW));
+                        GUILayout.Label(barLine,
+                                        Theme.Lead, Widgets.W(nameW));
+                    // asks for a sign, not an error (1.1.0, the author: "No sign" → ask the player to choose the sign to work on)
+                    else GUILayout.Label(Lang.T("Select a sign to work on"), Theme.Notice, Widgets.W(nameW));
                 }
             }
-            // every SignLink sign framed in the world, the window open or shut, until switched off (0.20.87)
-            bool show = Widgets.OnOff("Show all SignLink signs", ShowAll.On);
-            if (show != ShowAll.On) Later(() => SetShowAll(show));
+        }
+
+        /// <summary>Show all SignLink signs, a check box in the Close row on every tab (1.1.0, the author: a check box by
+        /// Close, not an On / Off row under the sign bar): every SignLink sign framed in the world, the window open or shut,
+        /// until switched off (0.20.87).</summary>
+        void ShowAllBox()
+        {
+            // nothing to frame with: grey and off while both highlights are off (1.1.0, the author), and switched off if it was on
+            bool can = PluginConfig.Highlight.Value || PluginConfig.HighlightContent.Value, was = GUI.enabled;
+            if (!can && ShowAll.On && Event.current.type == EventType.Layout) Later(() => SetShowAll(false));
+            GUI.enabled = was && can;
+            bool show = Widgets.Check(can && ShowAll.On, Lang.T("Show all SignLink signs"));
+            GUI.enabled = was;
+            if (can && show != ShowAll.On) Later(() => SetShowAll(show));
         }
 
         // the sign finder: every sign within reach, or the ones SignLink made (wherever this game knows them); stacks
@@ -85,7 +108,23 @@ namespace SignLink.UI
         // SignLink's signs within the multiplayer area's reach (0.20.103, the author: look for SignLink signs in the same
         // range our 600kb limit checker uses): the loaded ones anywhere and every unloaded one in the
         // world before
-        static readonly string[] ListModes = { "Every sign within 30 m", $"SignLink signs within {SaveCost.AreaRadiusM} m" };
+        static string[] listModes;
+        static string listModesFor;
+
+        /// <summary>The list's two modes in the language in use, made again when it changes.</summary>
+        static string[] ListModes
+        {
+            get
+            {
+                string lang = Lang.Current;
+                if (listModes == null || listModesFor != lang)
+                {
+                    listModes = new[] { Lang.T("Every sign within 30 m"), Lang.F("SignLink signs within {0} m", SaveCost.AreaRadiusM) };
+                    listModesFor = lang;
+                }
+                return listModes;
+            }
+        }
         float nearbyAt = -1f, farAt = -100f;
         Vector2 nearbyScroll;
 
@@ -136,14 +175,15 @@ namespace SignLink.UI
                 // test: a moving cat read 2.9 KB here, 4.2 KB on 1 Sign)
                 byte[] blob = Animation.StoredAnims.Blob(first);
                 long save = bytes == 0 ? 0 : bytes + (long)SaveCost.PerSign * stack.Count + (blob != null && blob.Length > 0 ? blob.Length + 8 : 0);
-                string where = (ahead >= 0 ? $"{ahead:0.0} m ahead" : $"{-ahead:0.0} m behind") + " · " +
-                               (side >= 0 ? $"{side:0.0} m right" : $"{-side:0.0} m left") + " · " +
-                               (up >= 0 ? $"{up:0.0} m up" : $"{-up:0.0} m down");
+                string where = (ahead >= 0 ? Lang.F("{0:0.0} m ahead", ahead) : Lang.F("{0:0.0} m behind", -ahead)) + " · " +
+                               (side >= 0 ? Lang.F("{0:0.0} m right", side) : Lang.F("{0:0.0} m left", -side)) + " · " +
+                               (up >= 0 ? Lang.F("{0:0.0} m up", up) : Lang.F("{0:0.0} m down", -up));
                 nearby.Add(new NearbyRow
                 {
-                    Label = $"{What(stack, first, bytes, save)}   <size={Theme.SmallSize}><color=#b3ab99>{where}</color></size>",
-                    // on the selected row's amber a dark brown, not the grey (0.20.191, test: almost unreadable)
-                    SelectedLabel = $"{What(stack, first, bytes, save)}   <size={Theme.SmallSize}><color=#4a3c22>{where}</color></size>",
+                    Label = $"{What(stack, first, bytes, save)}   <size={Theme.SmallSize}><color={Theme.DimHex}>{where}</color></size>",
+                    // on the selected row a colour of its own (Classic: a dark brown on the amber, not the grey: 0.20.191, test: almost
+                    // unreadable; Nordic: a light grey on the slate)
+                    SelectedLabel = $"{What(stack, first, bytes, save)}   <size={Theme.SmallSize}><color={Theme.DimOnHex}>{where}</color></size>",
                     Sign = first, Order = ours ? 0 : bytes > 0 ? 1 : 2, Distance = dist,
                 });
             }
@@ -159,12 +199,12 @@ namespace SignLink.UI
             bool plain = name.Length == 0 && stack.Count == 1 && bytes > 0 && bytes < 400;
             string words = plain && first.m_isViewable ? SignRecipe.Clean(TextReadback.Words(new[] { SignText.SavedText(first) }, 28)) : "";
             var parts = new List<string>();
-            if (bytes == 0) parts.Add("empty");
+            if (bytes == 0) parts.Add(Lang.T("empty"));
             else
             {
                 parts.Add(name.Length > 0 ? name : plain && !first.m_isViewable ? Session.HiddenWords : words.Length > 0 ? $"\"{words}\"" :
-                          stack.Count > 1 ? "a picture" : "a sign");
-                if (stack.Count > 1) parts.Add($"{stack.Count} signs");
+                          stack.Count > 1 ? Lang.T("a picture") : Lang.T("a sign"));
+                if (stack.Count > 1) parts.Add(Lang.F("{0} signs", stack.Count));
                 parts.Add(SaveCost.Label(save));
             }
             SignPose.Read(first, out float tilt, out float turn);
@@ -234,16 +274,28 @@ namespace SignLink.UI
                 if (far.Count >= 60) break;
                 Vector3 d = e.Key.GetPosition() - me;
                 string name = SignRecipe.Clean(e.Key.GetString(SignMarks.NameKey, ""));
-                far.Add($"   {(name.Length > 0 ? name : "a sign")} · {(e.Value > 1 ? $"{e.Value} signs" : "1 sign")} · " +
-                        $"{new Vector2(d.x, d.z).magnitude:0} m {Compass(d)}");
+                far.Add($"   {(name.Length > 0 ? name : Lang.T("a sign"))} · {(e.Value > 1 ? Lang.F("{0} signs", e.Value) : Lang.T("1 sign"))} · " +
+                        Compass(d));
             }
         }
 
+        /// <summary>How far and which way d lies on the ground, a whole phrase each way ("12 m north"), for the translations
+        /// (each key written out: signart/lang_keys.py finds literal keys only).</summary>
         static string Compass(Vector3 d)
         {
-            string[] names = { "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" };
+            float m = new Vector2(d.x, d.z).magnitude;
             float a = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg;                // the map's up is +z
-            return names[(Mathf.RoundToInt(a / 45f) % 8 + 8) % 8];
+            switch ((Mathf.RoundToInt(a / 45f) % 8 + 8) % 8)
+            {
+                case 0: return Lang.F("{0:0} m north", m);
+                case 1: return Lang.F("{0:0} m north-east", m);
+                case 2: return Lang.F("{0:0} m east", m);
+                case 3: return Lang.F("{0:0} m south-east", m);
+                case 4: return Lang.F("{0:0} m south", m);
+                case 5: return Lang.F("{0:0} m south-west", m);
+                case 6: return Lang.F("{0:0} m west", m);
+                default: return Lang.F("{0:0} m north-west", m);
+            }
         }
 
         void NearbyPanel()
@@ -252,15 +304,30 @@ namespace SignLink.UI
             if (mode != listMode) Later(() => { listMode = mode; nearbyAt = -1f; farAt = -100f; });
             if (Event.current.type == EventType.Layout)                     // rows change only between frames
             {
-                if (Time.unscaledTime - nearbyAt > 1f) RefreshNearby();
+                if (Time.unscaledTime - nearbyAt > 1f && nearbyReveal < 0) RefreshNearby();   // not under an arrow's reveal: its row
+                                                                            // is where the last Repaint saw it (1.1.0, review)
                 if (listMode == 1 && Player.m_localPlayer) WalkFar(Player.m_localPlayer.transform.position);
+            }
+            float viewH = Widgets.U(Widgets.Tall(170));
+            if (Event.current.type == EventType.Layout && nearbyReveal >= 0 && nearbyReveal < nearbyTops.Count)
+            {                                                               // an arrow's pick: scrolled into view
+                float top = nearbyTops[nearbyReveal], bottom = nearbyBottoms[nearbyReveal];
+                if (top < nearbyScroll.y) nearbyScroll.y = top;
+                else if (bottom > nearbyScroll.y + viewH) nearbyScroll.y = bottom - viewH;
+                nearbyReveal = -1;
             }
             using (Widgets.Scroll(ref nearbyScroll, 170))
             {
                 if (nearby.Count == 0)
-                    Widgets.Hint(listMode == 1 ? $"None within {SaveCost.AreaRadiusM} m" : $"None within {NearbyRadius:0} m");
+                    Widgets.Hint(Lang.F("None within {0} m", listMode == 1 ? SaveCost.AreaRadiusM : (int)NearbyRadius));
                 GUILayoutOption[] row = { Widgets.W(Widgets.ContentWidth - 30) };   // one for every row (0.20.132, review)
-                float shownTo = nearbyScroll.y + Widgets.U(Widgets.Tall(170));
+                float shownTo = nearbyScroll.y + viewH;
+                bool repaint = Event.current.type == EventType.Repaint;
+                if (repaint)
+                {
+                    nearbyTops.Clear();
+                    nearbyBottoms.Clear();
+                }
                 foreach (NearbyRow e in nearby)
                 {
                     bool selected = ReferenceEquals(e.Sign, Target);
@@ -273,36 +340,94 @@ namespace SignLink.UI
                             {
                                 KeepOpen();                                 // the player's own pick: no put closes it now
                                 SelectSign(s);
-                                Say($"selected {Called(s)}.");
+                                Say(Selected(s));
                             }
                             showNearby = false;                             // chosen (or chosen again): the list has done its job
                         });
                     }
                     Vector2 mouse = Event.current.mousePosition;              // a row scrolled out of the box is not under it
-                    if (Event.current.type == EventType.Repaint && e.Sign && GUILayoutUtility.GetLastRect().Contains(mouse) &&
-                        mouse.y >= nearbyScroll.y && mouse.y <= shownTo)
+                    if (repaint)
                     {
-                        listHover = e.Sign;                                 // its frame shows in the world (Draw, next Layout)
-                        listHoverAt = Time.frameCount;
+                        Rect r = GUILayoutUtility.GetLastRect();
+                        nearbyTops.Add(r.y);                                // where it lies, for the arrows (NearbyKeys)
+                        nearbyBottoms.Add(r.yMax);
+                        if (e.Sign && r.Contains(mouse) && mouse.y >= nearbyScroll.y && mouse.y <= shownTo)
+                        {
+                            listHover = e.Sign;                             // its frame shows in the world (Draw, next Layout)
+                            listHoverAt = Time.frameCount;
+                        }
                     }
                 }
                 if (listMode == 1 && far.Count > 0)                         // read at once (WalkFar): no "looking" line
                 {
-                    Widgets.Hint("Too far:");
+                    Widgets.Hint(Lang.T("Too far:"));
                     foreach (string f in far) Widgets.Hint(f);              // indented as made
                 }
             }
         }
 
+        // the arrows on the list (1.1.0, the author: Signs nearby is a list too, the up and down arrows should work there as
+        // on Art's and Picture's): where each row lay at the last Repaint, the row to scroll into view, the held arrow
+        readonly List<float> nearbyTops = new List<float>(), nearbyBottoms = new List<float>();
+        int nearbyReveal = -1;
+        KeyCode nearbyHeld;
+        float nearbyRepeatAt;
+
+        /// <summary>While Signs nearby shows (1 Sign): up and down select the row above or below, the list stays open, the
+        /// row scrolls into view; a held arrow repeats as on 2 Content's lists. Not while a field, the chat or the console
+        /// takes the keys.</summary>
+        void NearbyKeys()
+        {
+            if (GUIUtility.keyboardControl != 0 || Console.IsVisible() || (Chat.instance && Chat.instance.HasFocus()) || nearby.Count == 0)
+            {
+                nearbyHeld = KeyCode.None;
+                return;
+            }
+            KeyCode k = Input.GetKeyDown(KeyCode.UpArrow) ? KeyCode.UpArrow : Input.GetKeyDown(KeyCode.DownArrow) ? KeyCode.DownArrow : KeyCode.None;
+            if (k != KeyCode.None)
+            {
+                nearbyHeld = k;
+                nearbyRepeatAt = Time.unscaledTime + 0.4f;
+            }
+            else if (nearbyHeld != KeyCode.None && Input.GetKey(nearbyHeld) && Time.unscaledTime >= nearbyRepeatAt)
+            {
+                k = nearbyHeld;
+                nearbyRepeatAt = Time.unscaledTime + 0.12f;
+            }
+            else if (nearbyHeld != KeyCode.None && !Input.GetKey(nearbyHeld)) nearbyHeld = KeyCode.None;
+            if (k != KeyCode.None) NearbyStep(k == KeyCode.UpArrow ? -1 : 1);
+        }
+
+        /// <summary>The row `step` rows below (above: negative) the selected one is selected; none selected: the first row
+        /// (down) or the last (up).</summary>
+        void NearbyStep(int step)
+        {
+            if (nearby.Count == 0) return;
+            int at = nearby.FindIndex(e => ReferenceEquals(e.Sign, Target));
+            int next = at < 0 ? (step > 0 ? 0 : nearby.Count - 1) : Mathf.Clamp(at + step, 0, nearby.Count - 1);
+            Sign s = nearby[next].Sign;
+            if (next == at || !s) return;
+            Later(() =>
+            {
+                KeepOpen();                                                 // the player's own pick: no put closes it now
+                SelectSign(s);
+                showNearby = true;                                          // a pick by the arrows: the list stays for the next one
+                nearbyReveal = next;
+                Say(Selected(s));
+            });
+        }
+
         float barAt = -1f;
         int barCount;
-        string barPose = "", barName = "";
+        string barPose = "", barName = "", barLine = "";
+        static readonly string[] UpDownKeys = { "↑ ↓" };                   // Signs nearby's keys, one array for every event
 
-        /// <summary>What SignLink put on a sign, or "the sign" (players do not know ZDO ids).</summary>
-        static string Called(Sign s)
+        /// <summary>The status line after a pick, naming what SignLink put on the sign, or "the sign" (players do not know
+        /// ZDO ids); a whole sentence each way, for the translations.</summary>
+        static string Selected(Sign s)
         {
             string name = Session.ShownName(s);
-            return name.Length > 0 ? $"the sign with {name}" : "the sign";
+            return name.Length > 0 ? Lang.F("selected the sign with {0}.", name) : Lang.T("selected the sign.");
         }
     }
 }

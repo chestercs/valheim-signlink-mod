@@ -28,5 +28,9 @@ namespace SignLink.UI
         public abstract void Body();
 
         public virtual void Footer() { }
+
+        /// <summary>Draws a footer (1.1.0, the author: Playing and Settings showed an empty bar): without one, no box under
+        /// the body, the status line alone.</summary>
+        public virtual bool HasFooter => false;
     }
 }

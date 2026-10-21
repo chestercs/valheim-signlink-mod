@@ -10,6 +10,7 @@ namespace SignLink.UI
         public float WidthShare => SettingsTab.PreviewWidth ?? PluginConfig.MenuWidth.Value;
         public float HeightShare => SettingsTab.PreviewHeight ?? PluginConfig.MenuHeight.Value;
         public float Opacity => SettingsTab.PreviewOpacity ?? PluginConfig.MenuOpacity.Value;   // a dragged Opacity shows at once
+        public string ThemeName => PluginConfig.MenuTheme.Value;                                // Classic or Nordic (1.1.0)
 
         public float X
         {

@@ -315,20 +315,19 @@ static class Program
             Check(SaveCost.Glyphs(new[] { "<size=2><#f00>a b\nc", "3 < 4 <b>x</b>" }) == 7, $"glyphs: {SaveCost.Glyphs(new[] { "<size=2><#f00>a b\nc", "3 < 4 <b>x</b>" })}");
             Check(SaveCost.Glyphs(new[] { glowText }) == 3, "glyphs of a picture: one per pixel");
 
-            // the wait of a player who arrives on a server: the download (150 KB/s at best) and then the build. A 664 KB
-            // picture that builds in 0.7 s showed "0.7 s" in green; it costs about 5 s (author, 2026-10-11)
-            double wait = SaveCost.WaitSeconds(0.7, 664 * 1024);
-            Check(Math.Abs(wait - (664 / 150.0 + 0.7)) < 1e-9, $"wait = download + build: {wait}");
-            Check(SaveCost.WaitSeconds(0.7, -1) == 0.7, "wait before the bytes are counted: the build only");
+            // the wait of a player who arrives on a server: the download (150 KB/s at best; author, 2026-10-11: a 664 KB
+            // picture costs about 5 s). The build on their computer is not in it (1.1.0, the author: this computer's number)
+            double wait = SaveCost.DownloadSeconds(664 * 1024);
+            Check(Math.Abs(wait - 664 / 150.0) < 1e-9, $"wait = the download: {wait}");
+            Check(SaveCost.DownloadSeconds(-1) == 0, "not counted yet: no download");
             Check(SaveCost.Level(2.9) == 0 && SaveCost.Level(3.1) == 1 && SaveCost.Level(10) == 1 && SaveCost.Level(10.1) == 2,
                   "wait levels: green to 3 s, yellow to 10 s, red above");
-            Check(!SaveCost.Heavy(0.7, 664 * 1024, 100 * 1024), "a 664 KB picture is not red");
-            Check(SaveCost.Heavy(0.7, 2 * 1048576, 100 * 1024), "a 2 MB picture is red (about 14 s)");
-            Check(SaveCost.Heavy(10.5, -1, 0) && !SaveCost.Heavy(6, -1, 0), "not counted yet: the build alone decides");
-            Check(SaveCost.Heavy(0, 1000, 401 * 1024), "a sign over 400 KB is red");
-            string line = SaveCost.WaitLine(0.7, 664 * 1024);
-            Check(line.Contains($"{wait:0.#} s") && line.Contains($"{664 / 150.0:0.#} s") && line.Contains($"{0.7:0.#} s"),
-                  $"wait line names the total, the download and the build: '{line}'");
+            Check(!SaveCost.Heavy(664 * 1024, 100 * 1024), "a 664 KB picture is not red");
+            Check(SaveCost.Heavy(2 * 1048576, 100 * 1024), "a 2 MB picture is red (about 14 s)");
+            Check(!SaveCost.Heavy(-1, 0), "not counted yet: not red");
+            Check(SaveCost.Heavy(1000, 401 * 1024), "a sign over 400 KB is red");
+            string line = SaveCost.WaitLine(664 * 1024);
+            Check(line.Contains($"{wait:0.#} s") && !line.Contains("build"), $"wait line names the download alone: '{line}'");
 
             // the hard limits in a shared world (author, 2026-10-11): 300 KB on one sign stack, 600 KB in its area
             Check(SaveCost.SignLimit == 300 * 1024 && SaveCost.AreaLimit == 600 * 1024 && SaveCost.AreaRadiusM == 100,
@@ -853,15 +852,9 @@ static class Program
             Console.WriteLine("thumbnails checked");
         }
 
-        // the pure protections: the API password rules, picture plans, hostile GIFs, the main-thread timeout, headers
+        // the pure protections: picture plans, hostile GIFs, the main-thread timeout, headers
         // that cannot be read, a golden grid (a refactor of Grid or Halve must keep it), and names on disk
         {
-            Check(SignLink.Api.Password.Problem("") != null && SignLink.Api.Password.Problem("short") != null &&
-                  SignLink.Api.Password.Problem("has space 123456") != null && SignLink.Api.Password.Problem("ékezet12345678") != null &&
-                  SignLink.Api.Password.Problem("abcdefghijkl") == null, "password: the rules");
-            string p1 = SignLink.Api.Password.New(), p2 = SignLink.Api.Password.New();
-            Check(SignLink.Api.Password.Problem(p1) == null && p1 != p2, "password: a new one passes and differs");
-
             var opt = new PictureOptions { WidthM = 2f, Pitch = 0.125f, Place = Placement.Custom };
             PicturePlan plan1 = opt.PlanFor(4000, 3000);
             Check(plan1.W == 640 && !plan1.Coarsened && !plan1.Capped, $"plan: 2 m at pitch 0.125 on 4000 px is 640 wide ({plan1.W})");
@@ -926,7 +919,7 @@ static class Program
                 Check(fp.Pixels <= PictureOptions.MaxPixels && fp.W == PictureOptions.MaxDetail(4005, 1000),
                       $"review: Full resolution stays within the pixel cap ({fp.W} x {fp.H})");
                 Check(PictureOptions.AutoDetail(400, 5000, false) <= PictureOptions.MaxDetail(400, 5000), "review: the default resolution fits the cap");
-                var api = new PictureOptions { WidthM = 50f, Pitch = 4f };      // width and pitch (the API), a 300 px source
+                var api = new PictureOptions { WidthM = 50f, Pitch = 4f };      // width and pitch (the older model), a 300 px source
                 PicturePlan ap = api.PlanFor(300, 300);
                 Check(ap.W == 300 && Math.Abs(ap.WidthM - 50f) < 1f, $"review: coarsening keeps the width past 2 wu ({ap.W} at {ap.Pitch}, {ap.WidthM} m)");
                 var asked = new PictureOptions { WidthM = 2f, Detail = 200, Pitch = 0.25f };
@@ -1092,6 +1085,21 @@ static class Program
             }
             GifImage small = GifDecoder.Decode(Synthetic(4, 4, 3, 4, 4, 0));
             Check(small.Frames.Count == 3 && small.DelaysMs[1] == 50, $"gif: the synthetic file decodes ({small.Frames.Count} frames)");
+            // 1.1.0, review: a first code after a clear that names the next free code made a code its own prefix; reading it
+            // ran past the stack (IndexOutOfRange): it ends the frame's data now, as in giflib
+            {
+                byte[] selfRef = Synthetic(4, 4, 1, 4, 4, 0);
+                int at = -1;
+                for (int i = 0; i + 4 < selfRef.Length && at < 0; i++)
+                    if (selfRef[i] == 2 && selfRef[i + 1] == 2 && selfRef[i + 2] == 0x44 && selfRef[i + 3] == 0x01) at = i;
+                Check(at >= 0, "gif: the synthetic file's LZW bytes are where the test writes");
+                selfRef[at + 2] = 0x34;                                                                  // codes clear, 6, 0, 6, end
+                selfRef[at + 3] = 0xAC;
+                string selfError = null;
+                try { GifDecoder.Decode(selfRef); }
+                catch (Exception e) when (!(e is ArgumentException)) { selfError = e.GetType().Name; }
+                Check(selfError == null, $"gif: a code naming itself after a clear is not followed ({selfError ?? "fine"})");
+            }
             string tooMany = null;
             var manyClock = System.Diagnostics.Stopwatch.StartNew();
             try { GifDecoder.Decode(Synthetic(4, 4, 5001, 4, 4, 0)); }
@@ -1220,8 +1228,8 @@ static class Program
             };
             List<SignLink.ConfigMoves.Move> plan = SignLink.ConfigMoves.Plan(old);
             string Got(string k) { foreach (SignLink.ConfigMoves.Move e in plan) if (e.To == k) return e.Value; return null; }
-            Check(plan.Count > 0 && plan[0].From == "1 - API|Enabled" && plan[0].To == "9 - Developer API|Enabled", "config moves: a move knows where it came from");
-            Check(plan.Count == 4 && Got("9 - Developer API|Password") == "secret-of-twelve" && Got("9 - Developer API|Enabled") == "true" &&
+            Check(plan.Count > 0 && plan[0].From == "2 - Playback|Distance" && plan[0].To == "4 - Playback|Distance", "config moves: a move knows where it came from");
+            Check(plan.Count == 2 && Got("9 - Developer API|Password") == null && Got("9 - Developer API|Enabled") == null &&
                   Got("3 - Sign options|PreventEditor") == null &&
                   Got("1 - Menu|Scale") == "1.3" && Got("4 - Playback|Distance") == "32",
                   "config moves: every 0.19 entry goes to its 0.20 section; unknown, 0.20 and dropped ones stay");
@@ -1237,6 +1245,8 @@ static class Program
             Check(SignLink.ConfigMoves.Plan(new Dictionary<string, string> { ["9 - Developer API|LogSlowSigns"] = "true" }).Exists(m => m.To == "9 - Diagnostics|LogSlowSigns" && m.Value == "true"),
                   "config moves: LogSlowSigns goes to 9 - Diagnostics (1.0.3)");
             Check(SignLink.ConfigMoves.Stale(new Dictionary<string, string> { ["1 - Menu|Scale"] = "1" }).Count == 0, "config moves: nothing stale is nothing");
+            Check(SignLink.ConfigMoves.Stale(new Dictionary<string, string> { ["Server|Port"] = "8417", ["Viewer|FastRefresh"] = "true" }).Count == 2,
+                  "config moves: a 0.1x config's API port and FastRefresh leave the file (1.1.0)");
             // 0.20.123: Show all is no setting any more, it starts off every game (the author: forget Show all signs
             // after a game restart, a logout and the like)
             Check(SignLink.ConfigMoves.Stale(new Dictionary<string, string> { ["3 - Sign options|ShowAll"] = "true" }).Contains("3 - Sign options|ShowAll"),
@@ -1259,9 +1269,12 @@ static class Program
             };
             List<SignLink.ConfigMoves.Move> plan = SignLink.ConfigMoves.Plan(old);
             List<SignLink.ConfigMoves.Move> To(string k) => plan.FindAll(e => e.To == k);
-            Check(To("3 - Sign options|Highlight").Count == 1 && To("3 - Sign options|Highlight")[0].Value == "false" &&
-                  To("3 - Sign options|RefreshSeconds").Count == 1 && To("3 - Sign options|RefreshSeconds")[0].Value == "0.5",
-                  "config moves: the frame switch is Highlight, the re-read pace a sign option");
+            Check(To("3 - Sign options|Highlight").Count == 1 && To("3 - Sign options|Highlight")[0].Value == "false",
+                  "config moves: the frame switch is Highlight");
+            // 1.1.0: the re-read pace went (the author: no use in the mod any more): it leaves the file from both its homes, none moved
+            Check(To("3 - Sign options|RefreshSeconds").Count == 0 && SignLink.ConfigMoves.Stale(old).Contains("4 - Playback|RefreshSeconds") &&
+                  SignLink.ConfigMoves.Stale(new Dictionary<string, string> { ["3 - Sign options|RefreshSeconds"] = "0.5" }).Count == 1,
+                  "config moves: RefreshSeconds leaves the file from both its homes (gone since 1.1.0)");
             // 1.0.2: the hover line's switch (PreventEditor, PictureSigns before 0.20.45) is gone, the line is always on: every
             // home it had leaves the file, none is moved
             List<string> gone = SignLink.ConfigMoves.Stale(old);
@@ -1444,8 +1457,8 @@ static class Program
                   SignPicture.TextsHash(new[] { "ab", "c" }) != SignPicture.TextsHash(new[] { "ab", "d" }),
                   "sign picture: the texts' hash tells a changed picture from a moved sign");
             Check(!SignPicture.Read(new[] { "<size=2>Hello" }, 0, 0, out _, out string notPic) && notPic != null, "sign picture: a text is no picture");
-            // 0.20.52: what every player's game builds for a sign (SaveCost.LoadSeconds counts glyphs; 0.20.62: one count): the visible
-            // characters, tags and spaces aside (1 Sign's Multiplayer row says when it arrives)
+            // 0.20.52: what every player's game builds for a sign (SaveCost.Glyphs; 0.20.62: one count): the visible
+            // characters, tags and spaces aside (what a preview or a frame costs to build, SaveCost.GlyphSeconds)
             Check(SaveCost.Glyphs(new[] { "<size=2>■ ■\n<#fff>a", "", "<line-height=1>bc" }) == 5 &&
                   SaveCost.Glyphs(new string[0]) == 0,
                   "glyphs: the visible characters of a stack's texts (one count: SaveCost.Glyphs)");
@@ -1690,6 +1703,88 @@ static class Program
                   SignLink.UI.Change.AreaBytes(SignLink.UI.Verb.Put, 7) == 7 && SignLink.UI.Change.AreaBytes(SignLink.UI.Verb.Update, 9) == 9,
                   "area: the pick's bytes only for Place, Put and Update");
             Console.WriteLine("picture light checked");
+        }
+
+        // 1.1.0: the Nordic look's textures are painted at the window's pixel scale (Kit/Paint.cs): rounded corners,
+        // a frame over a see-through background, an amber band clipped to the box, a diamond, a tick
+        {
+            Func<float, float, bool> near = (a, b) => Math.Abs(a - b) < 0.02f;
+            Check(PetyusPolisz.Kit.Paint.InBox(5, 5, 0, 0, 10, 10, 3) && !PetyusPolisz.Kit.Paint.InBox(0.2, 0.2, 0, 0, 10, 10, 3) &&
+                  PetyusPolisz.Kit.Paint.InBox(0.2, 5, 0, 0, 10, 10, 3) && !PetyusPolisz.Kit.Paint.InBox(10.5, 5, 0, 0, 10, 10, 3),
+                  "paint: a rounded box holds its middle and its edges, not its corners' outside");
+            Check(PetyusPolisz.Kit.Paint.InBox(0.2, 0.2, 0, 0, 10, 10, 3, PetyusPolisz.Kit.Paint.BottomRight) &&
+                  !PetyusPolisz.Kit.Paint.InBox(9.8, 9.8, 0, 0, 10, 10, 3, PetyusPolisz.Kit.Paint.BottomRight),
+                  "paint: only the corners asked for are round");
+            var amber = PetyusPolisz.Kit.Paint.Rgba.Hex("#F2AE45");
+            Check(near(amber.R, 0xF2 / 255f) && near(amber.G, 0xAE / 255f) && near(amber.B, 0x45 / 255f) && amber.A == 1f &&
+                  near(PetyusPolisz.Kit.Paint.Rgba.Hex("#00000080").A, 0x80 / 255f), "paint: hex colours");
+
+            var fill = new PetyusPolisz.Kit.Paint.Rgba(0.2f, 0.3f, 0.4f, 0.8f);
+            var frame = new PetyusPolisz.Kit.Paint.Rgba(1f, 1f, 1f, 1f);
+            var p = new PetyusPolisz.Kit.Paint(12, 12);
+            p.Box(0, 0, 12, 12, 3.5, fill, replace: true);
+            p.Frame(0, 0, 12, 12, 3.5, 1, frame);
+            PetyusPolisz.Kit.Paint.Rgba mid = p.Get(6, 6), edge = p.Get(0, 6), corner = p.Get(0, 0);
+            Check(near(mid.R, 0.2f) && near(mid.G, 0.3f) && near(mid.B, 0.4f) && near(mid.A, 0.8f),
+                  "paint: the background inside the frame keeps its colour and its see-through alpha");
+            Check(near(edge.R, 1f) && near(edge.A, 1f), "paint: the frame on the edge, opaque");
+            Check(corner.A < 0.3f && p.Get(1, 1).A > 0.3f, "paint: a round corner leaves its outside clear, antialiased");
+
+            var q = new PetyusPolisz.Kit.Paint(10, 10);
+            q.Box(0, 0, 10, 10, 3, fill, replace: true);
+            q.Box(0, 0, 10, 10, 3, amber, clip: new double[] { 0, 7, 10, 10 });
+            Check(near(q.Get(5, 8).G, amber.G) && near(q.Get(5, 8).A, 1f) && near(q.Get(5, 5).G, 0.3f) && q.Get(0, 9).A < 0.5f,
+                  "paint: a band clipped to the box: amber in its rows only, its corners still round");
+            var r = new PetyusPolisz.Kit.Paint(10, 10);
+            r.Box(0, 0, 10, 10, 0, amber);
+            r.Box(1, 1, 9, 9, 0, fill, replace: true);
+            Check(near(r.Get(5, 5).A, 0.8f) && near(r.Get(5, 5).B, 0.4f) && near(r.Get(0, 5).A, 1f),
+                  "paint: replace puts a see-through background in place of what was under it");
+
+            var d = new PetyusPolisz.Kit.Paint(8, 8);
+            d.Diamond(4, 4, 3.4, frame);
+            Check(near(d.Get(3, 3).A, 1f) && d.Get(0, 0).A == 0f && d.Get(7, 7).A == 0f && d.Get(3, 0).A < 0.6f,
+                  "paint: a diamond stands on its corner");
+            var t = new PetyusPolisz.Kit.Paint(18, 18);
+            t.Line(new[] { 4.5, 9.5, 7.5, 12.5, 13.5, 5.5 }, 2.2, frame);
+            Check(t.Get(7, 12).A > 0.9f && t.Get(13, 5).A > 0.5f && t.Get(2, 2).A == 0f && t.Get(15, 15).A == 0f,
+                  "paint: the tick runs through its points and nowhere else");
+            var a = new PetyusPolisz.Kit.Paint(12, 12);
+            a.Triangle(3.6, 1.9, 3.6, 10.1, 9.8, 6, frame);
+            Check(a.Get(5, 6).A > 0.9f && a.Get(1, 6).A == 0f && a.Get(10, 6).A == 0f && a.Get(8, 2).A == 0f && a.Get(8, 10).A == 0f,
+                  "paint: the arrow's triangle fills between its points only");
+            Console.WriteLine("theme textures checked");
+        }
+
+        // 1.1.0: the window's words in the player's language (Kit/Lang.cs): English is the key and the fallback; Game default
+        // takes the game's language where a table came for it
+        {
+            var hu = PetyusPolisz.Kit.Lang.Parse("# a comment\nClose\tBezár\r\nLoading {0} ...\t{0} betöltése ...\n\nEmpty\t\nTwo\\nlines\tKét\\nsor\nno tab here\n");
+            Check(hu.Count == 3 && hu["Close"] == "Bezár" && hu["Loading {0} ..."] == "{0} betöltése ..." && hu["Two\nlines"] == "Két\nsor" &&
+                  !hu.ContainsKey("Empty"), "lang: a table's lines, comments and empty translations skipped, \\n unescaped");
+            string setting = PetyusPolisz.Kit.Lang.GameDefault, game = "English";
+            PetyusPolisz.Kit.Lang.Setting = () => setting;
+            PetyusPolisz.Kit.Lang.Game = () => game;
+            Check(PetyusPolisz.Kit.Lang.T("Close") == "Close" && PetyusPolisz.Kit.Lang.Choices.Length == 2 &&
+                  PetyusPolisz.Kit.Lang.Choices[0] == PetyusPolisz.Kit.Lang.GameDefault, "lang: no table: English, the choices Game default and English");
+            PetyusPolisz.Kit.Lang.Add("Hungarian", () => "Close\tBezár\nLoading {0} ...\t{0} betöltése ...\n");
+            Check(PetyusPolisz.Kit.Lang.Choices.Length == 3 && PetyusPolisz.Kit.Lang.Choices[2] == "Hungarian", "lang: a table adds its language");
+            Check(PetyusPolisz.Kit.Lang.T("Close") == "Close", "lang: Game default with the game in English: English");
+            game = "Hungarian";
+            Check(PetyusPolisz.Kit.Lang.T("Close") == "Bezár" && PetyusPolisz.Kit.Lang.F("Loading {0} ...", "x.png") == "x.png betöltése ..." &&
+                  PetyusPolisz.Kit.Lang.T("Signs nearby") == "Signs nearby", "lang: Game default follows the game; a missing line stays English");
+            game = "Russian";
+            Check(PetyusPolisz.Kit.Lang.T("Close") == "Close", "lang: the game in a language with no table: English");
+            setting = "Hungarian";
+            Check(PetyusPolisz.Kit.Lang.T("Close") == "Bezár", "lang: a chosen language whatever the game's");
+            setting = "English";
+            game = "Hungarian";
+            Check(PetyusPolisz.Kit.Lang.T("Close") == "Close", "lang: English chosen stays English");
+            PetyusPolisz.Kit.Lang.Add("Broken", () => "Loading {0} ...\t{1} {\n");
+            setting = "Broken";
+            Check(PetyusPolisz.Kit.Lang.F("Loading {0} ...", "x.png") == "Loading x.png ...", "lang: a translation whose braces do not fit falls back to the English");
+            PetyusPolisz.Kit.Lang.Setting = PetyusPolisz.Kit.Lang.Game = null;
+            Console.WriteLine("languages checked");
         }
 
         // 0.20.93: Shift + mouse wheel over a slider's row turns it a fine step a notch (the author: when I hover
@@ -2220,87 +2315,11 @@ static class Program
             Console.WriteLine("face tip checked");
         }
 
-        // 0.20.132 (security review): the local API and the numbers read from the world. A clone's spacing and count are
-        // checked before anything runs on the main thread (a step of 1e-9 m let millions of copies through); a body only
-        // where a route reads one (411 there without a Content-Length); a head and a body each within a total deadline;
-        // wrong passwords from this computer are refused but never lock it out, and the table forgets old entries; the
-        // network mode answers local networks only; a clipboard holding the API password is not pasted onto a sign; a
-        // fit, a pose or a base read from a sign (any player's game can write them) counts only when its numbers are sane
+        // 0.20.132 (security review): the numbers read from the world: a fit, a pose or a base read from a sign (any
+        // player's game can write them) counts only when its numbers are sane (the clone checks went with the API, 1.1.0)
         {
-            System.Net.IPAddress Ip(string s) => System.Net.IPAddress.Parse(s);
-            float gap = 0.002f, depth = 0.25f;
-            Check(SignLink.Signs.StackMath.CloneProblem(0f, 1, gap, depth) == null && SignLink.Signs.StackMath.CloneProblem(0.0005f, 499, gap, depth) == null &&
-                  SignLink.Signs.StackMath.CloneProblem(0.0003f, 833, gap, depth) == null && SignLink.Signs.StackMath.CloneProblem(0.002f, 124, gap, depth) == null &&
-                  SignLink.Signs.StackMath.CloneProblem(0f, 833, gap, depth) == null,
-                  "clone: the default spacing and 0.3-2 mm pass while the copies fit one stack");
-            Check(SignLink.Signs.StackMath.CloneProblem(1e-9f, 1, gap, depth) != null && SignLink.Signs.StackMath.CloneProblem(0.0002f, 1, gap, depth) != null &&
-                  SignLink.Signs.StackMath.CloneProblem(0.0021f, 1, gap, depth) != null && SignLink.Signs.StackMath.CloneProblem(-0.0005f, 1, gap, depth) != null,
-                  "clone: a spacing under 0.3 mm, over 2 mm or below 0 is refused");
-            Check(SignLink.Signs.StackMath.CloneProblem(0f, 834, gap, depth) != null && SignLink.Signs.StackMath.CloneProblem(0.0005f, 500, gap, depth) != null &&
-                  SignLink.Signs.StackMath.CloneProblem(0.0003f, 4000000, gap, depth) != null && SignLink.Signs.StackMath.CloneProblem(0.002f, 125, gap, depth) != null,
-                  "clone: more copies than one stack holds at that spacing (the default one at its finest, 0.3 mm) are refused");
-            Check(SignLink.Api.HttpRules.Parts("", '\u001d') == 1 && SignLink.Api.HttpRules.Parts("a\u001db\u001d", '\u001d') == 3 &&
-                  SignLink.Api.HttpRules.Parts(new string('\u001d', 9), '\u001d') == 10, "clone: the texts counted as Split makes them, before splitting");
-
-            Check(SignLink.Api.HttpRules.BodyCap("POST", "/screen") == 256L << 20 && SignLink.Api.HttpRules.BodyCap("POST", "/image") == 64L << 20 &&
-                  SignLink.Api.HttpRules.BodyCap("POST", "/sign") == 16L << 20 && SignLink.Api.HttpRules.BodyCap("POST", "/anim") == 16L << 20 &&
-                  SignLink.Api.HttpRules.BodyCap("POST", "/signs/clone") == 16L << 20, "body: the routes that read one, each its cap");
-            Check(SignLink.Api.HttpRules.BodyCap("GET", "/sign") == 0 && SignLink.Api.HttpRules.BodyCap("POST", "/anim/stop") == 0 &&
-                  SignLink.Api.HttpRules.BodyCap("POST", "/anim/unstore") == 0 && SignLink.Api.HttpRules.BodyCap("POST", "/screen/stop") == 0 &&
-                  SignLink.Api.HttpRules.BodyCap("POST", "/signs/delete") == 0 && SignLink.Api.HttpRules.BodyCap("POST", "/pose") == 0 &&
-                  SignLink.Api.HttpRules.BodyCap("POST", "/screens") == 0 && SignLink.Api.HttpRules.BodyCap("POST", "/nothing") == 0 &&
-                  SignLink.Api.HttpRules.BodyCap("GET", "") == 0 && SignLink.Api.HttpRules.BodyCap("PUT", "/sign") == 0,
-                  "body: none anywhere else (GETs, the stop endpoints, unknown paths): exact routes, no prefixes");
-            Check(SignLink.Api.HttpRules.NeedsLength("POST", "/sign") && SignLink.Api.HttpRules.NeedsLength("POST", "/signs/clone") &&
-                  !SignLink.Api.HttpRules.NeedsLength("POST", "/anim/stop") && !SignLink.Api.HttpRules.NeedsLength("GET", "/ping"),
-                  "body: 411 without a Content-Length only where a body is read (a body-less POST to a stop endpoint stays fine)");
-            Check(SignLink.Api.HttpRules.BodyMs(0) == 30000 && SignLink.Api.HttpRules.BodyMs(16L << 20) == 30000 && SignLink.Api.HttpRules.BodyMs(256L << 20) == 128000,
-                  "body: a total deadline of 30 s, or 2 MB a second for a larger one");
-            Check(SignLink.Api.HttpRules.ReadWait(0, 10000, 2000) == 2000 && SignLink.Api.HttpRules.ReadWait(7000, 10000, 5000) == 3000 &&
-                  SignLink.Api.HttpRules.ReadWait(9999, 10000, 5000) == 1 && SignLink.Api.HttpRules.ReadWait(10000, 10000, 5000) == 0 &&
-                  SignLink.Api.HttpRules.ReadWait(15000, 10000, 5000) == 0, "head and body: a read waits at most what is left of the whole");
-
-            Check(SignLink.Api.HttpRules.Loopback(Ip("127.0.0.1")) && SignLink.Api.HttpRules.Loopback(Ip("127.5.6.7")) &&
-                  SignLink.Api.HttpRules.Loopback(Ip("::1")) && SignLink.Api.HttpRules.Loopback(Ip("::ffff:127.0.0.1")) &&
-                  !SignLink.Api.HttpRules.Loopback(Ip("192.168.1.2")) && !SignLink.Api.HttpRules.Loopback(Ip("::ffff:10.0.0.1")) &&
-                  !SignLink.Api.HttpRules.Loopback(null), "loopback: IPv4, IPv6 and IPv4-mapped");
-            var lockout = new SignLink.Api.Lockout();
-            var t0 = new DateTime(2026, 10, 13, 12, 0, 0, DateTimeKind.Utc);
-            bool any = false;
-            for (int i = 0; i < 10; i++)
-                any |= lockout.Strike(Ip("127.0.0.1"), t0) | lockout.Strike(Ip("::ffff:127.0.0.1"), t0) | lockout.Strike(Ip("::1"), t0);
-            Check(!any && !lockout.Locked(Ip("127.0.0.1"), t0) && !lockout.Locked(Ip("::ffff:127.0.0.1"), t0) && lockout.Count == 0,
-                  "lock-out: wrong passwords from this computer are refused but never counted");
-            System.Net.IPAddress lan = Ip("192.168.1.20");
-            for (int i = 0; i < 4; i++) any |= lockout.Strike(lan, t0.AddSeconds(i));
-            Check(!any && !lockout.Locked(lan, t0.AddSeconds(4)), "lock-out: four wrong ones do not lock");
-            Check(lockout.Strike(lan, t0.AddSeconds(4)) && lockout.Locked(lan, t0.AddSeconds(5)) && lockout.Locked(Ip("::ffff:192.168.1.20"), t0.AddSeconds(5)) &&
-                  !lockout.Locked(lan, t0.AddSeconds(65)), "lock-out: the fifth within a minute locks that address for a minute");
-            for (int i = 0; i < 5; i++) lockout.Strike(Ip("10.0.0.9"), t0.AddSeconds(100 + i));   // locked until t0 + 164 s
-            lockout.Strike(Ip("10.0.0.7"), t0.AddSeconds(100));
-            lockout.Strike(Ip("10.0.0.10"), t0.AddSeconds(162));
-            Check(lockout.Count == 2 && lockout.Locked(Ip("10.0.0.9"), t0.AddSeconds(162)),
-                  $"lock-out: a strike prunes entries over a minute old that are not locked ({lockout.Count} left)");
-
-            string[] near = { "127.0.0.1", "10.1.2.3", "172.16.0.1", "172.31.255.254", "192.168.0.10", "169.254.1.1", "100.64.0.1",
-                              "100.127.255.254", "::1", "fc00::1", "fd12:3456::1", "fe80::1", "febf::1", "::ffff:192.168.1.5", "::ffff:100.100.1.1" };
-            string[] far = { "8.8.8.8", "172.15.255.255", "172.32.0.1", "192.169.0.1", "169.255.0.1", "100.63.255.255", "100.128.0.1", "11.0.0.1",
-                             "2001:db8::1", "fec0::1", "::ffff:8.8.8.8", "::", "0.0.0.0", "224.0.0.1" };
-            string wrongNear = string.Join(" ", near.Where(a => !SignLink.Api.HttpRules.LocalNetwork(Ip(a))));
-            string wrongFar = string.Join(" ", far.Where(a => SignLink.Api.HttpRules.LocalNetwork(Ip(a))));
-            Check(wrongNear.Length == 0 && wrongFar.Length == 0 && !SignLink.Api.HttpRules.LocalNetwork(null),
-                  $"network mode: loopback, private, link-local, CGNAT and ULA peers only (refused: {wrongNear}; let in: {wrongFar})");
-            var throttle = new SignLink.Api.Throttle(TimeSpan.FromMinutes(1));
-            Check(throttle.Allow("8.8.8.8", t0) && !throttle.Allow("8.8.8.8", t0.AddSeconds(30)) && throttle.Allow("1.1.1.1", t0.AddSeconds(30)) &&
-                  throttle.Allow("8.8.8.8", t0.AddSeconds(61)), "network mode: a refused peer is logged once a minute at most");
-
-            Check(SignLink.Api.Password.In("abc SECRETpassword1 def", "SECRETpassword1") && SignLink.Api.Password.In("SECRETpassword1", "SECRETpassword1") &&
-                  !SignLink.Api.Password.In("abc", "SECRETpassword1") && !SignLink.Api.Password.In("anything", "") &&
-                  !SignLink.Api.Password.In("anything", null) && !SignLink.Api.Password.In(null, "SECRETpassword1"),
-                  "paste: a clipboard holding the API password is refused (none set: nothing is)");
-
             Check(Fit.Sane(1, 0, 0, 0) && Fit.Sane(0.25, 12000, -12000, 400) && Fit.Sane(4, 40000, 40000, -40000),
-                  "world numbers: the fits SignLink writes are sane (300 m offsets, as the API allows, too)");
+                  "world numbers: the fits SignLink writes are sane (300 m offsets too)");
             Check(!Fit.Sane(0, 0, 0, 0) && !Fit.Sane(-1, 0, 0, 0) && !Fit.Sane(double.PositiveInfinity, 0, 0, 0) && !Fit.Sane(double.NaN, 0, 0, 0) &&
                   !Fit.Sane(1e9, 0, 0, 0) && !Fit.Sane(1e-9, 0, 0, 0) && !Fit.Sane(1, double.NaN, 0, 0) && !Fit.Sane(1, 0, double.NegativeInfinity, 0) &&
                   !Fit.Sane(1, 1e7, 0, 0) && !Fit.Sane(1, 0, 0, 1e7), "world numbers: a fit with no size, a NaN, an infinity or a huge number is none");
@@ -2325,7 +2344,7 @@ static class Program
         }
 
         // the plugin's GUID was bakterhaz.signlink until 0.20.43 (BepInEx names the config file after it): the old file
-        // takes the new name once, settings and API password with it
+        // takes the new name once, settings with it
         {
             string dir = Path.Combine(Path.GetTempPath(), "signlink-cfgfile-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);

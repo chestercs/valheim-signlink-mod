@@ -23,7 +23,8 @@ namespace PetyusPolisz.Kit
                     GUI.Box(box, GUIContent.none, Theme.Section);
                     if (boxText.Length > 0) GUI.Label(box, boxText, Theme.BoxText);
                 }
-                bool now = GUILayout.Toggle(selected, label, Theme.Item, W(width - 62), H(44));   // a click gives the other value
+                Space(6);                                                   // air between the picture and the row (1.1.0, the author)
+                bool now = GUILayout.Toggle(selected, label, Theme.Item, W(width - 68), H(44));   // a click gives the other value
                 hit = now != selected && (openWhenSelected || !selected);
             }
             return hit;

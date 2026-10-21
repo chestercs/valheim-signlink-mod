@@ -3,8 +3,8 @@
 
   package.py            -> mod/out/SignLink-<version>.zip (Thunderstore) and SignLink-<version>-nexus.zip (Nexus, manual)
 
-Checks first: Plugin.Version, the csproj's <Version>, manifest.json's version_number, the top CHANGELOG entry and docs/openapi.yaml's
-info.version are one version; the
+Checks first: Plugin.Version, the csproj's <Version>, manifest.json's version_number and the top CHANGELOG entry are one
+version, and that CHANGELOG entry is dated (not "not released yet"); the
 description fits 250 characters; the icon is 256 x 256 PNG; the DLL holds that version. It uploads nothing:
 publishing is the author's step (tcli publish, or the website), with the AI Generated category.
 """
@@ -33,12 +33,11 @@ def main():
     manifest = json.load(open(os.path.join(PKG, "manifest.json"), encoding="utf-8"))
     changelog = open(os.path.join(MOD, "CHANGELOG.md"), encoding="utf-8").read()
     top = re.search(r"^## ([0-9.]+)", changelog, re.M).group(1)
-    spec = open(os.path.join(MOD, "..", "docs", "openapi.yaml"), encoding="utf-8").read()
-    api = re.search(r"^  version: ([0-9.]+)$", spec, re.M)
-    api = api.group(1) if api else "(none)"
-    if not (version == built == manifest["version_number"] == top == api):
-        fail(f"versions differ: Plugin.cs {version}, SignLink.csproj {built}, manifest {manifest['version_number']}, CHANGELOG {top}, "
-             f"docs/openapi.yaml {api}")
+    heading = re.search(r"^## [0-9.]+.*$", changelog, re.M).group(0)
+    if not (version == built == manifest["version_number"] == top):
+        fail(f"versions differ: Plugin.cs {version}, SignLink.csproj {built}, manifest {manifest['version_number']}, CHANGELOG {top}")
+    if "not released" in heading:                              # the release checklist dates it first (1.1.0, review)
+        fail(f"the CHANGELOG's top entry is not dated: {heading!r} (date it before the zip is made)")
     if len(manifest["description"]) > 250:
         fail(f"description is {len(manifest['description'])} characters (250 at most)")
     if not re.fullmatch(r"[A-Za-z0-9_]+", manifest["name"]):
@@ -49,11 +48,15 @@ def main():
     dll = os.path.join(MOD, "out", "SignLink.dll")
     if not os.path.exists(dll):
         fail("mod/out/SignLink.dll is missing: run ./sign.sh mod")
-    if version.encode("utf-16-le") not in open(dll, "rb").read():
+    with open(dll, "rb") as f:
+        dll_bytes = f.read()
+    # the version as a whole, not the start of a longer one ("1.0.1" in "1.0.10")
+    wanted = re.escape(version.encode("utf-16-le")) + rb"(?![0-9.]\x00)"
+    if not re.search(rb"(?<![0-9.]\x00)" + wanted, dll_bytes):
         fail(f"mod/out/SignLink.dll is not version {version}: run ./sign.sh mod")
-    for marker in (b"LocalHttpServer", b"TcpListener", b"HttpListener", b"SIGNLINK_DEVAPI"):
-        if marker in open(dll, "rb").read():         # a release has no web server (the Thunderstore moderators, 2026-10-18)
-            fail(f"mod/out/SignLink.dll is a developer build ({marker.decode()}): run ./sign.sh mod without DEVAPI")
+    for marker in (b"TcpListener", b"HttpListener"):
+        if marker in dll_bytes:                         # no web server (the Thunderstore moderators, 2026-10-18; no API at all since 1.1.0)
+            fail(f"mod/out/SignLink.dll opens a port ({marker.decode()}): SignLink must not")
 
     for name in ("LICENSE", "LICENSE-ART"):                          # the package's copies match the repository's
         if open(os.path.join(PKG, name), "rb").read() != open(os.path.join(MOD, "..", name), "rb").read():

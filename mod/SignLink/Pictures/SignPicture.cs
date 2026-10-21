@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PetyusPolisz.Kit;
 using SignLink.Signs;
 
 namespace SignLink.Pictures
@@ -33,7 +34,7 @@ namespace SignLink.Pictures
             if (!TextReadback.ReadBox(texts, out int bw, out int bh, out int[] box, out double pitch, out double mx, out double my, asSeen: true) ||
                 pitch <= 0)
             {
-                why = "it holds no pixel picture SignLink can read back";
+                why = Lang.T("it holds no pixel picture SignLink can read back");
                 return false;
             }
             Canvas(bw, bh, (mx - fitX) / pitch, (my - fitY) / pitch, out int l, out int r, out int t, out int b, out double sx, out double sy);

@@ -104,9 +104,9 @@ namespace SignLink.UI
         }
 
         /// <summary>The board: its collider's rectangle in the sign's plane, at the board's own depth.</summary>
-        void PlaceBoard(Sign target)
+        void PlaceBoard(Sign target, bool on = true)
         {
-            BoxCollider c = target.GetComponentInChildren<BoxCollider>();
+            BoxCollider c = on ? target.GetComponentInChildren<BoxCollider>() : null;   // off: Highlight signs off (1.1.0)
             if (!c)
             {
                 foreach (Bar b in board) b.Go.SetActive(false);

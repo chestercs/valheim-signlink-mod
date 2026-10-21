@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using BepInEx;
+using PetyusPolisz.Kit;
 using SignLink.Signs;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -87,10 +88,26 @@ namespace SignLink.Pictures
         /// made first when it is not there yet (the Picture list's Open folder, Settings › About's, 0.20.119).</summary>
         public static void OpenFolder(string dir = "")
         {
-            Directory.CreateDirectory(Folder);
-            string at = FolderPath(dir);
-            if (!Directory.Exists(at)) at = Folder;
-            Application.OpenURL(new Uri(at).AbsoluteUri);                   // escaped: a '#' or a '%' in a folder's name (review)
+            try
+            {
+                Directory.CreateDirectory(Folder);
+                string at = FolderPath(dir);
+                if (!Directory.Exists(at)) at = Folder;
+                Application.OpenURL(new Uri(at).AbsoluteUri);               // escaped: a '#' or a '%' in a folder's name (review)
+            }
+            catch (Exception e) { Plugin.Log.LogWarning($"open folder: {e.Message}"); }   // a read-only data folder (1.1.0, review)
+        }
+
+        /// <summary>The most a picture file may weigh before it is read whole (1.1.0, review: a video of some gigabytes
+        /// dropped into the folder was read whole for its list thumbnail).</summary>
+        public const long MaxFileBytes = 512L << 20;
+
+        /// <summary>A picture file's bytes, refused over MaxFileBytes.</summary>
+        public static byte[] ReadFile(string path)
+        {
+            long n = new FileInfo(path).Length;
+            if (n > MaxFileBytes) throw new InvalidOperationException(Lang.F("the file is {0} MB, more than the {1} MB a picture may be", n >> 20, MaxFileBytes >> 20));
+            return File.ReadAllBytes(path);
         }
 
         /// <summary>A picture's name as a sign keeps it (PictureNames.Relative): its path under the images folder with '/'
@@ -205,7 +222,7 @@ namespace SignLink.Pictures
             if (loadImage == null)
             {
                 Type t = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule")
-                         ?? throw new InvalidOperationException("Unity's image decoder is missing");
+                         ?? throw new InvalidOperationException(Lang.T("Unity's image decoder is missing"));
                 loadImage = t.GetMethod("LoadImage", new[] { typeof(Texture2D), typeof(byte[]), typeof(bool) })
                             ?? throw new InvalidOperationException("ImageConversion.LoadImage not found");
             }
@@ -238,10 +255,10 @@ namespace SignLink.Pictures
         public static int Orientation(byte[] file)
         {
             if (!ImageHeader.Size(file, out int hw, out int hh, out int o))
-                throw new ArgumentException("not a PNG, JPG or GIF picture (its header cannot be read)");   // the size guard would be skipped
+                throw new ArgumentException(Lang.T("not a PNG, JPG or GIF picture (its header cannot be read)"));   // the size guard would be skipped
             if ((long)hw * hh > MaxSourcePixels)
-                throw new ArgumentException($"{hw} x {hh} is {(long)hw * hh / 1000000} megapixels: SignLink takes pictures up to " +
-                                            $"{MaxSourcePixels / 1000000} (scale it down first; a sign picture has at most a million)");
+                throw new ArgumentException(Lang.F("{0} x {1} is {2} megapixels: SignLink takes pictures up to {3} (scale it down first; a sign picture has at most a million)",
+                                                   hw, hh, (long)hw * hh / 1000000, MaxSourcePixels / 1000000));
             return o;
         }
 
@@ -272,7 +289,7 @@ namespace SignLink.Pictures
             var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             try
             {
-                if (!LoadImage(tex, file)) throw new ArgumentException("not a PNG, JPG or GIF picture");
+                if (!LoadImage(tex, file)) throw new ArgumentException(Lang.T("not a PNG, JPG or GIF picture"));
                 var raw = new RawTexture { W = tex.width, H = tex.height };
                 switch (tex.format)
                 {
@@ -353,12 +370,13 @@ namespace SignLink.Pictures
         public static string ScreenNote(byte[] file, Func<int, int, int> planWidth, Sign target = null)
         {
             if (!GifDecoder.Inspect(file, out int w, out int h, out int count) || count < 2) return null;
-            int kept = ScreenKept(w, h, count, planWidth(w, h));
-            long bytes = ScreenBytes(w, h, kept, planWidth(w, h)), budget = SignLink.Animation.ScreenPlayer.Budget;
+            int plan = planWidth(w, h);
+            int kept = ScreenKept(w, h, count, plan);
+            long bytes = ScreenBytes(w, h, kept, plan), budget = SignLink.Animation.ScreenPlayer.Budget;
             if (bytes > budget)
             {
                 Plugin.Log.LogWarning($"the GIF stays a still: its {kept} frames would be {bytes >> 20} MB (the screens hold at most {budget >> 20} MB)");
-                return $"; too big to play over the picture (its frames would be {bytes >> 20} MB, the screens hold at most {budget >> 20} MB)";
+                return "; " + Lang.F("too big to play over the picture (its frames would be {0} MB, the screens hold at most {1} MB)", bytes >> 20, budget >> 20);
             }
             if (target == null) return null;
             long room = MainThread.Run(() =>
@@ -370,7 +388,7 @@ namespace SignLink.Pictures
             });
             if (room >= bytes) return null;
             Plugin.Log.LogInfo($"the GIF stays a still for now: its {kept} frames would be {bytes >> 20} MB, the screens have room for {Math.Max(0, room) >> 20} MB");
-            return $"; it stays still for now: its frames would be {bytes >> 20} MB, the screens have room for {Math.Max(0, room) >> 20} MB";
+            return "; " + Lang.F("it stays still for now: its frames would be {0} MB, the screens have room for {1} MB", bytes >> 20, Math.Max(0, room) >> 20);
         }
 
         /// <summary>A GIF's frames for its screen alone (any thread), each shrunk as it is decoded: a screen restored from the
@@ -507,7 +525,7 @@ namespace SignLink.Pictures
         /// first.</summary>
         public static List<Sign> Place(Sign target, EncodedPicture pic, PictureOptions o)
         {
-            if (!target) throw new InvalidOperationException("the sign is gone (unloaded or removed)");
+            if (!target) throw new InvalidOperationException(Lang.T("the sign is gone (unloaded or removed)"));
             var texts = new List<string>();
             foreach (PixelText.Band b in pic.Bands) texts.Add(b.Text);
             List<Sign> placed = SignFit.PutPlaced(target, texts, o.FitFor(pic.Plan), pic.Name);
@@ -524,28 +542,30 @@ namespace SignLink.Pictures
         {
             ScreenFrames s = pic.Screen;
             pic.Screen = null;                                       // the player owns the frames from here
-            bool played = PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out string why);
+            bool played = PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out string why, out bool noRoom);
             // the room asked before the decode went to a paused or far GIF meanwhile (ScreenRestore played it again; review):
             // asked once more, as ScreenRestore.Finish asks; still refused, the frames park for the restore to find
-            if (!played && why != null && why.StartsWith("too big to play", StringComparison.Ordinal) &&
-                Plugin.Screens.MakeRoom(s.Bytes, target, Time.unscaledTime))
-                played = PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out why);
+            if (!played && noRoom && Plugin.Screens.MakeRoom(s.Bytes, target, Time.unscaledTime))
+                played = PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out why, out noRoom);
             if (!played)
             {
-                if (why != null && why.StartsWith("too big to play", StringComparison.Ordinal)) Plugin.Screens.Park(s, Time.unscaledTime);
-                pic.Note = $"; it stays still here: {why}";
+                if (noRoom) Plugin.Screens.Park(s, Time.unscaledTime);
+                pic.Note = "; " + Lang.F("it stays still here: {0}", why);
                 Plugin.Log.LogWarning($"the GIF stays a still: {why}");
                 return;
             }
-            pic.Note = "; the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder";
+            pic.Note = "; " + Lang.T("the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder");
         }
 
         /// <summary>The same for frames and a plan from anywhere (ScreenRestore: a still's GIF decoded again): centre
         /// and bottom edge in wu as the still was placed (EncodedPicture.CenterX, Bottom). False, nothing started, when
-        /// the screens' budget has no room; why says so.</summary>
-        public static bool PlayOver(Sign target, ScreenFrames s, PicturePlan plan, double centerX, double bottom, bool lit, out string why)
+        /// the screens' budget has no room; why says so (in the player's language), noRoom that it was the budget
+        /// (ScreenPlayer.NoRoomException: the caller may make room, or park the frames).</summary>
+        public static bool PlayOver(Sign target, ScreenFrames s, PicturePlan plan, double centerX, double bottom, bool lit, out string why,
+                                    out bool noRoom)
         {
             why = null;
+            noRoom = false;
             // a pixel of overscan on every side, each way on its own (one pitch for both left a tall GIF overhanging)
             float pitch = (float)(plan.Pitch * (plan.W + 2) / (double)s.W);
             float pitchY = (float)(plan.Pitch * (plan.H + 2) / (double)s.H);
@@ -557,9 +577,10 @@ namespace SignLink.Pictures
                                           hideText: true, point: false, lit: lit, frames: s.Frames, now: Time.unscaledTime,
                                           key: s.Key, sourceW: s.SourceW, sourceH: s.SourceH, pitchY: pitchY);
             }
-            catch (ArgumentException e)
+            catch (Exception e)                                             // any: the still is on, the screen only is not (1.1.0, review)
             {
                 why = e.Message;
+                noRoom = e is SignLink.Animation.ScreenPlayer.NoRoomException;
                 return false;
             }
             return true;
@@ -592,7 +613,7 @@ namespace SignLink.Pictures
                 PictureOptions o = options.Clone();
                 bool gif = PictureImporter.IsGifFile(file);                 // a GIF's bytes are read on the worker (1.0.2, review:
                 int w = 0, h = 0;                                           // 35 MB on the game's thread); PNG and JPG the game
-                byte[] bytes = gif ? null : File.ReadAllBytes(file);        // decodes here
+                byte[] bytes = gif ? null : PictureImporter.ReadFile(file); // decodes here
                 byte[] rgba = gif ? null : PictureImporter.Decode(bytes, out w, out h);
                 Busy = true;
                 cancel = false;
@@ -601,7 +622,7 @@ namespace SignLink.Pictures
                     try
                     {
                         string key = gif ? PictureImporter.Stamp(file) : null;   // with the bytes: a file written meanwhile is another
-                        if (gif) bytes = File.ReadAllBytes(file);
+                        if (gif) bytes = PictureImporter.ReadFile(file);
                         EncodedPicture pic = gif ? PictureImporter.EncodeGif(bytes, o, () => cancel, target) : PictureImporter.Encode(rgba, w, h, o);
                         pic.Name = PictureImporter.Relative(file);         // with its folder: the sign says where the file is
                         if (pic.Screen != null) pic.Screen.Key = PictureImporter.ScreenKey(key, pic.Screen.W);   // parked under it when the stack changes
@@ -659,7 +680,7 @@ namespace SignLink.Pictures
                     try
                     {
                         string key = PictureImporter.Stamp(file);           // with the bytes, on the worker (1.0.2, review)
-                        byte[] bytes = File.ReadAllBytes(file);
+                        byte[] bytes = PictureImporter.ReadFile(file);
                         int planW = still.Plan.W;                           // the still's: the screen goes over it
                         string note = PictureImporter.ScreenNote(bytes, (gw, gh) => planW, target);
                         ScreenFrames frames = note == null ? PictureImporter.GifScreen(bytes, (gw, gh) => planW, () => cancel) : null;
@@ -697,9 +718,11 @@ namespace SignLink.Pictures
                 string summary = pic.Summary;
                 List<Sign> signs = PictureImporter.Place(target, pic, o);
                 string how = o.FitFor(pic.Plan).Describe(o.Glow ? GlowMode.AsMade : GlowMode.Lit);
-                string result = $"{SignRecipe.Clean(pic.Name)} is on the sign{how}" + (signs.Count > 1 ? $" over {signs.Count} signs" : "") +
-                                $" ({SaveCost.Label(pic.SaveBytes)} in the world save; encoded in {pic.Ms / 1000:0.0} s, placed in {sw.Elapsed.TotalSeconds:0.0} s)" +
-                                pic.Note + ".";
+                string result = signs.Count > 1
+                    ? Lang.F("{0} is on the sign{1} over {2} signs ({3} in the world save; encoded in {4:0.0} s, placed in {5:0.0} s){6}.",
+                             SignRecipe.Clean(pic.Name), how, signs.Count, SaveCost.Label(pic.SaveBytes), pic.Ms / 1000, sw.Elapsed.TotalSeconds, pic.Note)
+                    : Lang.F("{0} is on the sign{1} ({2} in the world save; encoded in {3:0.0} s, placed in {4:0.0} s){5}.",
+                             SignRecipe.Clean(pic.Name), how, SaveCost.Label(pic.SaveBytes), pic.Ms / 1000, sw.Elapsed.TotalSeconds, pic.Note);
                 Plugin.Log.LogInfo($"picture placed: {summary}{how}; grid {pic.GridMs:0} ms, encoded in {pic.Ms / 1000:0.0} s, placed in {sw.Elapsed.TotalSeconds:0.0} s ({signs.Count} signs)");
                 Busy = false;
                 Say(result);
@@ -716,7 +739,7 @@ namespace SignLink.Pictures
             Busy = false;
             if (e is OperationCanceledException)
             {
-                Say("the import was stopped.");
+                Say(Lang.T("the import was stopped."));
                 return;
             }
             Plugin.Log.LogWarning($"picture: {e}");

@@ -9,35 +9,28 @@ using PetyusPolisz.Kit;
 namespace SignLink
 {
     /// <summary>Every config entry in one place (BepInEx/config/PetyusPolisz.SignLink.cfg), in the order a player reads
-    /// them: the menu first, the developer API last (the file and ConfigurationManager sort sections by name).</summary>
+    /// them: the menu first, the diagnostics last (the file and ConfigurationManager sort sections by name).</summary>
     internal static class PluginConfig
     {
         public static ConfigEntry<KeyboardShortcut> MenuKey;
         public static ConfigEntry<float> MenuScale;
         public static ConfigEntry<float> MenuWidth, MenuHeight;
         public static ConfigEntry<float> MenuOpacity;
+        public static ConfigEntry<string> MenuTheme, MenuLanguage;
         public static ConfigEntry<bool> Highlight, HighlightContent;
         public static ConfigEntry<float> WindowX, WindowY;
         public static ConfigEntry<bool> PngTransparency, MovingGifs;
         public static ConfigEntry<bool> PlayAnimations, PlayGifs;
         public static ConfigEntry<float> PlayDistance;
         public static ConfigEntry<int> GifMemory;
-        public static ConfigEntry<float> RefreshSeconds;
         public static ConfigEntry<bool> PictureFineWidth;
-#if SIGNLINK_DEVAPI
-        public static ConfigEntry<bool> ApiEnabled;
-        public static ConfigEntry<int> ApiPort;
-        public static ConfigEntry<bool> ApiNetwork;
-        public static ConfigEntry<string> ApiPassword;
-#endif
         public static ConfigEntry<bool> LogSlowSigns;
 
         static ConfigFile file;
 
         /// <summary>Every setting back to its default (Settings › Reset to defaults, 0.20.121, the author: Settings
-        /// needs a Reset to defaults button too, with a confirmation as well), the hotkey too; the API's password stays, so
-        /// a tool that knows it works again once the API is switched on. The file is written once. Returns how many
-        /// changed.</summary>
+        /// needs a Reset to defaults button too, with a confirmation as well), the hotkey too. The file is written once.
+        /// Returns how many changed.</summary>
         public static int ResetToDefaults()
         {
             if (file == null) return 0;
@@ -48,9 +41,6 @@ namespace SignLink
             {
                 foreach (KeyValuePair<ConfigDefinition, ConfigEntryBase> e in file)
                 {
-#if SIGNLINK_DEVAPI
-                    if (ReferenceEquals(e.Value, ApiPassword)) continue;
-#endif
                     if (Equals(e.Value.BoxedValue, e.Value.DefaultValue)) continue;
                     e.Value.BoxedValue = e.Value.DefaultValue;
                     n++;
@@ -86,21 +76,31 @@ namespace SignLink
             MenuHeight = cfg.Bind("1 - Menu", "Height", 0.86f,
                 Desc("The window's height as a share of the screen's: 1 reaches from the top of the screen to the bottom.", 3,
                      new AcceptableValueRange<float>(WindowSizing.HeightLeast, WindowSizing.HeightMost)));
-            MenuOpacity = cfg.Bind("1 - Menu", "Opacity", 0.8f,
+            MenuOpacity = cfg.Bind("1 - Menu", "Opacity", 0.85f,
                 Desc("How solid the window is: 1 is opaque, 0.5 shows the world through it. The text stays readable.", 2,
                      new AcceptableValueRange<float>(0.5f, 1f)));
+            MenuTheme = cfg.Bind("1 - Menu", "Theme", Theme.ClassicName,         // the default (1.1.0, the author; Nordic before)
+                Desc("The window's look: Classic (dark wood and gold) or Nordic (slate and amber).", 2,
+                     new AcceptableValueList<string>(Theme.Names)));
+            // the window's language (1.1.0, the author: Game default takes the game's language, English where SignLink has
+            // no table for it; the default): Game default first, so a value not in the list becomes it
+            MenuLanguage = cfg.Bind("1 - Menu", "Language", Lang.GameDefault,
+                Desc("The window's language: Game default follows the game's language setting (English where SignLink has no " +
+                     "translation for it), or a language chosen here.", 2,
+                     new AcceptableValueList<string>(Lang.Choices)));
             WindowX = cfg.Bind("1 - Menu", "WindowX", -1f,
                 Desc("Where the window was dragged: its left edge in screen pixels (-1: the default place).", 0));
             WindowY = cfg.Bind("1 - Menu", "WindowY", -1f,
                 Desc("Where the window was dragged: its top edge in screen pixels (-1: the default place).", 0));
             Highlight = cfg.Bind("3 - Sign options", "Highlight", true,
-                Desc("While the window is open, the selected sign is outlined in the world (its board, and where its " +
-                     "content goes), and so is the sign under the cursor.", 4));
+                Desc("While the window is open, signs' boards are outlined in the world: the selected one, Show all's, the one " +
+                     "under the cursor (where content goes is HighlightContent's).", 4));
             HighlightContent = cfg.Bind("3 - Sign options", "HighlightContent", true,
-                Desc("With Highlight on: where the content goes is framed too, green over what will show, red where a " +
-                     "wall or a floor stands in front of it, grey stripes seen from behind (off: the sign's board alone).", 3));
+                Desc("While the window is open, where a sign's content goes is framed in the world, green over what " +
+                     "will show, red where a wall or a floor stands in front of it, grey stripes seen from behind (the board's " +
+                     "outline is Highlight's).", 3));
             PlayAnimations = cfg.Bind("4 - Playback", "PlayAnimations", true,
-                Desc("Play the glyph animations saved on signs (moving art pieces, the API's animations). Off: they show " +
+                Desc("Play the glyph animations saved on signs (moving art pieces). Off: they show " +
                      "their first frame, as players without SignLink see them.", 4));
             // the author (0.20.160): two switches, one for the glyphs and one for the GIFs
             PlayGifs = cfg.Bind("4 - Playback", "PlayGifs", true,
@@ -112,10 +112,6 @@ namespace SignLink
                 Desc("The memory the moving GIFs' frames may take on this computer, in MB: 256, 512 or 1024. More GIFs move at " +
                      "once with more; 1024 wants a PC with 16 GB of RAM, as the game itself takes several GB. Lowered, the " +
                      "farthest GIFs stop until the rest fit.", 1, new AcceptableValueList<int>(256, 512, 1024)));
-            RefreshSeconds = cfg.Bind("3 - Sign options", "RefreshSeconds", 2f,
-                Desc("How often changed sign texts are re-read, in seconds. 2 is the game's own pace (nothing extra runs); " +
-                     "lower it only for animations a tool writes into signs over the network, or to see other players' " +
-                     "sign edits sooner.", 1, new AcceptableValueRange<float>(0.1f, 2f)));
             PngTransparency = cfg.Bind("5 - Pictures", "PngTransparency", true,
                 Desc("A PNG's see-through parts stay empty on the sign, half-transparent ones half transparent.", 2));
             // a choice of each picture since 0.20.160 (the Moving switch on 2 Content, as an art piece's): this is where it
@@ -132,27 +128,13 @@ namespace SignLink
                      "Your Resolution stays: for the exact size the picture takes the pixels nearest it, a few more or less, " +
                      "on a server never more than the multiplayer limit allows. Off: the next size it takes for the same data (20-150 cm a " +
                      "step on most pictures: the game reads only some pixel sizes exactly).", 1));
-#if SIGNLINK_DEVAPI                                                         // a developer build only (Plugin.cs); a release
-                                                                            // drops these entries from the file (ConfigMoves)
-            ApiEnabled = cfg.Bind("9 - Developer API", "Enabled", false,
-                Desc("A local HTTP API for developers' tools. Players do not need it: the window does everything. " +
-                     "Switches at once.", 5));
-            ApiPort = cfg.Bind("9 - Developer API", "Port", 8417,
-                Desc("Port of the API.", 4, new AcceptableValueRange<int>(1024, 65535)));
-            ApiNetwork = cfg.Bind("9 - Developer API", "AllowNetwork", false,
-                Desc("Also accept requests from other computers on your network. HTTP is not encrypted: use it only on " +
-                     "a home network you trust, never open the port to the internet.", 3));
-            ApiPassword = cfg.Bind("9 - Developer API", "Password", "",
-                Desc("Every request must send it (header X-SignLink-Password). Made the first time the API is switched " +
-                     "on; at least 12 plain characters. Anyone with it can change your signs.", 2, browsable: false));
-#endif
             LogSlowSigns = cfg.Bind("9 - Diagnostics", "LogSlowSigns", false,
                 Desc("Log sign hover texts and text refreshes that take over 30 ms (to find stalls); off unless asked for.", 1));
             Migrate(cfg);
         }
 
         /// <summary>Until 0.20.43 the GUID was bakterhaz.signlink, and BepInEx names the config file after the GUID: the old
-        /// file takes the new name once, before anything is bound, so the settings and the API password carry over.</summary>
+        /// file takes the new name once, before anything is bound, so the settings carry over.</summary>
         static void MoveOldFile(ConfigFile cfg)
         {
             try
@@ -170,7 +152,7 @@ namespace SignLink
 
         /// <summary>An older config's values (orphans under the new names: ConfigMoves) go to their new entries once,
         /// where the new entry is still at its default (a choice already made there stays), and the old entries
-        /// leave the file: a tool reading the first "Password =" line would find the old one first. Entries a later
+        /// leave the file. Entries a later
         /// version dropped (ConfigMoves.Stale) leave the file too. BepInEx keeps the orphans in a private dictionary;
         /// without it nothing moves and the file is as it was.</summary>
         static void Migrate(ConfigFile cfg)
@@ -224,14 +206,6 @@ namespace SignLink
             }
         }
 
-        /// <summary>Why the API password cannot be used (null: it can): at least 12 characters, ASCII, no spaces, since
-        /// the header is read as ASCII and trimmed.</summary>
-#if SIGNLINK_DEVAPI
-        public static string PasswordProblem() => Api.Password.Problem(ApiPassword.Value);
-
-        public static string NewPassword() => Api.Password.New();
-#endif
-
         /// <summary>The window's hotkey as people write it, the modifiers first ("Shift + Page Up"; UI.HotkeyText,
         /// 0.20.82), one key a part; none for no key.</summary>
         public static string[] MenuKeyParts()
@@ -250,15 +224,13 @@ namespace SignLink
         static string[] keyParts;
         static string keyText;
 
-        static ConfigDescription Desc(string text, int order, AcceptableValueBase range = null, bool browsable = true) =>
-            new ConfigDescription(text, range, new ConfigurationManagerAttributes { Order = order, Browsable = browsable ? (bool?)null : false });
+        static ConfigDescription Desc(string text, int order, AcceptableValueBase range = null) =>
+            new ConfigDescription(text, range, new ConfigurationManagerAttributes { Order = order });
 
-        /// <summary>Read by BepInEx.ConfigurationManager through reflection; a private copy is the usual way. Browsable
-        /// false keeps the password out of its window (F1): nothing to read off a stream.</summary>
+        /// <summary>Read by BepInEx.ConfigurationManager through reflection; a private copy is the usual way.</summary>
         sealed class ConfigurationManagerAttributes
         {
             public int? Order;
-            public bool? Browsable;
         }
     }
 }

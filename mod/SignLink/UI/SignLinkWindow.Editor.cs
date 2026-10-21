@@ -35,7 +35,7 @@ namespace SignLink.UI
                 top = Screen.height - Mathf.Max(bl.y, tr.y);                 // the panel's top edge; IMGUI counts from the top
                 centreX = (bl.x + tr.x) / 2f;
             }
-            const string label = "Open in SignLink";
+            string label = Lang.T("Open in SignLink");
             Vector2 size = Theme.Button.CalcSize(new GUIContent(label));
             float bh = size.y + Widgets.U(8);
             var box = new Rect(centreX - size.x / 2f - Widgets.U(8), Mathf.Max(0f, top - Widgets.U(10) - bh), size.x + Widgets.U(16), bh);   // above the panel
@@ -56,7 +56,7 @@ namespace SignLink.UI
                 badge = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.LowerRight, fontSize = Mathf.Max(12, Screen.height / 75) };
             badge.normal.textColor = new Color(1f, 0.45f, 0.35f);
             GUI.Label(new Rect(0, 0, Screen.width - 12, Screen.height - 8),
-                      $"SignLink {Plugin.Version} could not load: see BepInEx/LogOutput.log", badge);
+                      Lang.F("SignLink {0} could not load: see BepInEx/LogOutput.log", Plugin.Version), badge);
         }
     }
 }

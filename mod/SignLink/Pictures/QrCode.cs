@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PetyusPolisz.Kit;
 
 namespace SignLink.Pictures
 {
@@ -57,7 +58,7 @@ namespace SignLink.Pictures
             int version = minVersion, capacity;
             for (; ; version++)
             {
-                if (version > 40) throw new ArgumentException($"{data.Length} bytes are too long for a QR code at {level} (version 40 holds at most {DataCodewords(40, level) - 3})");
+                if (version > 40) throw new ArgumentException(Lang.F("{0} bytes are too long for a QR code at {1} (version 40 holds at most {2})", data.Length, level, DataCodewords(40, level) - 3));
                 capacity = DataCodewords(version, level) * 8;
                 if (4 + CountBits(version) + data.Length * 8 <= capacity) break;
             }

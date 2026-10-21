@@ -1,16 +1,12 @@
 // SignLink: write, animate and screen sign art in Valheim. Client-side BepInEx plugin, vanilla compatible.
 // Layout: Plugin (wiring) / PluginConfig / Signs (sign helpers, stacks, building) / Pictures (PNG/JPG to sign text) /
-// Animation (text frames, texture screens) / Patches / Presets / UI (the window). Api (a local HTTP API for the author's
-// tools, docs/api.md) is compiled only into a developer build (SIGNLINK_DEVAPI, ./sign.sh dev): never in a release.
+// Animation (texture screens, saved animations) / Patches / Presets / UI (the window).
 using System;
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using SignLink.Animation;
-#if SIGNLINK_DEVAPI
-using SignLink.Api;
-#endif
 using SignLink.Signs;
 using UnityEngine;
 
@@ -22,113 +18,74 @@ namespace SignLink
     {
         public const string Guid = "PetyusPolisz.SignLink";              // the Thunderstore team's name (bakterhaz.signlink until 0.20.43)
         public const string Name = "SignLink";
-        public const string Version = "1.0.3";
+        public const string Version = "1.1.0";
 
         internal static ManualLogSource Log;
-        internal static TextAnimator Text;
         internal static ScreenPlayer Screens;
         internal static ScreenRestore Restore;
         internal static StoredAnims Stored;
         internal static UI.ContentPreview Preview;
 
         Harmony harmony;
-#if SIGNLINK_DEVAPI
-        LocalHttpServer server;
-#endif
-        FastRefresh refresh;
 
         void Awake()
         {
             Log = Logger;
             MainThread.Report = e => Log.LogError(e);
+            Languages();                                                    // before Bind: the Language setting lists them
             PluginConfig.Bind(Config);
             harmony = new Harmony(Guid);
             Patch();
-            SignFinder.Seed();                                              // loaded again in a running game: its signs (0.20.135)
-            Text = new TextAnimator();
             Screens = new ScreenPlayer();
             Restore = new ScreenRestore();
             Stored = new StoredAnims();
-            Pictures.PictureFolder.Find();                                  // the images folder (the old one moves over once)
-            Pictures.StockPictures.Place(Pictures.PictureImporter.Folder);   // the paintings and the horse GIF on every computer with
-                                                                             // the mod, window opened or not (review)
             Preview = new UI.ContentPreview();
-            refresh = new FastRefresh(Text);
+            // the steps that touch the game or the disk, each on its own: one that throws (an odd data folder, a game update)
+            // leaves the window and the rest working (1.1.0, review: a throw here left no window, the patches on)
+            TryStart("the loaded signs", SignFinder.Seed);                  // loaded again in a running game: its signs (0.20.135)
+            TryStart("the images folder", Pictures.PictureFolder.Find);   // the old one moves over once
+            TryStart("the stock pictures", () => Pictures.StockPictures.Place(Pictures.PictureImporter.Folder));   // the paintings and
+                                                                            // the horse GIF on every computer with the mod (review)
             gameObject.AddComponent<UI.SignLinkWindow>();
-            instance = this;
             PluginConfig.GifMemory.SettingChanged += (_, __) => Restore.RoomFreed();   // raised: the GIFs waiting for room start
                                                                                        // (lowered: ScreenPlayer.Trim at its step)
-#if SIGNLINK_DEVAPI
-            ApplyApi();
-            PluginConfig.ApiEnabled.SettingChanged += (_, __) => ApplyApi();
-            PluginConfig.ApiNetwork.SettingChanged += (_, __) => { StopApi(); ApplyApi(); };
-            PluginConfig.ApiPort.SettingChanged += (_, __) => { StopApi(); ApplyApi(); };
-            PluginConfig.ApiPassword.SettingChanged += (_, __) =>
-            {
-                string why = PluginConfig.PasswordProblem();                 // a bad password typed into the config: the API stops
-                if (why != null && server != null)
-                {
-                    StopApi();
-                    ApiProblem = $"Stopped: the new password {why} (New makes a good one).";
-                }
-                else if (server == null) ApplyApi();
-            };
-            Log.LogInfo($"{Name} {Version} loaded (developer build)" + (server == null ? "" : $", developer API on port {PluginConfig.ApiPort.Value} " +
-                        (PluginConfig.ApiNetwork.Value ? "(network: every interface)" : "(this computer only)")));
-#else
             Log.LogInfo($"{Name} {Version} loaded");
-#endif
             Commands.Register();                                            // last, and guarded: a game update to the console
         }                                                                   // must not stop the rest of the plugin
 
-        static Plugin instance;
-
-#if SIGNLINK_DEVAPI
-        /// <summary>The developer API follows its switch at once (window or config), no restart needed.</summary>
-        void ApplyApi()
+        /// <summary>A start step that may fail on its own: logged, the plugin goes on.</summary>
+        static void TryStart(string what, Action step)
         {
-            if (PluginConfig.ApiEnabled.Value && server == null)
-            {
-                if (string.IsNullOrEmpty(PluginConfig.ApiPassword.Value))
-                {
-                    PluginConfig.ApiPassword.Value = PluginConfig.NewPassword();   // made on first use, not on every install
-                    if (server != null) return;                                     // its SettingChanged started the API already
-                }
-                string why = PluginConfig.PasswordProblem();
-                if (why != null)
-                {
-                    ApiProblem = $"Not started: the password {why} (New makes a good one).";
-                    Log.LogError($"developer API not started: its password {why}");
-                    return;
-                }
-                server = new LocalHttpServer(PluginConfig.ApiPort.Value, PluginConfig.ApiNetwork.Value, new Routes(Text, Screens).Handle);
-                server.Start();
-                ApiProblem = server.Running ? null
-                    : $"Could not listen on port {PluginConfig.ApiPort.Value} (another program uses it? see the BepInEx log).";
-            }
-            else if (!PluginConfig.ApiEnabled.Value) StopApi();
+            try { step(); }
+            catch (Exception e) { Log.LogError($"{what}: {e}"); }
         }
-
-        /// <summary>Why the developer API is on but not listening (the Settings tab says it), or null.</summary>
-        internal static string ApiProblem { get; private set; }
-
-        void StopApi()
-        {
-            server?.Stop();
-            server = null;
-            ApiProblem = null;
-        }
-
-        /// <summary>Is the developer API listening (for the Settings tab)?</summary>
-        internal static bool ApiRunning => instance && instance.server != null && instance.server.Running;
-#else
-        internal static bool ApiRunning => false;
-#endif
 
         static readonly HashSet<Type> patched = new HashSet<Type>();
 
         /// <summary>Did this patch class apply? (A feature that needs it falls back or stays off without it.)</summary>
         public static bool Patched(Type t) => patched.Contains(t);
+
+        /// <summary>The window's languages (1.1.0): a table per language in the DLL (Lang/&lt;Language&gt;.txt, the
+        /// game's own name for it: "Hungarian"), read when first used; the words follow the Language setting, Game default
+        /// the game's language (Localization), English where no table is. No file under BepInEx/config.</summary>
+        static void Languages()
+        {
+            System.Reflection.Assembly own = typeof(Plugin).Assembly;
+            const string Prefix = "SignLink.Lang.", Suffix = ".txt";
+            foreach (string res in own.GetManifestResourceNames())
+            {
+                if (!res.StartsWith(Prefix, StringComparison.Ordinal) || !res.EndsWith(Suffix, StringComparison.Ordinal)) continue;
+                string name = res;
+                PetyusPolisz.Kit.Lang.Add(res.Substring(Prefix.Length, res.Length - Prefix.Length - Suffix.Length), () =>
+                {
+                    using (var r = new System.IO.StreamReader(own.GetManifestResourceStream(name))) return r.ReadToEnd();
+                });
+            }
+            PetyusPolisz.Kit.Lang.Order = new[] { "Hungarian", "Chinese", "Russian" };   // the setting's order (1.1.0, the author)
+            PetyusPolisz.Kit.Lang.Setting = () => PluginConfig.MenuLanguage?.Value;
+            PetyusPolisz.Kit.Lang.Game = () => gameLanguage;                // read on the main thread (Update): workers word texts too
+            ReadGameLanguage();
+        }
 
         /// <summary>Every patch class on its own: one that a game update breaks is skipped with a warning, the rest of
         /// the mod keeps working.</summary>
@@ -147,41 +104,28 @@ namespace SignLink
         }
 
         Action<float>[] steps;
-        static readonly string[] StepNames = { "text animations", "screens", "screens restored", "saved animations", "fast refresh", "sign moves" };
-        readonly int[] failures = new int[6];
-        readonly bool[] off = new bool[6];
+        static readonly string[] StepNames = { "screens", "screens restored", "saved animations", "sign moves" };
+        readonly int[] failures = new int[StepNames.Length];
+        readonly bool[] off = new bool[StepNames.Length];
 
-        static string copiedPassword;
-        static float copiedUntil;
+        static string gameLanguage;
+        static float gameLanguageAt;
 
-        /// <summary>Settings › Copy put the API password on the clipboard: 30 s later it is taken off again if the
-        /// clipboard still holds exactly it (0.20.132, review: it stayed there for any program, or a Paste, to find).</summary>
-        internal static void PasswordCopied(string password)
+        /// <summary>The game's language as Lang reads it (Localization is the main thread's): the same string while it does
+        /// not change, so Lang's reference test holds.</summary>
+        static void ReadGameLanguage()
         {
-            copiedPassword = string.IsNullOrEmpty(password) ? null : password;
-            copiedUntil = Time.unscaledTime + 30f;
-        }
-
-        /// <summary>The copied password off the clipboard once its time is up (or the game closes), the clipboard read
-        /// only then, once.</summary>
-        static void ForgetCopiedPassword(float now, bool closing = false)
-        {
-            if (copiedPassword == null || (!closing && now < copiedUntil)) return;
-            string pw = copiedPassword;
-            copiedPassword = null;
-            try
-            {
-                if (GUIUtility.systemCopyBuffer == pw) GUIUtility.systemCopyBuffer = "";
-            }
-            catch (Exception e) { Log.LogDebug($"the clipboard: {e.Message}"); }
+            gameLanguageAt = Time.unscaledTime + 1f;
+            string now = Localization.instance?.GetSelectedLanguage();
+            if (now != gameLanguage) gameLanguage = now;
         }
 
         void Update()
         {
             MainThread.Drain();
             float now = Time.unscaledTime;
-            ForgetCopiedPassword(now);
-            if (steps == null) steps = new Action<float>[] { Text.Step, Screens.Step, Restore.Step, Stored.Step, refresh.Step, SignMove.Step };
+            if (now >= gameLanguageAt) ReadGameLanguage();                  // the game's own setting, once a second
+            if (steps == null) steps = new Action<float>[] { Screens.Step, Restore.Step, Stored.Step, SignMove.Step };
             for (int i = 0; i < steps.Length; i++) Safe(i, now);
         }
 
@@ -211,14 +155,9 @@ namespace SignLink
         /// (0.20.135, the author: now let us build the OnDestroy solution mentioned). The window cleans up its own part (SignLinkWindow.OnDestroy).</summary>
         void OnDestroy()
         {
-            ForgetCopiedPassword(0f, closing: true);
-#if SIGNLINK_DEVAPI
-            server?.Stop();
-#endif
             try
             {
-                Text?.Stop(null);                                           // the API's animations: the signs' texts back
-                Stored?.StopAll();                                          // stored ones too (the new copy starts them again)
+                Stored?.StopAll();                                          // the stored animations: the signs' texts back (the new copy starts them again)
             }
             catch (Exception e) { Log.LogDebug($"unload: {e.Message}"); }
             Screens?.StopAll();
