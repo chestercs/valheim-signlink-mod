@@ -56,8 +56,12 @@ Walk around with the window open, and hold the **right mouse button** to look ar
 | 1 Sign | 2 Content | 3 Place |
 |---|---|---|
 | ![Step 1: the Sign tab](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-1-sign.jpg) | ![Step 2: the Content tab](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-2-content.jpg) | ![Step 3: the Place tab](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-3-place.jpg) |
-| **Playing** | **Settings** | |
-| ![The Playing tab](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-4-playing.jpg) | ![The Settings tab](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-5-settings.jpg) | |
+
+| Playing | Settings |
+|---|---|
+| ![The Playing tab](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-4-playing.jpg) | ![The Settings tab](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-5-settings.jpg) |
+| **Two looks: Classic and Nordic** | **Your language: Русский and 简体中文** |
+| ![The window in the Classic and the Nordic look](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-themes.jpg) | ![The window in Russian and in Chinese](https://raw.githubusercontent.com/chestercs/valheim-signlink-mod/main/docs/media/window-languages.jpg) |
 
 **Your pictures** go into the `SignLink/images` folder next to your worlds (on Windows
 `%USERPROFILE%\AppData\LocalLow\IronGate\Valheim\SignLink\images`); the *Open folder* button takes you there. Six

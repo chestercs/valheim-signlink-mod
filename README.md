@@ -115,10 +115,16 @@ sign itself. You can walk around with the window open, and hold the **right mous
     <td width="33%"><img src="docs/media/window-2-content.jpg" alt="Step 2: the Content tab with a picture picked"><br><sub><b>2 Content:</b> the picture, its resolution, its light and the Summary.</sub></td>
     <td width="33%"><img src="docs/media/window-3-place.jpg" alt="Step 3: the Place tab with the highlight in the world"><br><sub><b>3 Place:</b> size, place and tilt, with the highlight in the world.</sub></td>
   </tr>
+</table>
+
+<table>
   <tr>
-    <td><img src="docs/media/window-4-playing.jpg" alt="The Playing tab with the moving pictures nearby"><br><sub><b>Playing:</b> the moving pictures around you, each with Pause.</sub></td>
-    <td><img src="docs/media/window-5-settings.jpg" alt="The Settings tab with the language list open"><br><sub><b>Settings:</b> language, look, text size, hotkey and more.</sub></td>
-    <td></td>
+    <td width="50%"><img src="docs/media/window-4-playing.jpg" alt="The Playing tab with the moving pictures nearby"><br><sub><b>Playing:</b> the moving pictures around you, each with Pause.</sub></td>
+    <td width="50%"><img src="docs/media/window-5-settings.jpg" alt="The Settings tab with the language list open"><br><sub><b>Settings:</b> language, look, text size, hotkey and more.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/media/window-themes.jpg" alt="The window in the Classic and the Nordic look, side by side"><br><sub><b>Two looks:</b> Classic and Nordic.</sub></td>
+    <td><img src="docs/media/window-languages.jpg" alt="The window in Russian and in Chinese, side by side"><br><sub><b>Your language:</b> Русский and 简体中文 shown here.</sub></td>
   </tr>
 </table>
 
