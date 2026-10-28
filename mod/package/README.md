@@ -73,7 +73,8 @@ famous paintings and a galloping horse GIF are waiting in it to start with.
 - **Built for shared worlds:** a picture is something every arriving player downloads, so on a server SignLink keeps
   them light: at most 300 KB on one sign and 600 KB within 100 m. The *Area* bar shows how much room is left, and
   *Multiplayer max* picks the best quality that fits. Single player has no limits at all.
-- **Moving GIFs:** share the GIF file with your friends and it moves for them too.
+- **Moving GIFs:** share the GIF file with your friends and it moves for them too, at full quality: the Resolution
+  only sets the still that goes into the world, so keep it low to spare the server.
 - **Wards are respected.** You can edit a friend's picture wherever you have access.
 
 ## Good to know
@@ -91,7 +92,7 @@ the [wiki](https://github.com/chestercs/valheim-signlink-mod/wiki).
 ## About this mod
 
 SignLink is made by ChesTeRcs (team PetyusPolisz). It was written with Claude (Anthropic's AI) under their direction
-and tested on their worlds with Valheim 1.0.20. The code is MIT licensed (LICENSE); the art library is CC BY 4.0
+and tested on their worlds with Valheim 1.0.21. The code is MIT licensed (LICENSE); the art library is CC BY 4.0
 (LICENSE-ART): playing with the pieces needs no credit, sharing the pieces themselves does. The six paintings and the GIF that
 come with it are public domain: The Starry Night (Van Gogh), The Great Wave off Kanagawa (Hokusai), The Creation of Adam (Michelangelo),
 Impression, Sunrise (Monet), The Wild Hunt of Odin and Valkyrien (Arbo), and Muybridge's galloping horse (1887).

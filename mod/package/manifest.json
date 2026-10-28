@@ -1,6 +1,6 @@
 {
   "name": "SignLink",
-  "version_number": "1.1.0",
+  "version_number": "1.2.0",
   "website_url": "https://github.com/chestercs/valheim-signlink-mod",
   "description": "Paintings, pixel art, glyph art and labels on signs that every player sees, no mod needed to view: your own PNG, JPG and GIF, 200+ art pieces (150 animated), walls, floors, ceilings. English, Hungarian, Chinese, Russian.",
   "dependencies": [

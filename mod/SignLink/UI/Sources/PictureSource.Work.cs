@@ -180,7 +180,7 @@ namespace SignLink.UI.Sources
             if (GifDecoder.IsGif(bytes))
             {
                 GifImage g = GifDecoder.Decode(bytes, maxFrames: 1, cancelled: stale);   // its first frame
-                // what moving does, the frames' memory left to the row: it follows the Resolution (the screen is sized to the sign)
+                // what moving does, the frames' memory left to the row: it follows GIF quality (on Saver the Resolution too)
                 d.OneFrame = g.SourceFrames < 2;                            // its words in the row; a long one's stride: RoomForGif
                 d.MW = g.Width;
                 d.MH = g.Height;

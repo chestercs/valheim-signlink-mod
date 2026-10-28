@@ -18,7 +18,7 @@ namespace SignLink
     {
         public const string Guid = "PetyusPolisz.SignLink";              // the Thunderstore team's name (bakterhaz.signlink until 0.20.43)
         public const string Name = "SignLink";
-        public const string Version = "1.1.0";
+        public const string Version = "1.2.0";
 
         internal static ManualLogSource Log;
         internal static ScreenPlayer Screens;
@@ -49,6 +49,11 @@ namespace SignLink
             gameObject.AddComponent<UI.SignLinkWindow>();
             PluginConfig.GifMemory.SettingChanged += (_, __) => Restore.RoomFreed();   // raised: the GIFs waiting for room start
                                                                                        // (lowered: ScreenPlayer.Trim at its step)
+            PluginConfig.GifFullQuality.SettingChanged += (_, __) =>                 // the frames were made at the other size:
+            {                                                                        // the GIFs near come back from their files
+                Screens.StopAll();                                                   // at the new one (ScreenRestore, nearest first)
+                Restore.Rescan();
+            };
             Log.LogInfo($"{Name} {Version} loaded");
             Commands.Register();                                            // last, and guarded: a game update to the console
         }                                                                   // must not stop the rest of the plugin

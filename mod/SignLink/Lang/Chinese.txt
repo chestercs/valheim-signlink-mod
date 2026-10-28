@@ -6,9 +6,9 @@ Close	关闭
 list|, 	，
 # Kit/Lang.cs:14
 Game default	跟随游戏
-# Kit/Widgets.Buttons.cs:121
+# Kit/Widgets.Buttons.cs:123
 On	开
-# Kit/Widgets.Buttons.cs:121
+# Kit/Widgets.Buttons.cs:123
 Off	关
 # SignLink/Animation/ScreenPlayer.cs:287
 the sign is gone	标牌已不在
@@ -148,15 +148,15 @@ not a PNG, JPG or GIF picture	不是 PNG、JPG 或 GIF 图片
 too big to play over the picture (its frames would be {0} MB, the screens hold at most {1} MB)	太大，无法在图片上播放（帧需要 {0} MB，最多只能容纳 {1} MB）
 # SignLink/Pictures/PictureImporter.cs:391
 it stays still for now: its frames would be {0} MB, the screens have room for {1} MB	暂时保持静止：帧需要 {0} MB，剩余空间只有 {1} MB
-# SignLink/Pictures/PictureImporter.cs:553
+# SignLink/Pictures/PictureImporter.cs:554
 it stays still here: {0}	在本机保持静止：{0}
-# SignLink/Pictures/PictureImporter.cs:557
+# SignLink/Pictures/PictureImporter.cs:558
 the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder	GIF 会在图片上播放；之后每当标牌加载，图片文件夹中有此文件的每台电脑都会再次播放
-# SignLink/Pictures/PictureImporter.cs:722
+# SignLink/Pictures/PictureImporter.cs:723
 {0} is on the sign{1} over {2} signs ({3} in the world save; encoded in {4:0.0} s, placed in {5:0.0} s){6}.	{0} 已放到标牌上{1}，共 {2} 个标牌 ({3} 存入世界存档；编码 {4:0.0} s，放置 {5:0.0} s){6}。
-# SignLink/Pictures/PictureImporter.cs:724
+# SignLink/Pictures/PictureImporter.cs:725
 {0} is on the sign{1} ({2} in the world save; encoded in {3:0.0} s, placed in {4:0.0} s){5}.	{0} 已放到标牌上{1} ({2} 存入世界存档；编码 {3:0.0} s，放置 {4:0.0} s){5}。
-# SignLink/Pictures/PictureImporter.cs:742
+# SignLink/Pictures/PictureImporter.cs:743
 the import was stopped.	导入已停止。
 # SignLink/Pictures/PixelText.cs:116
 the picture is fully transparent: nothing to put on a sign	图片完全透明：没有可放到标牌上的内容
@@ -872,91 +872,99 @@ not moving here	未在本机播放
 not moving here yet (starting)	尚未在本机播放（启动中）
 # SignLink/UI/Tabs/PlayingTab.cs:99
 that sign holds no GIF picture any more.	该标牌上已没有 GIF 图片。
-# SignLink/UI/Tabs/SettingsTab.cs:118
+# SignLink/UI/Tabs/SettingsTab.cs:119
 Settings	设置
-# SignLink/UI/Tabs/SettingsTab.cs:136
+# SignLink/UI/Tabs/SettingsTab.cs:137
 Window	窗口
-# SignLink/UI/Tabs/SettingsTab.cs:145
+# SignLink/UI/Tabs/SettingsTab.cs:146
 Language	语言
-# SignLink/UI/Tabs/SettingsTab.cs:150
+# SignLink/UI/Tabs/SettingsTab.cs:151
 Theme	主题
-# SignLink/UI/Tabs/SettingsTab.cs:154
+# SignLink/UI/Tabs/SettingsTab.cs:155
 Text size	文字大小
-# SignLink/UI/Tabs/SettingsTab.cs:175
+# SignLink/UI/Tabs/SettingsTab.cs:176
 Window size	窗口大小
-# SignLink/UI/Tabs/SettingsTab.cs:179
+# SignLink/UI/Tabs/SettingsTab.cs:180
 Default size	默认大小
-# SignLink/UI/Tabs/SettingsTab.cs:193
+# SignLink/UI/Tabs/SettingsTab.cs:19
+Full	完整
+# SignLink/UI/Tabs/SettingsTab.cs:19
+Saver	省内存
+# SignLink/UI/Tabs/SettingsTab.cs:194
 Hotkey	快捷键
-# SignLink/UI/Tabs/SettingsTab.cs:195
+# SignLink/UI/Tabs/SettingsTab.cs:196
 press a key ...	请按键……
-# SignLink/UI/Tabs/SettingsTab.cs:195
+# SignLink/UI/Tabs/SettingsTab.cs:196
 no key	无
-# SignLink/UI/Tabs/SettingsTab.cs:205
+# SignLink/UI/Tabs/SettingsTab.cs:206
 Unbind	解除绑定
-# SignLink/UI/Tabs/SettingsTab.cs:212
+# SignLink/UI/Tabs/SettingsTab.cs:213
 Press a key · Esc keeps the old	请按一个键 · Esc 保留原按键
-# SignLink/UI/Tabs/SettingsTab.cs:216
+# SignLink/UI/Tabs/SettingsTab.cs:217
 Sign options	标牌选项
-# SignLink/UI/Tabs/SettingsTab.cs:221
+# SignLink/UI/Tabs/SettingsTab.cs:222
 Highlight signs	高亮标牌
-# SignLink/UI/Tabs/SettingsTab.cs:226
+# SignLink/UI/Tabs/SettingsTab.cs:227
 Highlight sign contents	高亮标牌内容
-# SignLink/UI/Tabs/SettingsTab.cs:230
+# SignLink/UI/Tabs/SettingsTab.cs:231
 Pictures	图片
-# SignLink/UI/Tabs/SettingsTab.cs:234
+# SignLink/UI/Tabs/SettingsTab.cs:235
 PNG transparency	PNG 透明
-# SignLink/UI/Tabs/SettingsTab.cs:236
+# SignLink/UI/Tabs/SettingsTab.cs:237
 Fine Width steps: exact sizes, your Resolution kept	精细宽度步进：尺寸精确，保留你设的分辨率
-# SignLink/UI/Tabs/SettingsTab.cs:241
+# SignLink/UI/Tabs/SettingsTab.cs:242
 Playback	播放
-# SignLink/UI/Tabs/SettingsTab.cs:255
+# SignLink/UI/Tabs/SettingsTab.cs:256
 Pause beyond	超出距离暂停
-# SignLink/UI/Tabs/SettingsTab.cs:263
+# SignLink/UI/Tabs/SettingsTab.cs:264
+GIF quality	GIF 画质
+# SignLink/UI/Tabs/SettingsTab.cs:266
+Saver: less RAM, coarser	省内存：占用更少内存，画面较粗
+# SignLink/UI/Tabs/SettingsTab.cs:269
 GIF memory	GIF 内存
-# SignLink/UI/Tabs/SettingsTab.cs:265
+# SignLink/UI/Tabs/SettingsTab.cs:271
 RAM for moving GIFs; 1024 wants 16 GB	动态 GIF 占用的内存；1024 需要 16 GB 内存
-# SignLink/UI/Tabs/SettingsTab.cs:275
+# SignLink/UI/Tabs/SettingsTab.cs:281
 Reset to defaults	全部恢复默认
-# SignLink/UI/Tabs/SettingsTab.cs:275
+# SignLink/UI/Tabs/SettingsTab.cs:281
 Sure? Click again	确定？再点一次
-# SignLink/UI/Tabs/SettingsTab.cs:284
-every setting is at its default already.	所有设置已是默认值。
-# SignLink/UI/Tabs/SettingsTab.cs:285
-1 setting back to the default.	1 项设置已恢复默认。
-# SignLink/UI/Tabs/SettingsTab.cs:285
-{0} settings back to the default.	{0} 项设置已恢复默认。
 # SignLink/UI/Tabs/SettingsTab.cs:290
-About	关于
+every setting is at its default already.	所有设置已是默认值。
+# SignLink/UI/Tabs/SettingsTab.cs:291
+1 setting back to the default.	1 项设置已恢复默认。
+# SignLink/UI/Tabs/SettingsTab.cs:291
+{0} settings back to the default.	{0} 项设置已恢复默认。
 # SignLink/UI/Tabs/SettingsTab.cs:296
-Steps	步骤
-# SignLink/UI/Tabs/SettingsTab.cs:299
-Open it	打开方式
-# SignLink/UI/Tabs/SettingsTab.cs:299
-no hotkey	未设快捷键
-# SignLink/UI/Tabs/SettingsTab.cs:300
-/signlink in the chat	在聊天框输入 /signlink
-# SignLink/UI/Tabs/SettingsTab.cs:301
-E on a picture sign	对着图片标牌按 E
+About	关于
 # SignLink/UI/Tabs/SettingsTab.cs:302
-Open in SignLink (sign editor)	标牌编辑界面中的“在 SignLink 中打开”
-# SignLink/UI/Tabs/SettingsTab.cs:304
-Fine-tune	微调
-# SignLink/UI/Tabs/SettingsTab.cs:304
-Shift+wheel on a slider	在滑块上 Shift+滚轮
+Steps	步骤
 # SignLink/UI/Tabs/SettingsTab.cs:305
+Open it	打开方式
+# SignLink/UI/Tabs/SettingsTab.cs:305
+no hotkey	未设快捷键
+# SignLink/UI/Tabs/SettingsTab.cs:306
+/signlink in the chat	在聊天框输入 /signlink
+# SignLink/UI/Tabs/SettingsTab.cs:307
+E on a picture sign	对着图片标牌按 E
+# SignLink/UI/Tabs/SettingsTab.cs:308
+Open in SignLink (sign editor)	标牌编辑界面中的“在 SignLink 中打开”
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Fine-tune	微调
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Shift+wheel on a slider	在滑块上 Shift+滚轮
+# SignLink/UI/Tabs/SettingsTab.cs:311
 arrow keys (3 Place)	方向键（3 放置）
-# SignLink/UI/Tabs/SettingsTab.cs:307
+# SignLink/UI/Tabs/SettingsTab.cs:313
 Look around	环顾四周
-# SignLink/UI/Tabs/SettingsTab.cs:307
+# SignLink/UI/Tabs/SettingsTab.cs:313
 hold the right mouse button	按住鼠标右键
-# SignLink/UI/Tabs/SettingsTab.cs:310
+# SignLink/UI/Tabs/SettingsTab.cs:316
 Graphics tip	画面建议
-# SignLink/UI/Tabs/SettingsTab.cs:310
+# SignLink/UI/Tabs/SettingsTab.cs:316
 Bloom off: sharper pictures	关闭泛光：图片更清晰
-# SignLink/UI/Tabs/SettingsTab.cs:92
+# SignLink/UI/Tabs/SettingsTab.cs:93
 Classic	经典
-# SignLink/UI/Tabs/SettingsTab.cs:92
+# SignLink/UI/Tabs/SettingsTab.cs:93
 Nordic	北欧
 # SignLink/UI/Tabs/SignTab.cs:105
 Actions	操作

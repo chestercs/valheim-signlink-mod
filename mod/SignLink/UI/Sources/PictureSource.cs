@@ -317,9 +317,10 @@ namespace SignLink.UI.Sources
                                                                             // (or the language)
         int roomFrame = -1;                                                 // the frame RoomForGif last ran in
 
-        /// <summary>What the picked GIF's frames take at the size its sign shows (0: not a GIF, not known), whether frames
-        /// of that size play or wait parked already, the room the screens leave, what the sign's own screen frees, and the
-        /// Moving row's words (the stride follows the sign's size since 1.0.2: every frame while they fit the cap).</summary>
+        /// <summary>What the picked GIF's frames take at the size its screen gets (GIF quality; on Saver the sign's size) (0:
+        /// not a GIF, not known), whether frames of that size play or wait parked already, the room the screens leave, what
+        /// the sign's own screen frees, and the Moving row's words (the stride follows that size: every frame while they fit
+        /// the cap).</summary>
         void RoomForGif(Session s)
         {
             if (roomFrame == Time.frameCount) return;                       // once a frame, not once an event (review)

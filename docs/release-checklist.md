@@ -121,6 +121,16 @@ checks the packages and prepares the uploads; the push to GitHub and the stores'
   showed again once the moderators approved it.
 - Rules to keep: nothing big under `BepInEx/config` (only the .cfg); no listening sockets or network code in a release.
 
+## Live since 1.1.0 (2026-10-21)
+
+- One test in installed mode before the upload: the release DLL from the Nexus zip in `BepInEx/plugins/SignLink/`, no
+  SignLink copy under `scripts/`; an art piece and a picture put on a new sign, the language switched while open.
+- Gogs `main` fast-forwarded with tag v1.1.0; GitHub `main` b910b94 and release v1.1.0 (both zips) by
+  `.private/stores/github-1.1.0-store.sh`; Thunderstore 1.1.0 (the author's Submit) was hidden again until the moderator re-approved it the same evening (asked in the rejected-uploads forum with the package link);
+  Nexus 4453: the file as an update of 1.0.3 (archived, mod version 1.1.0, a changelog line), the description and the
+  summary from `.private/stores/nexus-description.bbcode`; the wiki regenerated.
+- Not done: the Nexus gallery still shows the 1.0.2 window pictures (window-4/5 and transparency.jpg not added).
+
 ## 1.1.0's pictures
 
 New in `docs/media/` for the README, the package README and the Nexus gallery: `window-1-sign.jpg` to
@@ -150,6 +160,9 @@ sign hidden in the ground).
 - **Mod-only pictures** (the author, 2026-10-16): the sign holds only a reference to the picture (its name or id),
   plus how the uploader placed it (size, place, pose, Resolution, light, GIF playback). A vanilla player sees nothing of
   it, and a SignLink player sees the picture or the moving GIF, drawn by the mod.
+  - **Set aside (the author, 2026-10-28):** the friend's wish (high-quality GIFs without loading the server) is met by
+    1.2.0: a moving GIF plays at its own size whatever its still's Resolution, so a low Resolution keeps the world small.
+    No still-less GIF signs: "ne bonyolítsuk még tovább a modunkat". What the code already has stays.
   - The open question is how the picture reaches the other SignLink players. Today a GIF moves only where its file
     is. It needs the player-to-player transfer that the frozen GIF topic leaned to (`docs/mod-standards.md`, "Moving
     GIFs for players without the file"): RPC chunks from a player who has the file, cached on disk, perhaps checked

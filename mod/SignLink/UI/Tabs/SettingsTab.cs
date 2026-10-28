@@ -10,12 +10,13 @@ namespace SignLink.UI
 {
     /// <summary>The window (language, look, text size, opacity, size, the key that opens it), the sign options (the two
     /// highlights), how pictures are made (PNG transparency, Fine Width steps), playback (animations and moving GIFs, how
-    /// far they play, the GIF memory), Reset to defaults and
+    /// far they play, the GIF quality and memory), Reset to defaults and
     /// About.</summary>
     internal sealed class SettingsTab : Tab
     {
         static readonly string[] GifMemoryNames = { "256 MB", "512 MB", "1024 MB" };
         static readonly int[] GifMemoryMB = { 256, 512, 1024 };
+        static readonly ChoiceNames GifQualityNames = new ChoiceNames("Full", "Saver");   // lang:keys
 
         /// <summary>The Pause beyond row (moved from Playing, 0.20.54): the config is written once a new value is set and
         /// nothing is held or focused (typing "150" does not save 8 and 15 on the way); otherwise the field reads the
@@ -258,6 +259,11 @@ namespace SignLink.UI
                     distance = got;
                     distanceDirty = true;
                 }
+                // the moving GIFs' own size or Saver's, this computer's choice (1.2.0, the author: Full again by default)
+                int quality = PluginConfig.GifFullQuality.Value ? 0 : 1;
+                int pickQuality = Widgets.Choice(Lang.T("GIF quality"), quality, GifQualityNames.Shown, 330f);
+                if (pickQuality != quality) Window.Later(() => PluginConfig.GifFullQuality.Value = pickQuality == 0);
+                Widgets.Hint(Lang.T("Saver: less RAM, coarser"));
                 // the frames the moving GIFs may hold here (1.0.2, the author: 512 and 1024 too)
                 int mem = Array.IndexOf(GifMemoryMB, PluginConfig.GifMemory.Value);
                 int pickMem = Widgets.Choice(Lang.T("GIF memory"), mem < 0 ? 0 : mem, GifMemoryNames, 330f);

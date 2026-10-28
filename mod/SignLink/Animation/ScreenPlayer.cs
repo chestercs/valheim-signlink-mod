@@ -173,7 +173,7 @@ namespace SignLink.Animation
         }
 
         /// <summary>The frames of this file (its Stamp) at the size a sign shows it (1.0.2: a screen is sized to its sign,
-        /// PictureImporter.ScreenKey): screenW gives the screen's width for the GIF's own size, which the frames carry.</summary>
+        /// on Saver since 1.2.0; PictureImporter.ScreenKey): screenW gives the screen's width for the GIF's own size, which the frames carry.</summary>
         public ScreenFrames FramesFor(string stamp, Func<int, int, int> screenW)
         {
             if (stamp == null) return null;

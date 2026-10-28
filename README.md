@@ -43,7 +43,7 @@ What goes on the sign is ordinary sign text, saved in your world like any other 
 - **The server needs nothing.** No server plugin, nothing to configure.
 - **It stays if you uninstall.** The pictures remain as normal signs.
 
-> **Version 1.1.0.** Get it on **[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/)**
+> **Version 1.2.0.** Get it on **[Thunderstore](https://thunderstore.io/c/valheim/p/PetyusPolisz/SignLink/)**
 > (r2modman, Thunderstore Mod Manager), **[Nexus Mods](https://www.nexusmods.com/valheim/mods/4453)** (Vortex or by
 > hand) or from [Releases](https://github.com/chestercs/valheim-signlink-mod/releases). See [Install](#install).
 
@@ -221,10 +221,12 @@ SignLink stays inside what the game itself can do. The measured numbers are in
 - **Big pictures take a moment to appear** when a player walks up: the download (about 150 KB/s on a server), then
   roughly 13 µs per pixel while the game builds the text.
 - **GIFs move only where the file is.** Their frames are not saved in the world, so a GIF moves on the computers that
-  have it in their images folder; everyone else sees its first frame.
+  have it in their images folder; everyone else sees its first frame. The moving GIF keeps its own quality whatever
+  Resolution you give that first frame, so a low Resolution spares the server without making the GIF coarse.
 - **Very long GIFs.** A GIF can have up to 5 000 frames (about 720 frames at 1920 x 1080). All moving GIFs share the
-  GIF memory (256 MB; 512 or 1024 MB in Settings › Playback if your PC has the RAM). A GIF too long for it plays every
-  second or third frame at the same speed, and one too big to move at all goes up as a still picture. The *Moving* row
+  GIF memory (256 MB; 512 or 1024 MB in Settings › Playback if your PC has the RAM). A GIF too long for it skips frames
+  at the same speed (more GIF memory, or Settings › Playback › *GIF quality* › *Saver*, keeps more of them), and one
+  too big to move at all goes up as a still picture. The *Moving* row
   on 2 Content tells you which before you put it up.
 - **The game's own sign editor cuts long text.** A player without SignLink who presses E on a picture sign and then
   Enter cuts it to 50 characters (Escape leaves it alone). Their game also slows down while they look at a picture
@@ -249,7 +251,7 @@ BepInExPack Valheim comes with it.
 **With Vortex:** *Mod Manager Download* on [the Nexus Mods page](https://www.nexusmods.com/valheim/mods/4453).
 
 **By hand:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/), then
-unpack `SignLink-1.1.0-nexus.zip` (from Nexus Mods or [Releases](https://github.com/chestercs/valheim-signlink-mod/releases))
+unpack `SignLink-1.2.0-nexus.zip` (from Nexus Mods or [Releases](https://github.com/chestercs/valheim-signlink-mod/releases))
 into the Valheim folder. The mod ends up in `BepInEx/plugins/SignLink/`.
 
 Your pictures go into `SignLink/images` in the game's data folder, next to your worlds (on Windows

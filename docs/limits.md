@@ -163,13 +163,14 @@ Content says the outcome under *Moving* before anything goes on the sign (`Pictu
 | Frames | 5 000 | not read |
 | Pixels of all frames | 1 500 million (about 720 frames of 1920 x 1080) | not read |
 | One GIF's frames kept | about four fifths of the GIF memory: 200 MB of 256 (`ScreenPlayer.FrameCap`), counted at the screen's size (1.0.2) | every k-th frame is kept, its delay k times as long: the same speed |
-| A screen's frame | at most twice the sign's pixels across, and 1024 pixels a side (`PictureImporter.ScreenSide`), shrunk by a whole factor (1.0.2) | |
+| A screen's frame | the GIF's own size, at most 1024 pixels a side (`PictureImporter.ScreenSide`), shrunk by a whole factor; on Settings › Playback › GIF quality › Saver also at most twice the sign's pixels across (1.0.2's rule; Full, the default since 1.2.0, does not) | |
 | All screens together | the GIF memory: 256 MB by default, 512 or 1024 in Settings › Playback (`ScreenPlayer.Budget`), RGB24 frames, a frame shared by several signs counted once | over it alone: the GIF goes on still; with the other screens playing: it waits for room, and screens idle far away or paused park to make room for a GIF beside the player (`ScreenPlayer.MakeRoom`); lowered, the farthest screens park until the rest fit (`Trim`) |
 | Uploads a game frame | 5 ms for every screen together (`ScreenPlayer.FrameBudgetMs`), the nearest first; 50 ms a second a screen | the rest show their frame at the next game frame |
 
 The file size alone decides nothing: a GIF compresses its frames, and what counts is their pixels once decoded (3 bytes
 each). The 35 MB GIF a player could not put on (2026-10-16, measured 2026-10-17: 720 x 416, 433 frames) needed 185 MB at
-its full size, more than another GIF playing nearby left; sized to its 214 px sign it takes 46 MB.
+its full size (GIF quality *Full*, the default again since 1.2.0), more than another GIF playing nearby left; on *Saver*,
+sized to its 214 px sign, it takes 46 MB.
 
 **Measured at 1024 MB (2026-10-18, a 32 GB PC).** Two 1024 x 576 screens (300 and 200 frames, 844 MB) beside three
 small ones, 959 MB held: 85-119 FPS, a frame upload 0.15 ms; a GIF decodes in 4-5 s on the worker. Farther away than

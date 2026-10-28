@@ -6,9 +6,9 @@ Close	Закрыть
 list|, 	, 
 # Kit/Lang.cs:14
 Game default	Как в игре
-# Kit/Widgets.Buttons.cs:121
+# Kit/Widgets.Buttons.cs:123
 On	Вкл.
-# Kit/Widgets.Buttons.cs:121
+# Kit/Widgets.Buttons.cs:123
 Off	Выкл.
 # SignLink/Animation/ScreenPlayer.cs:287
 the sign is gone	таблички больше нет
@@ -148,15 +148,15 @@ not a PNG, JPG or GIF picture	это не картинка PNG, JPG или GIF
 too big to play over the picture (its frames would be {0} MB, the screens hold at most {1} MB)	GIF слишком велик для анимации поверх картинки (кадры заняли бы {0} MB, максимум {1} MB)
 # SignLink/Pictures/PictureImporter.cs:391
 it stays still for now: its frames would be {0} MB, the screens have room for {1} MB	GIF пока не движется: кадры заняли бы {0} MB, а свободно {1} MB
-# SignLink/Pictures/PictureImporter.cs:553
+# SignLink/Pictures/PictureImporter.cs:554
 it stays still here: {0}	GIF здесь не движется: {0}
-# SignLink/Pictures/PictureImporter.cs:557
+# SignLink/Pictures/PictureImporter.cs:558
 the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder	GIF движется поверх неё и снова запускается при каждой загрузке таблички — на каждом компьютере, где этот файл есть в папке картинок
-# SignLink/Pictures/PictureImporter.cs:722
+# SignLink/Pictures/PictureImporter.cs:723
 {0} is on the sign{1} over {2} signs ({3} in the world save; encoded in {4:0.0} s, placed in {5:0.0} s){6}.	{0} на табличке{1}, всего табличек: {2} ({3} в сохранении мира; кодирование {4:0.0} с, размещение {5:0.0} с){6}.
-# SignLink/Pictures/PictureImporter.cs:724
+# SignLink/Pictures/PictureImporter.cs:725
 {0} is on the sign{1} ({2} in the world save; encoded in {3:0.0} s, placed in {4:0.0} s){5}.	{0} на табличке{1} ({2} в сохранении мира; кодирование {3:0.0} с, размещение {4:0.0} с){5}.
-# SignLink/Pictures/PictureImporter.cs:742
+# SignLink/Pictures/PictureImporter.cs:743
 the import was stopped.	импорт остановлен.
 # SignLink/Pictures/PixelText.cs:116
 the picture is fully transparent: nothing to put on a sign	картинка полностью прозрачна: на табличку нечего ставить
@@ -872,91 +872,99 @@ not moving here	здесь не движется
 not moving here yet (starting)	здесь пока не движется (запуск)
 # SignLink/UI/Tabs/PlayingTab.cs:99
 that sign holds no GIF picture any more.	на этой табличке больше нет GIF-картинки.
-# SignLink/UI/Tabs/SettingsTab.cs:118
+# SignLink/UI/Tabs/SettingsTab.cs:119
 Settings	Настройки
-# SignLink/UI/Tabs/SettingsTab.cs:136
+# SignLink/UI/Tabs/SettingsTab.cs:137
 Window	Окно
-# SignLink/UI/Tabs/SettingsTab.cs:145
+# SignLink/UI/Tabs/SettingsTab.cs:146
 Language	Язык
-# SignLink/UI/Tabs/SettingsTab.cs:150
+# SignLink/UI/Tabs/SettingsTab.cs:151
 Theme	Оформление
-# SignLink/UI/Tabs/SettingsTab.cs:154
+# SignLink/UI/Tabs/SettingsTab.cs:155
 Text size	Размер текста
-# SignLink/UI/Tabs/SettingsTab.cs:175
+# SignLink/UI/Tabs/SettingsTab.cs:176
 Window size	Размер окна
-# SignLink/UI/Tabs/SettingsTab.cs:179
+# SignLink/UI/Tabs/SettingsTab.cs:180
 Default size	По умолчанию
-# SignLink/UI/Tabs/SettingsTab.cs:193
+# SignLink/UI/Tabs/SettingsTab.cs:19
+Full	Полное
+# SignLink/UI/Tabs/SettingsTab.cs:19
+Saver	Экономное
+# SignLink/UI/Tabs/SettingsTab.cs:194
 Hotkey	Горячая клавиша
-# SignLink/UI/Tabs/SettingsTab.cs:195
+# SignLink/UI/Tabs/SettingsTab.cs:196
 press a key ...	нажмите клавишу ...
-# SignLink/UI/Tabs/SettingsTab.cs:195
+# SignLink/UI/Tabs/SettingsTab.cs:196
 no key	нет клавиши
-# SignLink/UI/Tabs/SettingsTab.cs:205
+# SignLink/UI/Tabs/SettingsTab.cs:206
 Unbind	Отвязать
-# SignLink/UI/Tabs/SettingsTab.cs:212
+# SignLink/UI/Tabs/SettingsTab.cs:213
 Press a key · Esc keeps the old	Нажмите клавишу · Esc оставит прежнюю
-# SignLink/UI/Tabs/SettingsTab.cs:216
+# SignLink/UI/Tabs/SettingsTab.cs:217
 Sign options	Параметры табличек
-# SignLink/UI/Tabs/SettingsTab.cs:221
+# SignLink/UI/Tabs/SettingsTab.cs:222
 Highlight signs	Подсветка табличек
-# SignLink/UI/Tabs/SettingsTab.cs:226
+# SignLink/UI/Tabs/SettingsTab.cs:227
 Highlight sign contents	Подсветка содержимого
-# SignLink/UI/Tabs/SettingsTab.cs:230
+# SignLink/UI/Tabs/SettingsTab.cs:231
 Pictures	Картинки
-# SignLink/UI/Tabs/SettingsTab.cs:234
+# SignLink/UI/Tabs/SettingsTab.cs:235
 PNG transparency	Прозрачность PNG
-# SignLink/UI/Tabs/SettingsTab.cs:236
+# SignLink/UI/Tabs/SettingsTab.cs:237
 Fine Width steps: exact sizes, your Resolution kept	Точный шаг Ширины: точные размеры, ваше Разрешение сохраняется
-# SignLink/UI/Tabs/SettingsTab.cs:241
+# SignLink/UI/Tabs/SettingsTab.cs:242
 Playback	Воспроизведение
-# SignLink/UI/Tabs/SettingsTab.cs:255
+# SignLink/UI/Tabs/SettingsTab.cs:256
 Pause beyond	Пауза дальше
-# SignLink/UI/Tabs/SettingsTab.cs:263
+# SignLink/UI/Tabs/SettingsTab.cs:264
+GIF quality	Качество GIF
+# SignLink/UI/Tabs/SettingsTab.cs:266
+Saver: less RAM, coarser	Экономное: меньше ОЗУ, грубее
+# SignLink/UI/Tabs/SettingsTab.cs:269
 GIF memory	Память для GIF
-# SignLink/UI/Tabs/SettingsTab.cs:265
+# SignLink/UI/Tabs/SettingsTab.cs:271
 RAM for moving GIFs; 1024 wants 16 GB	ОЗУ для движущихся GIF; для 1024 нужно 16 GB
-# SignLink/UI/Tabs/SettingsTab.cs:275
+# SignLink/UI/Tabs/SettingsTab.cs:281
 Reset to defaults	Сбросить настройки
-# SignLink/UI/Tabs/SettingsTab.cs:275
+# SignLink/UI/Tabs/SettingsTab.cs:281
 Sure? Click again	Точно? Нажмите ещё раз
-# SignLink/UI/Tabs/SettingsTab.cs:284
-every setting is at its default already.	все настройки и так по умолчанию.
-# SignLink/UI/Tabs/SettingsTab.cs:285
-1 setting back to the default.	1 настройка сброшена.
-# SignLink/UI/Tabs/SettingsTab.cs:285
-{0} settings back to the default.	сброшено настроек: {0}.
 # SignLink/UI/Tabs/SettingsTab.cs:290
-About	О моде
+every setting is at its default already.	все настройки и так по умолчанию.
+# SignLink/UI/Tabs/SettingsTab.cs:291
+1 setting back to the default.	1 настройка сброшена.
+# SignLink/UI/Tabs/SettingsTab.cs:291
+{0} settings back to the default.	сброшено настроек: {0}.
 # SignLink/UI/Tabs/SettingsTab.cs:296
-Steps	Шаги
-# SignLink/UI/Tabs/SettingsTab.cs:299
-Open it	Открыть
-# SignLink/UI/Tabs/SettingsTab.cs:299
-no hotkey	нет горячей клавиши
-# SignLink/UI/Tabs/SettingsTab.cs:300
-/signlink in the chat	/signlink в чате
-# SignLink/UI/Tabs/SettingsTab.cs:301
-E on a picture sign	E на табличке с картинкой
+About	О моде
 # SignLink/UI/Tabs/SettingsTab.cs:302
-Open in SignLink (sign editor)	«Открыть в SignLink» (редактор таблички)
-# SignLink/UI/Tabs/SettingsTab.cs:304
-Fine-tune	Точная настройка
-# SignLink/UI/Tabs/SettingsTab.cs:304
-Shift+wheel on a slider	Shift+колесо на ползунке
+Steps	Шаги
 # SignLink/UI/Tabs/SettingsTab.cs:305
+Open it	Открыть
+# SignLink/UI/Tabs/SettingsTab.cs:305
+no hotkey	нет горячей клавиши
+# SignLink/UI/Tabs/SettingsTab.cs:306
+/signlink in the chat	/signlink в чате
+# SignLink/UI/Tabs/SettingsTab.cs:307
+E on a picture sign	E на табличке с картинкой
+# SignLink/UI/Tabs/SettingsTab.cs:308
+Open in SignLink (sign editor)	«Открыть в SignLink» (редактор таблички)
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Fine-tune	Точная настройка
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Shift+wheel on a slider	Shift+колесо на ползунке
+# SignLink/UI/Tabs/SettingsTab.cs:311
 arrow keys (3 Place)	стрелки (3 Размещение)
-# SignLink/UI/Tabs/SettingsTab.cs:307
+# SignLink/UI/Tabs/SettingsTab.cs:313
 Look around	Осмотреться
-# SignLink/UI/Tabs/SettingsTab.cs:307
+# SignLink/UI/Tabs/SettingsTab.cs:313
 hold the right mouse button	удерживайте правую кнопку мыши
-# SignLink/UI/Tabs/SettingsTab.cs:310
+# SignLink/UI/Tabs/SettingsTab.cs:316
 Graphics tip	Совет по графике
-# SignLink/UI/Tabs/SettingsTab.cs:310
+# SignLink/UI/Tabs/SettingsTab.cs:316
 Bloom off: sharper pictures	Свечение выкл.: картинки чётче
-# SignLink/UI/Tabs/SettingsTab.cs:92
+# SignLink/UI/Tabs/SettingsTab.cs:93
 Classic	Классика
-# SignLink/UI/Tabs/SettingsTab.cs:92
+# SignLink/UI/Tabs/SettingsTab.cs:93
 Nordic	Северная
 # SignLink/UI/Tabs/SignTab.cs:105
 Actions	Действия

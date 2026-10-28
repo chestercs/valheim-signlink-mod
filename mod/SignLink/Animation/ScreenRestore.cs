@@ -64,6 +64,17 @@ namespace SignLink.Animation
         /// <summary>The next scan now (the window changed a stack: its screen comes back without the two-second wait).</summary>
         public void Soon() => nextScan = 0f;
 
+        /// <summary>GIF quality switched (1.2.0): every screen was stopped, so each stack nearby is looked at again now, its
+        /// file read at once: no minute's gate from a decode just before, no wait for room counted at the other size (review:
+        /// a switch back within a minute left GIFs still). What the player paused or a bad file passed over stays.</summary>
+        public void Rescan()
+        {
+            decoded.Clear();
+            waiting.Clear();
+            noRoom.Clear();
+            nextScan = 0f;
+        }
+
         /// <summary>Room came back (a screen stopped or parked, the GIF memory raised): the stacks waiting for room are looked
         /// at at the next scan, not after their minute (1.0.2, review: nothing woke them).</summary>
         public void RoomFreed()
@@ -232,6 +243,7 @@ namespace SignLink.Animation
             if (gate != null) decoded[gate] = now;
             if (zdo != null) waiting.Remove(zdo.m_uid);
             long room = Plugin.Screens.Room;                                // what the playing screens leave (parked ones go)
+            bool full = PictureImporter.FullQuality;                        // one reading for the room check and the frames (review)
             busy = true;
             bool noRoom = false;
             ThreadPool.QueueUserWorkItem(_ =>
@@ -246,12 +258,12 @@ namespace SignLink.Animation
                         if (key != null) lock (measured) measured[key] = new Measured { W = gw, H = gh, Count = count };
                         if (count < 2) throw new InvalidOperationException("the file has one frame");
                         int planW = o.PlanFor(gw, gh).W;
-                        long need = PictureImporter.ScreenBytes(gw, gh, PictureImporter.ScreenKept(gw, gh, count, planW), planW);   // sized to its sign (1.0.2)
+                        long need = PictureImporter.ScreenBytes(gw, gh, PictureImporter.ScreenKept(gw, gh, count, planW, full), planW, full);   // GIF quality's size
                         noRoom = need > room;
                         if (noRoom)
                             throw new InvalidOperationException($"its frames would be {need >> 20} MB, the screens have room for {Math.Max(0, room) >> 20} MB");
                     }
-                    ScreenFrames frames = PictureImporter.GifScreen(bytes, (w, h) => o.PlanFor(w, h).W) ?? throw new InvalidOperationException("the file has one frame");
+                    ScreenFrames frames = PictureImporter.GifScreen(bytes, (w, h) => o.PlanFor(w, h).W, full: full) ?? throw new InvalidOperationException("the file has one frame");
                     PicturePlan plan = o.PlanFor(frames.SourceW, frames.SourceH);
                     frames.Key = PictureImporter.ScreenKey(key, frames.W);
                     string how = $"decoded in {sw.Elapsed.TotalSeconds:0.0} s";
@@ -279,6 +291,13 @@ namespace SignLink.Animation
         void Finish(Sign s, string src, string name, PictureOptions o, PicturePlan plan, ScreenFrames frames, string how)
         {
             busy = false;
+            if (frames.W != PictureImporter.ScreenWidth(frames.SourceW, frames.SourceH, plan.W))
+            {                                                               // GIF quality switched while they were decoded (review:
+                if (frames.Key != null) decoded.Remove(frames.Key);         // they played on at the old size): dropped, never parked
+                nextScan = 0f;                                              // (no lookup would find them), made again at the size now
+                Plugin.Log.LogInfo($"screen on {SignFinder.Id(s)}: its frames were made for the other GIF quality ({frames.W} px wide), made again");
+                return;
+            }
             if (!s || SignFinder.Zdo(s) == null || SignMarks.Source(s) != src || Plugin.Screens.Plays(s))
             {                                                               // gone, changed or placed again meanwhile: looked at
                 Plugin.Screens.Park(frames, Time.unscaledTime);             // again, its frames kept for it (0.20.132)

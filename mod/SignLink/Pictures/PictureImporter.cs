@@ -341,17 +341,18 @@ namespace SignLink.Pictures
         /// file picked).</summary>
         public static EncodedPicture EncodeGif(byte[] file, PictureOptions o, Func<bool> cancelled = null, Sign target = null)
         {
-            string note = o.Animate ? ScreenNote(file, (w, h) => o.PlanFor(w, h).W, target) : null;
+            bool full = FullQuality;                                        // one reading for the whole decode (review)
+            string note = o.Animate ? ScreenNote(file, (w, h) => o.PlanFor(w, h).W, target, full) : null;
             bool moving = o.Animate && note == null;
             byte[] still = null;
             int k = 0, sw = 0, sh = 0;
             GifImage gif = GifDecoder.Decode(file, maxBytes: SignLink.Animation.ScreenPlayer.FrameCap, maxFrames: moving ? int.MaxValue : 1, cancelled: cancelled,
-                                             frameBytes: (w, h) => ScreenFrameBytes(w, h, o.PlanFor(w, h).W), frame: (canvas, w, h) =>
+                                             frameBytes: (w, h) => ScreenFrameBytes(w, h, o.PlanFor(w, h).W, full), frame: (canvas, w, h) =>
             {
                 if (still == null)
                 {
                     still = GifFrameRgba(canvas);                           // the still: the first frame at full size
-                    ScreenShape(w, h, o.PlanFor(w, h).W, out k, out sw, out sh);
+                    ScreenShape(w, h, o.PlanFor(w, h).W, full, out k, out sw, out sh);
                 }
                 return moving ? ShrinkFlip(canvas, w, h, k, sw, sh) : null;
             });
@@ -367,12 +368,12 @@ namespace SignLink.Pictures
         /// (ScreenPlayer.MakeRoom, asked on the main thread: call this off it), so the still goes on alone and the sign
         /// plays when room frees (ScreenRestore; 1.0.2: every frame was decoded first and dropped at the start). Null when
         /// they would play, or when its blocks do not tell (the decode says why).</summary>
-        public static string ScreenNote(byte[] file, Func<int, int, int> planWidth, Sign target = null)
+        public static string ScreenNote(byte[] file, Func<int, int, int> planWidth, Sign target = null, bool? full = null)
         {
             if (!GifDecoder.Inspect(file, out int w, out int h, out int count) || count < 2) return null;
             int plan = planWidth(w, h);
-            int kept = ScreenKept(w, h, count, plan);
-            long bytes = ScreenBytes(w, h, kept, plan), budget = SignLink.Animation.ScreenPlayer.Budget;
+            int kept = ScreenKept(w, h, count, plan, full);
+            long bytes = ScreenBytes(w, h, kept, plan, full), budget = SignLink.Animation.ScreenPlayer.Budget;
             if (bytes > budget)
             {
                 Plugin.Log.LogWarning($"the GIF stays a still: its {kept} frames would be {bytes >> 20} MB (the screens hold at most {budget >> 20} MB)");
@@ -392,54 +393,62 @@ namespace SignLink.Pictures
         }
 
         /// <summary>A GIF's frames for its screen alone (any thread), each shrunk as it is decoded: a screen restored from the
-        /// file (ScreenRestore), an Update whose still is counted already. Null for a GIF of one frame.</summary>
-        public static ScreenFrames GifScreen(byte[] file, Func<int, int, int> planWidth, Func<bool> cancelled = null)
+        /// file (ScreenRestore), an Update whose still is counted already. Null for a GIF of one frame. full: the GIF quality
+        /// the caller read (its room check's), else read once here.</summary>
+        public static ScreenFrames GifScreen(byte[] file, Func<int, int, int> planWidth, Func<bool> cancelled = null, bool? full = null)
         {
+            bool q = full ?? FullQuality;
             int k = 0, sw = 0, sh = 0;
             GifImage gif = GifDecoder.Decode(file, maxBytes: SignLink.Animation.ScreenPlayer.FrameCap, cancelled: cancelled,
-                                             frameBytes: (w, h) => ScreenFrameBytes(w, h, planWidth(w, h)), frame: (canvas, w, h) =>
+                                             frameBytes: (w, h) => ScreenFrameBytes(w, h, planWidth(w, h), q), frame: (canvas, w, h) =>
             {
-                if (sw == 0) ScreenShape(w, h, planWidth(w, h), out k, out sw, out sh);
+                if (sw == 0) ScreenShape(w, h, planWidth(w, h), q, out k, out sw, out sh);
                 return ShrinkFlip(canvas, w, h, k, sw, sh);
             });
             return gif.Frames.Count < 2 ? null : Screen(gif, sw, sh);
         }
 
         /// <summary>The screen's size for a GIF of w x h shown planW pixels wide on its sign: shrunk by a whole factor k (a
-        /// box average) to at most ScreenSide a side, and to at most twice the sign's pixels (1.0.2, the author: a 720 px
-        /// GIF on a 214 px sign held 185 MB moving; the moving picture a little finer than its still, a quarter of the
-        /// memory). planW 0: the side alone. Every computer works it out from the sign's own recipe: the same size for
-        /// everyone, nothing sent.</summary>
-        static void ScreenShape(int w, int h, int planW, out int k, out int W, out int H)
+        /// box average) to at most ScreenSide a side; with Settings › Playback › GIF quality on Saver also to at most twice
+        /// the sign's pixels (1.0.2, the author: a 720 px GIF on a 214 px sign held 185 MB moving, a quarter of that so).
+        /// Full, the GIF's own size, is the default again since 1.2.0 (the author: a tester lowered the Resolution to spare
+        /// the server and his GIFs went pixelated). planW 0: the side alone. Every computer works it out from the sign's
+        /// recipe and its own setting: nothing sent, the frames are its own. full: Full (true) or Saver.</summary>
+        static void ScreenShape(int w, int h, int planW, bool full, out int k, out int W, out int H)
         {
             k = Math.Max(1, (int)Math.Ceiling(Math.Max(w, h) / (double)ScreenSide));
-            if (planW > 0) k = Math.Max(k, (int)Math.Ceiling(w / (2.0 * planW)));
+            if (planW > 0 && !full) k = Math.Max(k, (int)Math.Ceiling(w / (2.0 * planW)));
             W = Math.Max(1, w / k);
             H = Math.Max(1, h / k);
         }
 
-        /// <summary>The screen's width for a GIF of w x h shown planW pixels wide (ScreenShape).</summary>
-        public static int ScreenWidth(int w, int h, int planW)
+        /// <summary>Settings › Playback › GIF quality now: Full (true, the default) or Saver. A decode reads it once and
+        /// sizes everything with that (review: a switch between its stride and its first frame mixed the two).</summary>
+        public static bool FullQuality => PluginConfig.GifFullQuality?.Value ?? true;
+
+        /// <summary>The screen's width for a GIF of w x h shown planW pixels wide (ScreenShape; full: GIF quality, now's when
+        /// not given).</summary>
+        public static int ScreenWidth(int w, int h, int planW, bool? full = null)
         {
-            ScreenShape(w, h, planW, out _, out int W, out _);
+            ScreenShape(w, h, planW, full ?? FullQuality, out _, out int W, out _);
             return W;
         }
 
         /// <summary>What a screen of `frames` frames of a w x h GIF shown planW pixels wide holds (ScreenShape's size, RGB24).</summary>
-        public static long ScreenBytes(int w, int h, int frames, int planW)
+        public static long ScreenBytes(int w, int h, int frames, int planW, bool? full = null)
         {
-            ScreenShape(w, h, planW, out _, out int W, out int H);
+            ScreenShape(w, h, planW, full ?? FullQuality, out _, out int W, out int H);
             return (long)frames * W * H * 3;
         }
 
         /// <summary>One screen frame's bytes for a w x h GIF shown planW pixels wide.</summary>
-        public static long ScreenFrameBytes(int w, int h, int planW) => ScreenBytes(w, h, 1, planW);
+        public static long ScreenFrameBytes(int w, int h, int planW, bool? full = null) => ScreenBytes(w, h, 1, planW, full);
 
         /// <summary>How many of a GIF's count frames its screen keeps: every k-th past ScreenPlayer.FrameCap, counted at the
         /// screen's size (1.0.2, review: the full-size frames counted, so a GIF on a small sign lost every second frame for
         /// nothing).</summary>
-        public static int ScreenKept(int w, int h, int count, int planW) =>
-            GifDecoder.Kept(count, ScreenFrameBytes(w, h, planW), SignLink.Animation.ScreenPlayer.FrameCap);
+        public static int ScreenKept(int w, int h, int count, int planW, bool? full = null) =>
+            GifDecoder.Kept(count, ScreenFrameBytes(w, h, planW, full), SignLink.Animation.ScreenPlayer.FrameCap);
 
         /// <summary>The key frames are kept and shared under: the file (Stamp) and the screen's width, so signs showing a GIF at
         /// one size share its frames and another size is frames of its own.</summary>
@@ -542,6 +551,13 @@ namespace SignLink.Pictures
         {
             ScreenFrames s = pic.Screen;
             pic.Screen = null;                                       // the player owns the frames from here
+            if (s.W != ScreenWidth(s.SourceW, s.SourceH, pic.Plan.W))
+            {                                                        // GIF quality switched while they were decoded (review):
+                Plugin.Restore?.Soon();                              // dropped; ScreenRestore decodes them again at the size now
+                Plugin.Log.LogInfo($"the GIF's frames were made for the other GIF quality: they are made again ({s.W} px wide)");
+                pic.Note = "; " + Lang.T("the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder");
+                return;
+            }
             bool played = PlayOver(target, s, pic.Plan, pic.CenterX, pic.Bottom, lit, out string why, out bool noRoom);
             // the room asked before the decode went to a paused or far GIF meanwhile (ScreenRestore played it again; review):
             // asked once more, as ScreenRestore.Finish asks; still refused, the frames park for the restore to find
@@ -682,8 +698,9 @@ namespace SignLink.Pictures
                         string key = PictureImporter.Stamp(file);           // with the bytes, on the worker (1.0.2, review)
                         byte[] bytes = PictureImporter.ReadFile(file);
                         int planW = still.Plan.W;                           // the still's: the screen goes over it
-                        string note = PictureImporter.ScreenNote(bytes, (gw, gh) => planW, target);
-                        ScreenFrames frames = note == null ? PictureImporter.GifScreen(bytes, (gw, gh) => planW, () => cancel) : null;
+                        bool full = PictureImporter.FullQuality;            // one reading for the room check and the frames
+                        string note = PictureImporter.ScreenNote(bytes, (gw, gh) => planW, target, full);
+                        ScreenFrames frames = note == null ? PictureImporter.GifScreen(bytes, (gw, gh) => planW, () => cancel, full) : null;
                         if (frames != null) frames.Key = PictureImporter.ScreenKey(key, frames.W);   // parked under it when the stack changes
                         EncodedPicture pic = still.With(frames);
                         if (note != null) pic.Note = note;

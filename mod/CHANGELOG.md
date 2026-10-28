@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0 (2026-10-28)
+
+- **Moving GIFs at full quality again.** Since 1.0.2 a moving GIF played at most at twice its sign's pixels, so a GIF
+  put on with a low Resolution (to keep the world small for the server) moved coarse and pixelated. It now plays at its
+  own size again (at most 1024 pixels a side), whatever the Resolution of its still. The Resolution sets only the still
+  that goes into the world, which everyone sees; the moving GIF comes from the file on each computer and costs the
+  server nothing.
+- Settings › Playback › **GIF quality**: *Full* (the default) or *Saver*, 1.0.2's way: at most twice the sign's pixels,
+  about a quarter of the memory for a big GIF on a small sign, but coarser. It is this computer's choice alone;
+  switched, the GIFs nearby start again at the new size (while *Play all GIFs* is off they show their still until it
+  is on again). With Full, a big GIF takes more of the *GIF memory*: fewer
+  move at once, and a long one may show fewer of its frames; 512 or 1024 MB gives them room.
+
 ## 1.1.0 (2026-10-21)
 
 - A new look for the window: the game's own Averia Serif Libre font, rounded and framed controls, tabs and choices in a

@@ -23,6 +23,7 @@ namespace SignLink
         public static ConfigEntry<bool> PlayAnimations, PlayGifs;
         public static ConfigEntry<float> PlayDistance;
         public static ConfigEntry<int> GifMemory;
+        public static ConfigEntry<bool> GifFullQuality;
         public static ConfigEntry<bool> PictureFineWidth;
         public static ConfigEntry<bool> LogSlowSigns;
 
@@ -111,7 +112,14 @@ namespace SignLink
             GifMemory = cfg.Bind("4 - Playback", "GifMemoryMB", 256,
                 Desc("The memory the moving GIFs' frames may take on this computer, in MB: 256, 512 or 1024. More GIFs move at " +
                      "once with more; 1024 wants a PC with 16 GB of RAM, as the game itself takes several GB. Lowered, the " +
-                     "farthest GIFs stop until the rest fit.", 1, new AcceptableValueList<int>(256, 512, 1024)));
+                     "farthest GIFs stop until the rest fit.", 0, new AcceptableValueList<int>(256, 512, 1024)));
+            // the author (1.2.0, a tester's GIFs went pixelated on low-Resolution signs): a moving GIF at its own size again
+            // by default; off is 1.0.2's Saver, at most twice its sign's pixels (PictureImporter.ScreenShape). This computer's
+            // memory alone: the frames come from the file here, never from the world
+            GifFullQuality = cfg.Bind("4 - Playback", "GifFullQuality", true,
+                Desc("Moving GIFs play at their own size (at most 1024 pixels a side). Off (Saver): at most twice their sign's " +
+                     "pixels, about a quarter of the memory for a big GIF on a small sign, but coarser. Only this computer " +
+                     "changes; the world and the server are not touched.", 1));
             PngTransparency = cfg.Bind("5 - Pictures", "PngTransparency", true,
                 Desc("A PNG's see-through parts stay empty on the sign, half-transparent ones half transparent.", 2));
             // a choice of each picture since 0.20.160 (the Moving switch on 2 Content, as an art piece's): this is where it

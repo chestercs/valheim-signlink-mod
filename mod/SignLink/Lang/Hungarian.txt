@@ -6,9 +6,9 @@ Close	Bezár
 list|, 	, 
 # Kit/Lang.cs:14
 Game default	A játék nyelve
-# Kit/Widgets.Buttons.cs:121
+# Kit/Widgets.Buttons.cs:123
 On	Be
-# Kit/Widgets.Buttons.cs:121
+# Kit/Widgets.Buttons.cs:123
 Off	Ki
 # SignLink/Animation/ScreenPlayer.cs:287
 the sign is gone	a tábla eltűnt
@@ -148,15 +148,15 @@ not a PNG, JPG or GIF picture	nem PNG, JPG vagy GIF kép
 too big to play over the picture (its frames would be {0} MB, the screens hold at most {1} MB)	túl nagy ahhoz, hogy a kép fölött mozogjon (a képkockái {0} MB-ot foglalnának, a GIF-eknek legfeljebb {1} MB jut)
 # SignLink/Pictures/PictureImporter.cs:391
 it stays still for now: its frames would be {0} MB, the screens have room for {1} MB	egyelőre állókép marad: a képkockái {0} MB-ot foglalnának, a GIF-eknek csak {1} MB hely maradt
-# SignLink/Pictures/PictureImporter.cs:553
+# SignLink/Pictures/PictureImporter.cs:554
 it stays still here: {0}	nálad állókép marad: {0}
-# SignLink/Pictures/PictureImporter.cs:557
+# SignLink/Pictures/PictureImporter.cs:558
 the GIF plays over it, and again whenever the sign loads, on every computer that has the file in its images folder	a GIF mozog rajta, és újra elindul, valahányszor a tábla betöltődik, minden gépen, amelynek a képmappájában megvan a fájl
-# SignLink/Pictures/PictureImporter.cs:722
+# SignLink/Pictures/PictureImporter.cs:723
 {0} is on the sign{1} over {2} signs ({3} in the world save; encoded in {4:0.0} s, placed in {5:0.0} s){6}.	{0} felkerült a táblára{1}, {2} táblán ({3} a világmentésben; kódolás {4:0.0} s, felrakás {5:0.0} s){6}.
-# SignLink/Pictures/PictureImporter.cs:724
+# SignLink/Pictures/PictureImporter.cs:725
 {0} is on the sign{1} ({2} in the world save; encoded in {3:0.0} s, placed in {4:0.0} s){5}.	{0} felkerült a táblára{1} ({2} a világmentésben; kódolás {3:0.0} s, felrakás {4:0.0} s){5}.
-# SignLink/Pictures/PictureImporter.cs:742
+# SignLink/Pictures/PictureImporter.cs:743
 the import was stopped.	az importálás megszakadt.
 # SignLink/Pictures/PixelText.cs:116
 the picture is fully transparent: nothing to put on a sign	a kép teljesen átlátszó: nincs mit táblára tenni
@@ -872,91 +872,99 @@ not moving here	nálad nem mozog
 not moving here yet (starting)	nálad még nem mozog (indul)
 # SignLink/UI/Tabs/PlayingTab.cs:99
 that sign holds no GIF picture any more.	azon a táblán már nincs GIF-kép.
-# SignLink/UI/Tabs/SettingsTab.cs:118
+# SignLink/UI/Tabs/SettingsTab.cs:119
 Settings	Beállítások
-# SignLink/UI/Tabs/SettingsTab.cs:136
+# SignLink/UI/Tabs/SettingsTab.cs:137
 Window	Ablak
-# SignLink/UI/Tabs/SettingsTab.cs:145
+# SignLink/UI/Tabs/SettingsTab.cs:146
 Language	Nyelv
-# SignLink/UI/Tabs/SettingsTab.cs:150
+# SignLink/UI/Tabs/SettingsTab.cs:151
 Theme	Téma
-# SignLink/UI/Tabs/SettingsTab.cs:154
+# SignLink/UI/Tabs/SettingsTab.cs:155
 Text size	Szövegméret
-# SignLink/UI/Tabs/SettingsTab.cs:175
+# SignLink/UI/Tabs/SettingsTab.cs:176
 Window size	Ablakméret
-# SignLink/UI/Tabs/SettingsTab.cs:179
+# SignLink/UI/Tabs/SettingsTab.cs:180
 Default size	Alapméret
-# SignLink/UI/Tabs/SettingsTab.cs:193
+# SignLink/UI/Tabs/SettingsTab.cs:19
+Full	Teljes
+# SignLink/UI/Tabs/SettingsTab.cs:19
+Saver	Takarékos
+# SignLink/UI/Tabs/SettingsTab.cs:194
 Hotkey	Gyorsbillentyű
-# SignLink/UI/Tabs/SettingsTab.cs:195
+# SignLink/UI/Tabs/SettingsTab.cs:196
 press a key ...	nyomj meg egy billentyűt ...
-# SignLink/UI/Tabs/SettingsTab.cs:195
+# SignLink/UI/Tabs/SettingsTab.cs:196
 no key	nincs billentyű
-# SignLink/UI/Tabs/SettingsTab.cs:205
+# SignLink/UI/Tabs/SettingsTab.cs:206
 Unbind	Billentyű törlése
-# SignLink/UI/Tabs/SettingsTab.cs:212
+# SignLink/UI/Tabs/SettingsTab.cs:213
 Press a key · Esc keeps the old	Nyomj meg egy billentyűt · Esc: marad a régi
-# SignLink/UI/Tabs/SettingsTab.cs:216
+# SignLink/UI/Tabs/SettingsTab.cs:217
 Sign options	Tábla-beállítások
-# SignLink/UI/Tabs/SettingsTab.cs:221
+# SignLink/UI/Tabs/SettingsTab.cs:222
 Highlight signs	Táblák kiemelése
-# SignLink/UI/Tabs/SettingsTab.cs:226
+# SignLink/UI/Tabs/SettingsTab.cs:227
 Highlight sign contents	Táblatartalom kiemelése
-# SignLink/UI/Tabs/SettingsTab.cs:230
+# SignLink/UI/Tabs/SettingsTab.cs:231
 Pictures	Képek
-# SignLink/UI/Tabs/SettingsTab.cs:234
+# SignLink/UI/Tabs/SettingsTab.cs:235
 PNG transparency	PNG-átlátszóság
-# SignLink/UI/Tabs/SettingsTab.cs:236
+# SignLink/UI/Tabs/SettingsTab.cs:237
 Fine Width steps: exact sizes, your Resolution kept	Finom Szélesség-lépések: pontos méretek, a Felbontás marad
-# SignLink/UI/Tabs/SettingsTab.cs:241
+# SignLink/UI/Tabs/SettingsTab.cs:242
 Playback	Lejátszás
-# SignLink/UI/Tabs/SettingsTab.cs:255
+# SignLink/UI/Tabs/SettingsTab.cs:256
 Pause beyond	Megáll ezen túl
-# SignLink/UI/Tabs/SettingsTab.cs:263
+# SignLink/UI/Tabs/SettingsTab.cs:264
+GIF quality	GIF-minőség
+# SignLink/UI/Tabs/SettingsTab.cs:266
+Saver: less RAM, coarser	Takarékos: kevesebb RAM, durvább kép
+# SignLink/UI/Tabs/SettingsTab.cs:269
 GIF memory	GIF-memória
-# SignLink/UI/Tabs/SettingsTab.cs:265
+# SignLink/UI/Tabs/SettingsTab.cs:271
 RAM for moving GIFs; 1024 wants 16 GB	RAM a mozgó GIF-eknek; az 1024-hez 16 GB kell
-# SignLink/UI/Tabs/SettingsTab.cs:275
+# SignLink/UI/Tabs/SettingsTab.cs:281
 Reset to defaults	Alapértékek visszaállítása
-# SignLink/UI/Tabs/SettingsTab.cs:275
+# SignLink/UI/Tabs/SettingsTab.cs:281
 Sure? Click again	Biztos? Kattints újra
-# SignLink/UI/Tabs/SettingsTab.cs:284
-every setting is at its default already.	már minden beállítás alapértéken van.
-# SignLink/UI/Tabs/SettingsTab.cs:285
-1 setting back to the default.	1 beállítás visszaállt alapértékre.
-# SignLink/UI/Tabs/SettingsTab.cs:285
-{0} settings back to the default.	{0} beállítás visszaállt alapértékre.
 # SignLink/UI/Tabs/SettingsTab.cs:290
-About	Névjegy
+every setting is at its default already.	már minden beállítás alapértéken van.
+# SignLink/UI/Tabs/SettingsTab.cs:291
+1 setting back to the default.	1 beállítás visszaállt alapértékre.
+# SignLink/UI/Tabs/SettingsTab.cs:291
+{0} settings back to the default.	{0} beállítás visszaállt alapértékre.
 # SignLink/UI/Tabs/SettingsTab.cs:296
-Steps	Lépések
-# SignLink/UI/Tabs/SettingsTab.cs:299
-Open it	Megnyitás
-# SignLink/UI/Tabs/SettingsTab.cs:299
-no hotkey	nincs gyorsbillentyű
-# SignLink/UI/Tabs/SettingsTab.cs:300
-/signlink in the chat	/signlink a csetben
-# SignLink/UI/Tabs/SettingsTab.cs:301
-E on a picture sign	E egy képes táblán
+About	Névjegy
 # SignLink/UI/Tabs/SettingsTab.cs:302
-Open in SignLink (sign editor)	Megnyitás a SignLinkben (táblaszerkesztő)
-# SignLink/UI/Tabs/SettingsTab.cs:304
-Fine-tune	Finomhangolás
-# SignLink/UI/Tabs/SettingsTab.cs:304
-Shift+wheel on a slider	Shift+görgő egy csúszkán
+Steps	Lépések
 # SignLink/UI/Tabs/SettingsTab.cs:305
+Open it	Megnyitás
+# SignLink/UI/Tabs/SettingsTab.cs:305
+no hotkey	nincs gyorsbillentyű
+# SignLink/UI/Tabs/SettingsTab.cs:306
+/signlink in the chat	/signlink a csetben
+# SignLink/UI/Tabs/SettingsTab.cs:307
+E on a picture sign	E egy képes táblán
+# SignLink/UI/Tabs/SettingsTab.cs:308
+Open in SignLink (sign editor)	Megnyitás a SignLinkben (táblaszerkesztő)
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Fine-tune	Finomhangolás
+# SignLink/UI/Tabs/SettingsTab.cs:310
+Shift+wheel on a slider	Shift+görgő egy csúszkán
+# SignLink/UI/Tabs/SettingsTab.cs:311
 arrow keys (3 Place)	nyílbillentyűk (3 Elhelyezés)
-# SignLink/UI/Tabs/SettingsTab.cs:307
+# SignLink/UI/Tabs/SettingsTab.cs:313
 Look around	Körülnézés
-# SignLink/UI/Tabs/SettingsTab.cs:307
+# SignLink/UI/Tabs/SettingsTab.cs:313
 hold the right mouse button	jobb egérgomb nyomva tartva
-# SignLink/UI/Tabs/SettingsTab.cs:310
+# SignLink/UI/Tabs/SettingsTab.cs:316
 Graphics tip	Grafikai tipp
-# SignLink/UI/Tabs/SettingsTab.cs:310
+# SignLink/UI/Tabs/SettingsTab.cs:316
 Bloom off: sharper pictures	Bloom ki: élesebb képek
-# SignLink/UI/Tabs/SettingsTab.cs:92
+# SignLink/UI/Tabs/SettingsTab.cs:93
 Classic	Klasszikus
-# SignLink/UI/Tabs/SettingsTab.cs:92
+# SignLink/UI/Tabs/SettingsTab.cs:93
 Nordic	Északi
 # SignLink/UI/Tabs/SignTab.cs:105
 Actions	Műveletek

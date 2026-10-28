@@ -181,7 +181,7 @@ namespace SignLink.UI.Sources
                 }
                 if (gif && c != null && c.Stamp == stamp)                   // the counted texts too (0.20.132, review: an Update
                 {                                                           // decoded and encoded the GIF again)
-                    int planW = c.Pic.Plan.W;                               // the screen is sized to the sign (1.0.2)
+                    int planW = c.Pic.Plan.W;                               // the sign's size: Saver's screen follows it
                     ScreenFrames frames = o.Animate ? Plugin.Screens.FramesFor(stamp, (gw, gh) => PictureImporter.ScreenWidth(gw, gh, planW)) : null;   // playing or parked: shared
                     if (!o.Animate || frames != null) job.Place(target, c.Pic.With(frames), o, done);
                     else job.StartScreen(target, f0, c.Pic, o, done);       // only the frames are decoded
